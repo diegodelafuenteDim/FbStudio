@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using FbStudio.Core.Metadata;
 using FbStudio.Core.Profiles;
 using FbStudio.Core.Resources;
 
@@ -17,6 +18,10 @@ public sealed record ProfileBackupFile
     public int Count { get; init; }
 
     public List<ConnectionProfile>? Profiles { get; init; }
+
+    /// <summary>Las áreas de cada base (por Id del registro), si se incluyeron y el archivo no va cifrado.</summary>
+    public Dictionary<Guid, SchemaAreaFile>? Areas { get; init; }
+
     public EncryptedBackup? Encrypted { get; init; }
 
     [JsonIgnore]
@@ -32,18 +37,24 @@ public sealed record ProfileBackupContent
     public List<ConnectionProfile> Profiles { get; init; } = [];
     public Dictionary<Guid, string> Passwords { get; init; } = [];
 
+    /// <summary>Las áreas de cada base (por Id del registro), si se incluyeron.</summary>
+    public Dictionary<Guid, SchemaAreaFile> Areas { get; init; } = [];
+
     /// <summary>Registros que vienen sin usuario (se exportaron sin él).</summary>
     [JsonIgnore]
     public int WithoutUser => Profiles.Count(p => string.IsNullOrWhiteSpace(p.User));
 }
 
-/// <summary>Un registro del archivo y el que ya existe para la misma base (si hay).</summary>
-public sealed record ProfileImportItem(ConnectionProfile Profile, string? Password, ConnectionProfile? Existing);
+/// <summary>Un registro del archivo, el que ya existe para la misma base (si hay) y las áreas que trae (si trae).</summary>
+public sealed record ProfileImportItem(ConnectionProfile Profile, string? Password, ConnectionProfile? Existing, SchemaAreaFile? Areas = null);
 
 /// <param name="PasswordsForgotten">Registros que cambiaron de servidor, base o usuario sin traer contraseña: la guardada se olvidó.</param>
 /// <param name="KeptProtection">Registros que conservaron su protección (solo lectura, producción, cifrado) que el archivo bajaba.</param>
+/// <param name="AreasImported">Bases que recibieron las áreas del archivo.</param>
+/// <param name="AreasKept">Bases que ya tenían áreas (o usan un archivo compartido): se dejaron las suyas.</param>
+/// <param name="AreasFailed">Bases cuyas áreas no se pudieron guardar (disco o permisos).</param>
 public sealed record ProfileImportResult(int Added, int Updated, int Skipped, int Invalid, int WithPassword, int PasswordsForgotten = 0,
-    int KeptProtection = 0);
+    int KeptProtection = 0, int AreasImported = 0, int AreasKept = 0, int AreasFailed = 0);
 
 /// <summary>
 /// Backup y restore de los registros de conexión (F-22, D-55): un archivo para guardarlos o para pasarlos a otra PC, o
@@ -73,15 +84,20 @@ public static class ProfileBackup
 
     /// <summary>
     /// Guarda los registros. Sin <paramref name="includeUser"/> van sin usuario (y entonces sin contraseña); con
-    /// <paramref name="passphrase"/>, con sus contraseñas y todo cifrado.
+    /// <paramref name="passphrase"/>, con sus contraseñas y todo cifrado. Con <paramref name="areas"/>, también las áreas
+    /// de cada base que tenga (aunque estén en un archivo compartido: viaja el contenido, no la ruta).
     /// </summary>
-    public static void Export(string path, IReadOnlyList<ConnectionProfile> profiles, bool includeUser, Func<Guid, string?> passwords, string? passphrase)
+    public static void Export(string path, IReadOnlyList<ConnectionProfile> profiles, bool includeUser, Func<Guid, string?> passwords, string? passphrase,
+        Func<ConnectionProfile, SchemaAreaFile?>? areas = null)
     {
         var list = profiles.Select(p => includeUser ? p : p with { User = "" }).ToList();
+        var areaFiles = areas is null
+            ? []
+            : profiles.Select(p => (p.Id, File: areas(p))).Where(x => x.File is { Areas.Count: > 0 }).ToDictionary(x => x.Id, x => x.File!);
         ProfileBackupFile file;
         if (passphrase is null || !includeUser)
         {
-            file = new ProfileBackupFile { CreatedAt = DateTime.UtcNow, Count = list.Count, Profiles = list };
+            file = new ProfileBackupFile { CreatedAt = DateTime.UtcNow, Count = list.Count, Profiles = list, Areas = areaFiles.Count > 0 ? areaFiles : null };
         }
         else
         {
@@ -91,6 +107,7 @@ public static class ProfileBackup
                 Profiles = list,
                 Passwords = list.Select(p => (p.Id, Password: passwords(p.Id))).Where(x => x.Password is not null)
                     .ToDictionary(x => x.Id, x => x.Password!),
+                Areas = areaFiles,
             };
             var salt = RandomNumberGenerator.GetBytes(16);
             var data = Protector(passphrase, salt, Iterations).Protect(JsonSerializer.Serialize(content, WorkspaceJsonContext.Default.ProfileBackupContent));
@@ -121,7 +138,7 @@ public static class ProfileBackup
     /// <summary>Los registros del archivo; si está cifrado, con la frase (si no es la correcta, avisa).</summary>
     public static ProfileBackupContent Open(ProfileBackupFile file, string? passphrase)
     {
-        if (file.Encrypted is not { } e) return new ProfileBackupContent { Profiles = file.Profiles ?? [] };
+        if (file.Encrypted is not { } e) return new ProfileBackupContent { Profiles = file.Profiles ?? [], Areas = file.Areas ?? [] };
         if (string.IsNullOrEmpty(passphrase)) throw new InvalidOperationException(CoreStrings.BackupWrongPhrase);
         if (e.Kdf != Kdf || e.Iterations is < MinIterations or > MaxIterations) throw new InvalidOperationException(CoreStrings.BackupNotOurs);
         try
@@ -141,7 +158,7 @@ public static class ProfileBackup
     /// </summary>
     public static IReadOnlyList<ProfileImportItem> Plan(IReadOnlyList<ConnectionProfile> existing, ProfileBackupContent content) =>
         (content.Profiles ?? []).Where(p => p is not null).Select(p => new ProfileImportItem(p, content.Passwords?.GetValueOrDefault(p.Id),
-            existing.FirstOrDefault(x => x.Id == p.Id) ?? existing.FirstOrDefault(x => SameDatabase(x, p)))).ToList();
+            existing.FirstOrDefault(x => x.Id == p.Id) ?? existing.FirstOrDefault(x => SameDatabase(x, p)), content.Areas?.GetValueOrDefault(p.Id))).ToList();
 
     // Un archivo escrito a mano puede traer nulls: se comparan como vacíos.
     private static bool SameDatabase(ConnectionProfile a, ConnectionProfile b) =>
@@ -155,11 +172,14 @@ public static class ProfileBackup
     /// <paramref name="password"/>, si se dieron. Un archivo no puede usarse para llevar una contraseña guardada a otro
     /// servidor (si cambia el servidor, la base o el usuario y no trae contraseña, la guardada se olvida) ni para bajar
     /// protecciones: solo lectura, producción y el cifrado de la conexión se conservan (se cambian a mano en el registro).
-    /// El archivo de áreas no se importa: cada PC elige el suyo (una ruta de red ajena se leería sola al conectar).
+    /// La ruta del archivo de áreas no se importa: cada PC elige el suyo (una ruta de red ajena se leería sola al conectar).
+    /// Las áreas que trae el archivo (con <paramref name="areas"/>) van al archivo de esta PC de cada base que todavía no
+    /// tiene; la que ya tiene áreas, o usa un archivo compartido, conserva las suyas.
     /// </summary>
-    public static ProfileImportResult Apply(ProfileStore store, IReadOnlyList<ProfileImportItem> items, bool updateExisting, string? user = null, string? password = null)
+    public static ProfileImportResult Apply(ProfileStore store, IReadOnlyList<ProfileImportItem> items, bool updateExisting, string? user = null, string? password = null,
+        AreaStore? areas = null)
     {
-        int added = 0, updated = 0, skipped = 0, invalid = 0, withPassword = 0, forgotten = 0, kept = 0;
+        int added = 0, updated = 0, skipped = 0, invalid = 0, withPassword = 0, forgotten = 0, kept = 0, areasImported = 0, areasKept = 0, areasFailed = 0;
         var names = store.Load().Select(p => p.Name).ToHashSet(StringComparer.CurrentCultureIgnoreCase);
         foreach (var item in items)
         {
@@ -217,8 +237,29 @@ public static class ProfileBackup
                 store.ForgetPassword(p.Id); // …salvo que ahora apunte a otro servidor, base o usuario
                 forgotten++;
             }
+            if (areas is null || item.Areas is not { Areas.Count: > 0 } imported) continue;
+            if (!string.IsNullOrWhiteSpace(p.AreasFile))
+            {
+                areasKept++; // usa un archivo compartido: no se toca
+                continue;
+            }
+            var own = areas.Load(p);
+            if (own.File.Areas.Count > 0)
+            {
+                areasKept++;
+                continue;
+            }
+            try
+            {
+                areas.Save(areas.PathFor(p), p.Id, imported, own.Stamp, force: true);
+                areasImported++;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                areasFailed++;
+            }
         }
-        return new ProfileImportResult(added, updated, skipped, invalid, withPassword, forgotten, kept);
+        return new ProfileImportResult(added, updated, skipped, invalid, withPassword, forgotten, kept, areasImported, areasKept, areasFailed);
     }
 
     private static bool SameTarget(ConnectionProfile a, ConnectionProfile b) =>

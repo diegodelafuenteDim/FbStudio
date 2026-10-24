@@ -166,7 +166,7 @@ public static class SchemaComparer
         var (a, b) = (s.Field, t.Field);
         var name = Q(a.Name);
         if (a.Type != b.Type || a.CharacterSet != b.CharacterSet)
-            yield return new(PhaseDomains, $"ALTER DOMAIN {name} TYPE {a.Type}{(a.CharacterSet is { } cs ? " CHARACTER SET " + cs : "")};");
+            yield return new(PhaseDomains, $"ALTER DOMAIN {name} TYPE {a.Type}{(a.CharacterSet is { } cs ? " CHARACTER SET " + Q(cs) : "")};");
         if (a.Default != b.Default)
             yield return new(PhaseDomains, a.Default is { } d ? $"ALTER DOMAIN {name} SET DEFAULT {DefaultValue(d)};" : $"ALTER DOMAIN {name} DROP DEFAULT;");
         if (a.NotNull != b.NotNull) yield return new(PhaseDomains, $"ALTER DOMAIN {name} {(a.NotNull ? "SET" : "DROP")} NOT NULL;");
@@ -269,7 +269,7 @@ public static class SchemaComparer
                 if (ColumnType(a) != ColumnType(b))
                 {
                     details.Add(string.Format(CoreStrings.CompareColumnType, a.Name, ColumnType(b), ColumnType(a)));
-                    statements.Add(new(PhaseColumns, $"ALTER TABLE {table} ALTER {col} TYPE {a.Type}{(a.CharacterSet is { } cs ? " CHARACTER SET " + cs : "")}{(a.Collation is { } co ? " COLLATE " + co : "")};"));
+                    statements.Add(new(PhaseColumns, $"ALTER TABLE {table} ALTER {col} TYPE {a.Type}{(a.CharacterSet is { } cs ? " CHARACTER SET " + Q(cs) : "")}{(a.Collation is { } co ? " COLLATE " + co : "")};"));
                 }
                 if (a.Default != b.Default)
                 {
@@ -343,7 +343,7 @@ public static class SchemaComparer
 
     private static string ColumnType(FieldDefinition f) =>
         f.Computed is { } e ? "COMPUTED BY " + Parenthesized(e)
-        : f.Type + (f.CharacterSet is { } cs ? " CHARACTER SET " + cs : "") + (f.Collation is { } co ? " COLLATE " + co : "");
+        : f.Type + (f.CharacterSet is { } cs ? " CHARACTER SET " + Q(cs) : "") + (f.Collation is { } co ? " COLLATE " + co : "");
 
     private static string ConstraintLabel(ConstraintDefinition c) => c.Name.StartsWith("INTEG_", StringComparison.Ordinal)
         ? c.Kind switch { ConstraintKind.PrimaryKey => "PRIMARY KEY", ConstraintKind.Unique => "UNIQUE", ConstraintKind.ForeignKey => "FOREIGN KEY", _ => "CHECK" }

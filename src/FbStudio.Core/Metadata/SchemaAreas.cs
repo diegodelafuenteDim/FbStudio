@@ -17,6 +17,9 @@ public sealed record SchemaArea
     /// sirve cuando los procedimientos no siguen el prefijo de las tablas. Las excepciones igual ganan.
     /// </summary>
     public bool IncludeDependents { get; init; }
+
+    /// <summary>Color del área en el árbol y en la pestaña Áreas (D-86), de la paleta de las carpetas; null: sin color.</summary>
+    public string? Color { get; init; }
 }
 
 /// <summary>El archivo de áreas de una base. No tiene datos de conexión: se puede compartir con otros.</summary>

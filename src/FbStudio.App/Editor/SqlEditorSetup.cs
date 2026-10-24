@@ -142,14 +142,15 @@ public sealed class SqlEditorSetup
     {
         if (string.IsNullOrEmpty(e.Text)) return;
         var c = e.Text[0];
-        if (c is '(' or ',') UpdateSignature(open: true);
+        if (c is '(' or ',' or ' ') UpdateSignature(open: true); // el espacio, por «EXECUTE PROCEDURE P a, b» sin paréntesis
         if (_window is not null) return;
         if (c == '.' || char.IsLetter(c)) ShowCompletion(force: false);
     }
 
     /// <summary>
     /// Ayuda de parámetros (F-33): dentro de los paréntesis de un procedimiento o una función del catálogo, muestra su
-    /// firma con el parámetro actual resaltado. Se abre al escribir «(» o «,»; después solo se actualiza o se cierra.
+    /// firma con el parámetro actual resaltado. Se abre al escribir «(» o «,» (o el espacio después del nombre en un
+    /// EXECUTE PROCEDURE sin paréntesis); después solo se actualiza o se cierra.
     /// </summary>
     private void UpdateSignature(bool open)
     {

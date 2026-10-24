@@ -177,6 +177,7 @@ public partial class EditorTabView : UserControl
         Editor.Options.IndentationSize = s.TabSize;
         Editor.Options.ConvertTabsToSpaces = s.ConvertTabsToSpaces;
         Editor.Options.AllowScrollBelowDocument = s.ScrollPastEnd;
+        Editor.Options.EnableTextDragDrop = true;  // una tabla o una columna arrastradas del árbol escriben su nombre donde se sueltan
         _zoomWithWheel = s.ZoomWithCtrlWheel;
     }
 

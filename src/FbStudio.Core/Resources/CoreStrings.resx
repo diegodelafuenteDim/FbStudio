@@ -246,6 +246,9 @@
   <data name="ImportNoColumns" xml:space="preserve">
     <value>No hay ninguna columna del archivo elegida para importar.</value>
   </data>
+  <data name="ImportTooMuchText" xml:space="preserve">
+    <value>El Excel trae demasiado texto para importarlo de una vez (más de {0:N0} caracteres): partilo en archivos más chicos o guardalo como CSV.</value>
+  </data>
   <data name="InsertScriptHeader" xml:space="preserve">
     <value>Script INSERT generado por FbStudio el {0:yyyy-MM-dd HH:mm}</value>
   </data>

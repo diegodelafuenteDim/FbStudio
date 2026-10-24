@@ -18,6 +18,10 @@
           <SolidColorBrush x:Key="FbsMatchForegroundBrush" Color="#5A4300" />
           <SolidColorBrush x:Key="FbsWarningBackgroundBrush" Color="#FFF3DC" />
           <SolidColorBrush x:Key="FbsDangerBackgroundBrush" Color="#FDE7E7" />
+          <!-- Entornos (F-20): App.ApplyEnvironmentColors los cambia por los elegidos en Opciones. -->
+          <SolidColorBrush x:Key="FbsEnvDevBrush" Color="#2E7D32" />
+          <SolidColorBrush x:Key="FbsEnvTestBrush" Color="#B26A00" />
+          <SolidColorBrush x:Key="FbsEnvProdBrush" Color="#C62828" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
           <SolidColorBrush x:Key="FbsMutedBrush" Color="#9AA5B1" />
@@ -29,8 +33,15 @@
           <SolidColorBrush x:Key="FbsMatchForegroundBrush" Color="#FFE58A" />
           <SolidColorBrush x:Key="FbsWarningBackgroundBrush" Color="#3A2C10" />
           <SolidColorBrush x:Key="FbsDangerBackgroundBrush" Color="#3D1C1C" />
+          <SolidColorBrush x:Key="FbsEnvDevBrush" Color="#66BB6A" />
+          <SolidColorBrush x:Key="FbsEnvTestBrush" Color="#FFB74D" />
+          <SolidColorBrush x:Key="FbsEnvProdBrush" Color="#EF5350" />
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
+      <!-- La franja de la base lleva letra blanca: el mismo color en los dos temas. -->
+      <SolidColorBrush x:Key="FbsBannerDevBrush" Color="#2E7D32" />
+      <SolidColorBrush x:Key="FbsBannerTestBrush" Color="#B26A00" />
+      <SolidColorBrush x:Key="FbsBannerProdBrush" Color="#C62828" />
     </ResourceDictionary>
   </Application.Resources>
 
@@ -57,6 +68,19 @@
     <Style Selector="mi|MaterialIcon.tone.danger">
       <Setter Property="Foreground" Value="{DynamicResource FbsDangerBrush}" />
     </Style>
+    <Style Selector="mi|MaterialIcon.tone.dev">
+      <Setter Property="Foreground" Value="{DynamicResource FbsEnvDevBrush}" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.tone.test">
+      <Setter Property="Foreground" Value="{DynamicResource FbsEnvTestBrush}" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.tone.prod">
+      <Setter Property="Foreground" Value="{DynamicResource FbsEnvProdBrush}" />
+    </Style>
+    <!-- Color propio (una carpeta o un área, F-20 y D-86): va después, así gana sobre el del tono. -->
+    <Style Selector="mi|MaterialIcon.custom">
+      <Setter Property="Foreground" Value="{ReflectionBinding IconBrush}" />
+    </Style>
     <Style Selector="Border.tone">
       <Setter Property="BorderBrush" Value="{DynamicResource FbsMutedBrush}" />
     </Style>
@@ -68,6 +92,15 @@
     </Style>
     <Style Selector="Border.tone.danger">
       <Setter Property="BorderBrush" Value="{DynamicResource FbsDangerBrush}" />
+    </Style>
+    <Style Selector="Border.tone.dev">
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsEnvDevBrush}" />
+    </Style>
+    <Style Selector="Border.tone.test">
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsEnvTestBrush}" />
+    </Style>
+    <Style Selector="Border.tone.prod">
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsEnvProdBrush}" />
     </Style>
   </Application.Styles>
 </Application>

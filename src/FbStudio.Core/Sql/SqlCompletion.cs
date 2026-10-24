@@ -115,7 +115,11 @@ public static class SqlCompletion
     public static SignatureHelp? SignatureAt(string text, int caret, MetadataCatalog catalog)
     {
         if (catalog.Signatures.Count == 0) return null;
-        var tokens = SqlLexer.Tokenize(text[..Math.Clamp(caret, 0, text.Length)]).ToList();
+        var before = text[..Math.Clamp(caret, 0, text.Length)];
+        var tokens = SqlLexer.Tokenize(before).ToList();
+        if (tokens.Count > 0 && tokens[^1].Start + tokens[^1].Length == before.Length && tokens[^1].Kind is SqlTokenKind.Word or SqlTokenKind.QuotedIdentifier
+            && tokens.Count >= 3 && tokens[^2].IsWord("PROCEDURE") && tokens[^3].IsWord("EXECUTE"))
+            return null; // todavía se está escribiendo el nombre
         var open = new Stack<int>();
         for (var i = 0; i < tokens.Count; i++)
         {
@@ -140,7 +144,40 @@ public static class SqlCompletion
             }
             return new SignatureHelp(signature, argument, tokens[paren].Start);
         }
-        return null;
+        return ExecuteProcedureSignature(tokens, catalog);
+    }
+
+    /// <summary>
+    /// «EXECUTE PROCEDURE P a, b» sin paréntesis (Firebird lo acepta): la firma de P y en qué parámetro está, contando las
+    /// comas. Hace falta que ya haya algo después del nombre (un espacio); con RETURNING_VALUES, ya no son parámetros.
+    /// </summary>
+    private static SignatureHelp? ExecuteProcedureSignature(List<SqlToken> tokens, MetadataCatalog catalog)
+    {
+        var start = tokens.FindLastIndex(t => t is { Kind: SqlTokenKind.Symbol, Text: ";" }) + 1;
+        var execute = -1;
+        for (var i = start; i + 2 < tokens.Count; i++)
+            if (tokens[i].IsWord("EXECUTE") && tokens[i + 1].IsWord("PROCEDURE") && tokens[i + 2].Kind is SqlTokenKind.Word or SqlTokenKind.QuotedIdentifier)
+                execute = i;
+        if (execute < 0) return null;
+        var last = execute + 2;
+        var name = Unquote(tokens[last].Text);
+        if (last + 2 < tokens.Count && tokens[last + 1] is { Kind: SqlTokenKind.Symbol, Text: "." } && tokens[last + 2].Kind is SqlTokenKind.Word or SqlTokenKind.QuotedIdentifier)
+        {
+            last += 2;
+            name = name + "." + Unquote(tokens[last].Text);
+        }
+        if (!catalog.Signatures.TryGetValue(name, out var signature)) return null;
+        if (last + 1 < tokens.Count && tokens[last + 1] is { Kind: SqlTokenKind.Symbol, Text: "(" }) return null; // con paréntesis: lo de arriba
+        var depth = 0;
+        var argument = 0;
+        for (var i = last + 1; i < tokens.Count; i++)
+        {
+            if (tokens[i].IsWord("RETURNING_VALUES")) return null;
+            if (tokens[i] is { Kind: SqlTokenKind.Symbol, Text: "(" }) depth++;
+            else if (tokens[i] is { Kind: SqlTokenKind.Symbol, Text: ")" }) depth--;
+            else if (depth == 0 && tokens[i] is { Kind: SqlTokenKind.Symbol, Text: "," }) argument++;
+        }
+        return new SignatureHelp(signature, argument, tokens[last].Start + tokens[last].Length);
     }
 
     /// <summary>Tablas, vistas y procedimientos que aparecen después de FROM o JOIN.</summary>
@@ -200,6 +237,12 @@ public static class SqlCompletion
             }
             if (next.Kind is not (SqlTokenKind.Word or SqlTokenKind.QuotedIdentifier) || KeywordSet.Contains(next.Text) && next.Kind == SqlTokenKind.Word) continue;
             var name = Unquote(next.Text);
+            // De un paquete: FROM PKG.PROC(…) alias
+            if (j + 1 < tokens.Count && tokens[j] is { Kind: SqlTokenKind.Symbol, Text: "." } && tokens[j + 1].Kind is SqlTokenKind.Word or SqlTokenKind.QuotedIdentifier)
+            {
+                name = name + "." + Unquote(tokens[j + 1].Text);
+                j += 2;
+            }
             // Procedimiento seleccionable: FROM PROC(arg1, arg2) alias
             if (j < tokens.Count && tokens[j] is { Kind: SqlTokenKind.Symbol, Text: "(" }) j = MatchingParen(tokens, j) + 1;
             if (ctes.TryGetValue(name, out var cte)) source = cte;

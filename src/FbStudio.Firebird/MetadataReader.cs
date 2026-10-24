@@ -25,6 +25,16 @@ public static class MetadataReader
         ORDER BY p.RDB$PROCEDURE_NAME, pp.RDB$PARAMETER_NUMBER
         """;
 
+    // Los parámetros de salida de los procedimientos de paquetes, como «PKG.PROC» (sus columnas en el FROM).
+    private const string PackageProceduresSql = """
+        SELECT TRIM(p.RDB$PACKAGE_NAME) || '.' || TRIM(p.RDB$PROCEDURE_NAME), TRIM(pp.RDB$PARAMETER_NAME)
+        FROM RDB$PROCEDURES p
+        JOIN RDB$PROCEDURE_PARAMETERS pp ON pp.RDB$PROCEDURE_NAME = p.RDB$PROCEDURE_NAME
+             AND pp.RDB$PACKAGE_NAME = p.RDB$PACKAGE_NAME AND pp.RDB$PARAMETER_TYPE = 1
+        WHERE p.RDB$PACKAGE_NAME IS NOT NULL AND COALESCE(p.RDB$SYSTEM_FLAG, 0) = 0
+        ORDER BY p.RDB$PACKAGE_NAME, p.RDB$PROCEDURE_NAME, pp.RDB$PARAMETER_NUMBER
+        """;
+
     // Firmas (F-33): los parámetros de entrada de cada procedimiento (también los de paquetes), con su tipo o dominio.
     private const string ProcedureInputsSql = """
         SELECT TRIM(p.RDB$PACKAGE_NAME), TRIM(p.RDB$PROCEDURE_NAME), TRIM(pp.RDB$PARAMETER_NAME),
@@ -95,6 +105,7 @@ public static class MetadataReader
 
         var columns = (await Rows(ColumnsSql)).Select(r => (S(r[0])!, S(r[1])!)).ToList();
         var procedures = (await Rows(ProceduresSql)).Select(r => (S(r[0])!, S(r[1]))).ToList();
+        var packageProcedures = (await Rows(PackageProceduresSql)).Select(r => (S(r[0])!, S(r[1]))).ToList();
 
         var signatures = new Dictionary<string, RoutineSignature>(StringComparer.OrdinalIgnoreCase);
         var members = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
@@ -138,7 +149,7 @@ public static class MetadataReader
         var exceptions = (await Rows(ExceptionsSql)).Select(r => S(r[0])!).ToList();
         await tx.CommitAsync(ct);
 
-        return new MetadataCatalog(columns, procedures)
+        return new MetadataCatalog(columns, procedures, packageProcedures)
         {
             Functions = functions.Order(StringComparer.Ordinal).ToList(),
             StoredFunctions = stored.Order(StringComparer.Ordinal).ToList(),

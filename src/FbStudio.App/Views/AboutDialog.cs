@@ -1,16 +1,19 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using FbStudio.App.Resources;
+using Material.Icons;
+using Material.Icons.Avalonia;
 
 namespace FbStudio.App.Views;
 
 /// <summary>
-/// Ayuda → Acerca de FbStudio: versión, autor y licencia (en palabras simples), enlaces al repositorio, a los pedidos y a
-/// las donaciones, los componentes de terceros y la aclaración de que no hay relación con la Firebird Foundation.
+/// Ayuda → Acerca de FbStudio: versión, autor y licencia (en palabras simples), enlaces al repositorio y a los pedidos,
+/// los componentes de terceros y la aclaración de que no hay relación con la Firebird Foundation.
 /// </summary>
 public sealed class AboutDialog : Window
 {
@@ -42,15 +45,25 @@ public sealed class AboutDialog : Window
             },
         };
 
-        var links = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
-        links.Children.Add(Link(Strings.AboutRepository, AppInfo.RepositoryUrl));
-        links.Children.Add(Link(Strings.AboutReport, AppInfo.IssuesUrl));
-        links.Children.Add(Link(Strings.AboutDiscussions, AppInfo.DiscussionsUrl));
+        // Dos columnas parejas: a la izquierda lo de FbStudio, a la derecha lo para escribir en GitHub.
+        var copy = Action(MaterialIconKind.ContentCopy, Strings.AboutCopyInfo, async button =>
+        {
+            if (GetTopLevel(this)?.Clipboard is not { } clipboard) return;
+            await clipboard.SetTextAsync(AppInfo.ReportInfo);
+            Label(button).Text = Strings.AboutCopied;
+        });
+        var links = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), RowDefinitions = new RowDefinitions("Auto,Auto,Auto"), Margin = new Thickness(0, 2, 0, 0) };
+        Place(links, 0, 0, Link(MaterialIconKind.Github, Strings.AboutRepository, AppInfo.RepositoryUrl));
+        Place(links, 1, 0, Action(MaterialIconKind.BullhornOutline, Strings.AboutWhatsNew, _ => new WhatsNewDialog().ShowDialog(this)));
+        Place(links, 2, 0, copy);
+        Place(links, 0, 1, Link(MaterialIconKind.BugOutline, Strings.AboutReportBug, AppInfo.BugReportUrl));
+        Place(links, 1, 1, Link(MaterialIconKind.LightbulbOnOutline, Strings.AboutRequestFeature, AppInfo.FeatureRequestUrl));
+        Place(links, 2, 1, Link(MaterialIconKind.ForumOutline, Strings.AboutDiscussions, AppInfo.DiscussionsUrl));
 
         var thirdParty = new StackPanel { Spacing = 2 };
         foreach (var (name, license) in AppInfo.ThirdParty)
             thirdParty.Children.Add(new TextBlock { Text = $"{name} — {license}", FontSize = 12, Opacity = 0.8, TextWrapping = TextWrapping.Wrap });
-        thirdParty.Children.Add(Link(Strings.AboutThirdPartyDetail, AppInfo.ThirdPartyUrl));
+        thirdParty.Children.Add(Link(MaterialIconKind.OpenInNew, Strings.AboutThirdPartyDetail, AppInfo.ThirdPartyUrl));
 
         var close = new Button { Content = Strings.Close, IsDefault = true, IsCancel = true, HorizontalAlignment = HorizontalAlignment.Right };
         close.Click += (_, _) => Close();
@@ -64,7 +77,7 @@ public sealed class AboutDialog : Window
                 new DockPanel { Children = { Dock(logo), header } },
                 Section(Strings.AboutLicenseTitle,
                     new TextBlock { Text = Strings.AboutLicense, TextWrapping = TextWrapping.Wrap },
-                    Link(Strings.AboutLicenseFull, AppInfo.LicenseUrl)),
+                    Link(MaterialIconKind.ScaleBalance, Strings.AboutLicenseFull, AppInfo.LicenseUrl)),
                 Section(Strings.AboutHelpTitle, new TextBlock { Text = Strings.AboutHelp, TextWrapping = TextWrapping.Wrap }, links),
                 new Expander { Header = Strings.AboutThirdParty, Content = thirdParty, HorizontalAlignment = HorizontalAlignment.Stretch },
                 new TextBlock { Text = Strings.AboutTrademarks, FontSize = 11, Opacity = 0.65, TextWrapping = TextWrapping.Wrap },
@@ -96,19 +109,11 @@ public sealed class AboutDialog : Window
         return panel;
     }
 
-    /// <summary>Un enlace que abre el navegador.</summary>
-    private Button Link(string text, string url)
+    /// <summary>Un enlace que abre el navegador: ícono y texto, alineado a la izquierda.</summary>
+    private Button Link(MaterialIconKind icon, string text, string url)
     {
         _links.Add((text, url));
-        var button = new Button
-        {
-            Content = text,
-            Padding = new Thickness(0, 2, 14, 2),
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
-        };
-        button.Classes.Add("link");
+        var button = Row(icon, text);
         ToolTip.SetTip(button, url);
         button.Click += async (_, _) =>
         {
@@ -116,4 +121,49 @@ public sealed class AboutDialog : Window
         };
         return button;
     }
+
+    /// <summary>Lo mismo que un enlace, pero hace algo en FbStudio (abrir las novedades, copiar la versión).</summary>
+    private Button Action(MaterialIconKind icon, string text, Func<Button, Task> action)
+    {
+        var button = Row(icon, text);
+        button.Click += async (_, _) => await action(button);
+        return button;
+    }
+
+    private static Button Row(MaterialIconKind icon, string text)
+    {
+        var button = new Button
+        {
+            Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal, Spacing = 8,
+                Children =
+                {
+                    new MaterialIcon { Kind = icon, Width = 16, Height = 16, VerticalAlignment = VerticalAlignment.Center },
+                    new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap },
+                },
+            },
+            Padding = new Thickness(0, 3, 12, 3),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+        };
+        button.Classes.Add("link");
+        return button;
+    }
+
+    private static TextBlock Label(Button button) => ((StackPanel)button.Content!).Children.OfType<TextBlock>().First();
+
+    private static void Place(Grid grid, int row, int column, Control control)
+    {
+        Grid.SetRow(control, row);
+        Grid.SetColumn(control, column);
+        grid.Children.Add(control);
+    }
+
+    /// <summary>Los textos de los enlaces y acciones que muestra (para las pruebas).</summary>
+    public IReadOnlyList<string> RowTexts =>
+        Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(this).OfType<Button>().Where(b => b.Classes.Contains("link")).Select(b => Label(b).Text ?? "").ToList();
 }

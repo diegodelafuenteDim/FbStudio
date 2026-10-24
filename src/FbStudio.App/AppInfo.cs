@@ -11,9 +11,12 @@ public static class AppInfo
 
     public const string RepositoryUrl = "https://github.com/diegodelafuenteDim/FbStudio";
     public const string IssuesUrl = RepositoryUrl + "/issues/new/choose";
+    public const string BugReportUrl = RepositoryUrl + "/issues/new?template=bug_report.yml";
+    public const string FeatureRequestUrl = RepositoryUrl + "/issues/new?template=feature_request.yml";
     public const string DiscussionsUrl = RepositoryUrl + "/discussions";
     public const string LicenseUrl = RepositoryUrl + "/blob/main/LICENSE";
     public const string ThirdPartyUrl = RepositoryUrl + "/blob/main/THIRD-PARTY-NOTICES.md";
+    public const string ChangeLogUrl = RepositoryUrl + "/blob/main/CHANGELOG.md";
 
     /// <summary>«0.1.0» y, si se compiló desde git, el commit («0.1.0 · 3d75868»).</summary>
     public static string Version
@@ -27,6 +30,26 @@ public static class AppInfo
             var commit = informational[(plus + 1)..];
             return $"{informational[..plus]} · {(commit.Length > 7 ? commit[..7] : commit)}";
         }
+    }
+
+    /// <summary>Versión y sistema, para pegar en un reporte: «FbStudio 0.2.0 · 3d75868 · Windows 11 … · X64».</summary>
+    public static string ReportInfo =>
+        $"{Name} {Version} · {System.Runtime.InteropServices.RuntimeInformation.OSDescription.Trim()} · {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture}";
+
+    /// <summary>Solo el número («0.1.0»), sin el commit: el de la sección del registro de cambios.</summary>
+    public static string VersionNumber => Version.Split(' ')[0];
+
+    private static IReadOnlyList<Core.ChangeLogVersion>? _changeLog;
+
+    /// <summary>El registro de cambios que va adentro de la app (CHANGELOG.md); vacío si no está.</summary>
+    public static IReadOnlyList<Core.ChangeLogVersion> ChangeLog => _changeLog ??= LoadChangeLog();
+
+    private static IReadOnlyList<Core.ChangeLogVersion> LoadChangeLog()
+    {
+        using var stream = typeof(AppInfo).Assembly.GetManifestResourceStream("FbStudio.CHANGELOG.md");
+        if (stream is null) return [];
+        using var reader = new StreamReader(stream);
+        return Core.ChangeLog.Parse(reader.ReadToEnd());
     }
 
     /// <summary>Componentes de terceros que van con la app (el detalle está en THIRD-PARTY-NOTICES.md).</summary>

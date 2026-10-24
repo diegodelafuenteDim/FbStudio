@@ -62,6 +62,33 @@ public sealed class ImportFileTests : IDisposable
         Assert.Equal(column, ImportFile.ColumnIndex(reference));
 
     [Fact]
+    public void Excel_con_textos_compartidos_y_un_tope_para_no_llenar_la_memoria()
+    {
+        // Un .xlsx mínimo como los de Excel: los textos van en sharedStrings.xml y las celdas los nombran por número.
+        Directory.CreateDirectory(_folder);
+        var path = Path.Combine(_folder, "compartidos.xlsx");
+        const string ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        using (var zip = System.IO.Compression.ZipFile.Open(path, System.IO.Compression.ZipArchiveMode.Create))
+        {
+            void Entry(string name, string xml)
+            {
+                using var w = new StreamWriter(zip.CreateEntry(name).Open(), new UTF8Encoding(false));
+                w.Write(xml);
+            }
+            Entry("xl/workbook.xml", $"<workbook xmlns=\"{ns}\"><sheets><sheet name=\"Hoja1\" sheetId=\"1\"/></sheets></workbook>");
+            Entry("xl/worksheets/sheet1.xml", $"<worksheet xmlns=\"{ns}\"><sheetData><row r=\"1\"><c r=\"A1\" t=\"s\"><v>0</v></c></row>"
+                + "<row r=\"2\"><c r=\"A2\" t=\"s\"><v>1</v></c></row></sheetData></worksheet>");
+            Entry("xl/sharedStrings.xml", $"<sst xmlns=\"{ns}\"><si><t>NOMBRE</t></si><si><t>Ana María</t></si></sst>");
+        }
+
+        var file = ImportFile.Excel(path);
+        Assert.Equal(["NOMBRE"], file.Headers);
+        Assert.Equal("Ana María", Assert.Single(file.Rows())[0]);
+        var error = Assert.Throws<InvalidDataException>(() => ImportFile.Excel(path, 0, true, maxTextChars: 8));
+        Assert.Contains("demasiado texto", error.Message);
+    }
+
+    [Fact]
     public void Excel_de_ida_y_vuelta_con_numeros_fechas_y_textos()
     {
         Directory.CreateDirectory(_folder);

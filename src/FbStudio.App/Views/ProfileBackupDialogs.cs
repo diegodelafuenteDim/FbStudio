@@ -9,8 +9,8 @@ using FbStudio.Workspace;
 
 namespace FbStudio.App.Views;
 
-/// <summary>Lo elegido en «Exportar registros…»: cuáles, si van con usuario y la frase (si van con contraseñas).</summary>
-public sealed record ProfileExportChoice(IReadOnlyList<Guid> ProfileIds, bool IncludeUser, string? Passphrase);
+/// <summary>Lo elegido en «Exportar registros…»: cuáles, si van con usuario, la frase (si van con contraseñas) y si van las áreas.</summary>
+public sealed record ProfileExportChoice(IReadOnlyList<Guid> ProfileIds, bool IncludeUser, string? Passphrase, bool IncludeAreas = true);
 
 /// <summary>Lo elegido al importar: si se actualizan los que ya están y el usuario para los que vienen sin él.</summary>
 public sealed record ProfileImportChoice(bool UpdateExisting, string? User, string? Password);
@@ -73,6 +73,7 @@ public sealed class ProfileExportDialog : Window
         // Con TextBlock adentro para que el texto largo se parta en renglones en vez de cortarse.
         IncludeUser = new CheckBox { Content = BackupDialog.Text(Strings.BackupIncludeUser), IsChecked = true };
         IncludePasswords = new CheckBox { Content = BackupDialog.Text(Strings.BackupIncludePasswords), IsChecked = false };
+        IncludeAreas = new CheckBox { Content = BackupDialog.Text(Strings.BackupIncludeAreas), IsChecked = true };
         Phrase = new TextBox { PasswordChar = '●' };
         Repeat = new TextBox { PasswordChar = '●' };
         var phrasePanel = new StackPanel
@@ -114,7 +115,7 @@ public sealed class ProfileExportDialog : Window
                 }
                 if (phrase != Repeat.Text) { BackupDialog.Show(error, Strings.BackupPhraseMismatch); return; }
             }
-            Close(new ProfileExportChoice(ids, IncludeUser.IsChecked == true, phrase));
+            Close(new ProfileExportChoice(ids, IncludeUser.IsChecked == true, phrase, IncludeAreas.IsChecked == true));
         }
 
         Content = new StackPanel
@@ -131,6 +132,7 @@ public sealed class ProfileExportDialog : Window
                 IncludeUser,
                 IncludePasswords,
                 phrasePanel,
+                IncludeAreas,
                 BackupDialog.Text(Strings.BackupExportNote, 0.75),
                 error,
                 BackupDialog.Buttons(ok, cancel),
@@ -140,6 +142,7 @@ public sealed class ProfileExportDialog : Window
 
     public CheckBox IncludeUser { get; }
     public CheckBox IncludePasswords { get; }
+    public CheckBox IncludeAreas { get; }
     public TextBox Phrase { get; }
     public TextBox Repeat { get; }
 }

@@ -38,12 +38,21 @@ public sealed partial class TreeNode : ObservableObject
     [ObservableProperty] private string? _detail;
     [ObservableProperty] private MaterialIconKind _icon;
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsSuccessTone), nameof(IsWarningTone), nameof(IsDangerTone))]
+    [NotifyPropertyChangedFor(nameof(IsSuccessTone), nameof(IsWarningTone), nameof(IsDangerTone), nameof(IsDevTone), nameof(IsTestTone), nameof(IsProdTone))]
     private Tone _tone;
 
     public bool IsSuccessTone => Tone == Tone.Success;
     public bool IsWarningTone => Tone == Tone.Warning;
     public bool IsDangerTone => Tone == Tone.Danger;
+    public bool IsDevTone => Tone == Tone.Development;
+    public bool IsTestTone => Tone == Tone.Test;
+    public bool IsProdTone => Tone == Tone.Production;
+
+    /// <summary>Color propio del ícono (el de una carpeta, F-20); null: el del tono.</summary>
+    public Avalonia.Media.IBrush? IconBrush { get; init; }
+
+    /// <summary>Con color propio, el ícono lleva la clase «custom» y un estilo le pone <see cref="IconBrush"/> (si no, queda el del tono).</summary>
+    public bool HasIconBrush => IconBrush is not null;
     [ObservableProperty] private bool _isExpanded;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isActive;
@@ -247,11 +256,17 @@ public sealed partial class DatabaseTreeViewModel : ObservableObject, IAsyncDisp
         if (IsConnected(db.Profile!.Id)) DatabaseActivated?.Invoke(db.Profile);
     }
 
+    /// <summary>El color propio de una carpeta (F-20), por su ruta; null: sin color propio.</summary>
+    public Func<string, string?>? FolderColorFor { get; set; }
+
     /// <summary>Lo que se leyó del servidor al conectar la base (null si no está conectada o no se pudo leer).</summary>
     public ServerInfo? ServerFor(Guid profileId) => _explorers.TryGetValue(profileId, out var explorer) ? explorer.Server : null;
 
     /// <summary>Se leyeron los datos del servidor de una base (versión, tipo, cifrado de la conexión).</summary>
     public event Action<Guid>? ServerInfoLoaded;
+
+    /// <summary>Se conectó o se desconectó una base (la franja muestra las otras conectadas, F-21).</summary>
+    public event Action? ConnectionsChanged;
 
     public Task DisconnectAsync(Guid profileId) =>
         Flatten(_roots, all: true).FirstOrDefault(n => n.Kind == TreeNodeKind.Database && n.Profile!.Id == profileId) is { } db
@@ -270,6 +285,7 @@ public sealed partial class DatabaseTreeViewModel : ObservableObject, IAsyncDisp
         db.AlertDetail = null;
         SetDatabaseIcon(db);
         Refresh();
+        ConnectionsChanged?.Invoke();
     }
 
     public async Task RefreshDatabaseAsync(TreeNode db)
@@ -320,6 +336,7 @@ public sealed partial class DatabaseTreeViewModel : ObservableObject, IAsyncDisp
             {
                 Kind = TreeNodeKind.Folder, Level = level, Parent = parent, Text = ProfileFolders.Name(path), FolderPath = path,
                 IsCustomFolder = true, IsExpanded = true, Icon = MaterialIconKind.Folder,
+                IconBrush = FolderColorFor?.Invoke(path) is { } hex ? new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(hex)) : null,
             };
             folder.Children =
             [
@@ -404,6 +421,7 @@ public sealed partial class DatabaseTreeViewModel : ObservableObject, IAsyncDisp
                     SetDatabaseIcon(node);
                     Status = string.Format(Strings.TreeConnectedTo, profile.Name) + (server?.Warning is { } warning ? " " + warning : "");
                     ServerInfoLoaded?.Invoke(profile.Id);
+                    ConnectionsChanged?.Invoke();
                     return true;
                 }
                 case TreeNodeKind.Category:
@@ -424,7 +442,7 @@ public sealed partial class DatabaseTreeViewModel : ObservableObject, IAsyncDisp
                     var membership = new AreaMembership(areas, objects, uses);
                     node.Children =
                     [
-                        .. areas.Select((a, i) => AreaNode(node, a.Name, membership.Members(i), MaterialIconKind.Group)),
+                        .. areas.Select((a, i) => AreaNode(node, a.Name, membership.Members(i), MaterialIconKind.Group, a.Color)),
                         AreaNode(node, Strings.AreasUnassigned, membership.Unassigned, MaterialIconKind.HelpCircleOutline),
                     ];
                     Status = string.Format(Strings.AreasLoaded, areas.Count, objects.Count);
@@ -481,12 +499,13 @@ public sealed partial class DatabaseTreeViewModel : ObservableObject, IAsyncDisp
     };
 
     /// <summary>Un área con sus objetos por tipo, ya cargados (un tipo sin objetos en el área no aparece).</summary>
-    private static TreeNode AreaNode(TreeNode parent, string name, IReadOnlyList<DbObject> members, MaterialIconKind icon)
+    private static TreeNode AreaNode(TreeNode parent, string name, IReadOnlyList<DbObject> members, MaterialIconKind icon, string? color = null)
     {
         var area = new TreeNode
         {
             Kind = TreeNodeKind.Area, Level = parent.Level + 1, Parent = parent, Text = name, Detail = members.Count.ToString("N0"),
             Icon = icon, Total = members.Count,
+            IconBrush = color is null ? null : new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(color)),
         };
         area.Children = members.GroupBy(o => o.Kind).OrderBy(g => g.Key).Select(g =>
         {
@@ -634,6 +653,17 @@ public sealed partial class DatabaseTreeViewModel : ObservableObject, IAsyncDisp
         : 3;
 
     public static string QuoteIdentifier(string name) => FbStudio.Core.Sql.SqlIdentifier.Quote(name);
+
+    /// <summary>
+    /// Lo que escribe en el editor un objeto o una columna arrastrados hasta ahí (o con «Insertar nombre»): su nombre,
+    /// entre comillas si hace falta. null: el nodo no se lleva al editor (una base o una carpeta se arrastran dentro del árbol).
+    /// </summary>
+    public static string? EditorText(TreeNode node) => node switch
+    {
+        { Kind: TreeNodeKind.Object, Object: { } o } => QuoteIdentifier(o.Name),
+        { Kind: TreeNodeKind.Column, Column: { } c } => QuoteIdentifier(c.Name),
+        _ => null,
+    };
 
     public async ValueTask DisposeAsync()
     {

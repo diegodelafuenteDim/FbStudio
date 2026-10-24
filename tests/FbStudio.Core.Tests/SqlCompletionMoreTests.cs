@@ -7,7 +7,8 @@ public class SqlCompletionMoreTests
 {
     private static readonly MetadataCatalog Catalog = new(
         [("TURNOS", "CODIGO"), ("TURNOS", "FECHA"), ("TURNOS", "MEDICO"), ("PACIENTES", "CODIGO"), ("PACIENTES", "EMAIL")],
-        [("TURNOS_LIBRES", "FECHA"), ("TURNOS_LIBRES", "HORA"), ("ACTUALIZAR", null)])
+        [("TURNOS_LIBRES", "FECHA"), ("TURNOS_LIBRES", "HORA"), ("ACTUALIZAR", null)],
+        [("PKG_TURNOS.DESDE", "FECHA"), ("PKG_TURNOS.DESDE", "MEDICO")])
     {
         Functions = ["F_DOBLE", "F_EDAD"],
         Packages = ["PKG_TURNOS"],
@@ -94,5 +95,24 @@ public class SqlCompletionMoreTests
         Assert.Null(At("SELECT F_DOBLE(1)| FROM TURNOS"));                                          // ya se cerró
         Assert.Null(At("SELECT COUNT(|"));
         Assert.Null(At("SELECT F_DOBLE(1; SELECT (|"));                                             // otra sentencia
+
+        // EXECUTE PROCEDURE sin paréntesis: después del nombre y un espacio, y contando las comas.
+        Assert.Equal(("TURNOS_LIBRES", 0, "EXECUTE PROCEDURE TURNOS_LIBRES".Length), At("EXECUTE PROCEDURE TURNOS_LIBRES |") is { } e
+            ? (e.Signature.Name, e.Argument, e.OpenParen) : default);
+        Assert.Equal(1, At("execute procedure turnos_libres '2026-01-01', |")!.Argument);
+        Assert.Equal("PKG_TURNOS.RECALCULAR", At("EXECUTE PROCEDURE PKG_TURNOS.RECALCULAR |")!.Signature.Name);
+        Assert.Null(At("EXECUTE PROCEDURE TURNOS_LIBRES|"));                                       // todavía se escribe el nombre
+        Assert.Null(At("EXECUTE PROCEDURE TURNOS_LIBRES 1, 2 RETURNING_VALUES |"));
+        Assert.Equal(1, At("EXECUTE PROCEDURE TURNOS_LIBRES(1, |")!.Argument);                     // con paréntesis, como siempre
+        Assert.Null(At("EXECUTE PROCEDURE OTRO |"));                                               // uno que no conoce
+    }
+
+    [Fact]
+    public void Columnas_de_un_procedimiento_de_paquete_en_el_FROM()
+    {
+        Assert.Equal(["FECHA", "MEDICO"], Texts("SELECT d.| FROM PKG_TURNOS.DESDE(1) d"));
+        Assert.Equal(["FECHA", "MEDICO"], Texts("SELECT d.| FROM PKG_TURNOS.DESDE(1) AS d JOIN TURNOS t ON t.FECHA = d.FECHA"));
+        Assert.DoesNotContain("PKG_TURNOS.DESDE", Catalog.Tables);                                   // no es una tabla
+        Assert.DoesNotContain("PKG_TURNOS.DESDE", Catalog.Procedures);                               // se ofrece dentro del paquete
     }
 }

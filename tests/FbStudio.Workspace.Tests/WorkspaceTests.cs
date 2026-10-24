@@ -98,6 +98,30 @@ public sealed class WorkspaceTests : IDisposable
     }
 
     [Fact]
+    public void Colores_propios_solo_de_la_paleta_y_las_carpetas_sin_distinguir_mayusculas()
+    {
+        var settings = new AppSettings
+        {
+            EnvironmentColors = new()
+            {
+                [ProfileEnvironment.Desarrollo] = "#1565c0",
+                [ProfileEnvironment.Prueba] = "#C62828",                              // un rojo fuera de producción: no
+                [ProfileEnvironment.Produccion] = "#C62828",                          // el de siempre: no se guarda
+            },
+            FolderColors = new() { ["Clientes/Norte/"] = "#00796B", ["Rojas"] = "#B71C1C", [" "] = "#1565C0" },
+        }.Normalized();
+        Assert.Equal(new Dictionary<ProfileEnvironment, string> { [ProfileEnvironment.Desarrollo] = "#1565C0" }, settings.EnvironmentColors);
+        Assert.Equal("#00796B", Assert.Single(settings.FolderColors!).Value);
+        Assert.Equal(new AppSettings(), new AppSettings { EnvironmentColors = new() { [ProfileEnvironment.Produccion] = "#C62828" } }.Normalized());
+
+        var store = new SettingsStore(_folder);
+        store.Save(settings);
+        var again = new SettingsStore(_folder).Current;
+        Assert.Equal("#1565C0", again.EnvironmentColors![ProfileEnvironment.Desarrollo]);
+        Assert.Equal("#00796B", again.FolderColors!["CLIENTES/NORTE"]);              // sin distinguir mayúsculas, también al releer
+    }
+
+    [Fact]
     public void Opciones_se_guardan_y_se_vuelven_a_leer()
     {
         var store = new SettingsStore(_folder);

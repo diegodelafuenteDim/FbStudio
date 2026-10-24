@@ -12,16 +12,24 @@ public enum Tone
     Success,
     Warning,
     Danger,
+
+    // Los entornos tienen sus propios pinceles (FbsEnv…Brush): el color se puede cambiar en Opciones (F-20).
+    Development,
+    Test,
+    Production,
 }
 
 public static class Tones
 {
-    /// <summary>Verde desarrollo, naranja prueba, rojo producción: la misma convención en el árbol, las pestañas y la franja.</summary>
+    /// <summary>
+    /// El color de cada entorno (de fábrica verde desarrollo, naranja prueba, rojo producción): la misma convención en el
+    /// árbol, las pestañas y la franja.
+    /// </summary>
     public static Tone ForEnvironment(ProfileEnvironment? environment) => environment switch
     {
-        ProfileEnvironment.Produccion => Tone.Danger,
-        ProfileEnvironment.Prueba => Tone.Warning,
-        ProfileEnvironment.Desarrollo => Tone.Success,
+        ProfileEnvironment.Produccion => Tone.Production,
+        ProfileEnvironment.Prueba => Tone.Test,
+        ProfileEnvironment.Desarrollo => Tone.Development,
         _ => Tone.Muted,
     };
 }

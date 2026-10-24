@@ -1,3 +1,4 @@
+using FbStudio.Core.Metadata;
 using FbStudio.Core.Profiles;
 
 namespace FbStudio.Workspace.Tests;
@@ -196,6 +197,38 @@ public sealed class ProfileBackupTests : IDisposable
         Assert.True(target.Load().Single(p => p.Id == same.Id).ReadOnly);
         Assert.Equal("clave-stock", target.GetPassword(same.Id));                   // mismo servidor: la conserva
         Assert.Null(target.Load().Single(p => p.Name == "Nueva").AreasFile);
+    }
+
+    [Fact]
+    public void Las_areas_viajan_con_los_registros_y_no_pisan_las_que_ya_hay()
+    {
+        var origin = Origin();
+        var originAreas = new AreaStore(Path.Combine(_folder, "areas-origen"));
+        var clinica = origin.Load().Single(p => p.Name == "Clinica");
+        var stock = origin.Load().Single(p => p.Name == "Stock");
+        var area = new SchemaArea { Name = "Laboratorio", Rules = ["LAB_*"] };
+        originAreas.Save(originAreas.PathFor(clinica), clinica.Id, new SchemaAreaFile { Areas = [area] }, null);
+        originAreas.Save(originAreas.PathFor(stock), stock.Id, new SchemaAreaFile { Areas = [new SchemaArea { Name = "Depósito", Rules = ["DEP_*"] }] }, null);
+
+        foreach (var phrase in new[] { null, Phrase })                                  // sin cifrar y cifrado
+        {
+            ProfileBackup.Export(File("b.json"), origin.Load(), includeUser: phrase is not null, origin.GetPassword, phrase, p => originAreas.Load(p).File);
+            var content = ProfileBackup.Open(ProfileBackup.Read(File("b.json")), phrase);
+            Assert.Equal(2, content.Areas.Count);                                      // «Sin clave» no tiene áreas: no viaja nada
+
+            // Otra PC: «Stock» ya está registrada y tiene sus propias áreas.
+            var target = Store("destino-" + (phrase is null ? "plano" : "cifrado"));
+            var targetAreas = new AreaStore(Path.Combine(_folder, "areas-destino-" + (phrase is null ? "plano" : "cifrado")));
+            var mine = P("Stock mío", "stock");
+            target.Upsert(mine, null);
+            targetAreas.Save(targetAreas.PathFor(mine), mine.Id, new SchemaAreaFile { Areas = [new SchemaArea { Name = "Mía", Rules = ["X_*"] }] }, null);
+
+            var result = ProfileBackup.Apply(target, ProfileBackup.Plan(target.Load(), content), updateExisting: true, "JPEREZ", "suya", targetAreas);
+            Assert.Equal((1, 1, 0), (result.AreasImported, result.AreasKept, result.AreasFailed));
+            var imported = target.Load().Single(p => p.Name == "Clinica");
+            Assert.Equal(["Laboratorio"], targetAreas.Load(imported).File.Areas.Select(a => a.Name));
+            Assert.Equal(["Mía"], targetAreas.Load(mine).File.Areas.Select(a => a.Name)); // la que ya tenía, intacta
+        }
     }
 
     public void Dispose()

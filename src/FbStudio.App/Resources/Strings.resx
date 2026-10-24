@@ -5,14 +5,20 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AboutCopied" xml:space="preserve">
+    <value>Copiado: pegalo en el reporte</value>
+  </data>
+  <data name="AboutCopyInfo" xml:space="preserve">
+    <value>Copiar versión y sistema</value>
+  </data>
   <data name="AboutDiscussions" xml:space="preserve">
     <value>Preguntas e ideas</value>
   </data>
   <data name="AboutHelp" xml:space="preserve">
-    <value>Los errores y los pedidos de funciones se cargan en GitHub; las dudas y las ideas, en Discussions.</value>
+    <value>Los errores y los pedidos se cargan en GitHub, en español o en inglés; las dudas y las ideas, en Discussions.</value>
   </data>
   <data name="AboutHelpTitle" xml:space="preserve">
-    <value>Errores, pedidos y preguntas</value>
+    <value>Ayuda y comentarios</value>
   </data>
   <data name="AboutLicense" xml:space="preserve">
     <value>Apache 2.0 con la condición «Commons Clause»: se puede usar gratis (también en empresas), modificar y compartir, pero no vender.</value>
@@ -26,8 +32,14 @@
   <data name="AboutReport" xml:space="preserve">
     <value>Reportar un error o pedir una función</value>
   </data>
+  <data name="AboutReportBug" xml:space="preserve">
+    <value>Reportar un error</value>
+  </data>
   <data name="AboutRepository" xml:space="preserve">
-    <value>Repositorio</value>
+    <value>Código fuente en GitHub</value>
+  </data>
+  <data name="AboutRequestFeature" xml:space="preserve">
+    <value>Pedir una función</value>
   </data>
   <data name="AboutTagline" xml:space="preserve">
     <value>IDE y herramienta de administración para bases Firebird, libre y gratis.</value>
@@ -47,6 +59,18 @@
   <data name="AboutVersion" xml:space="preserve">
     <value>Versión {0}</value>
   </data>
+  <data name="AboutWhatsNew" xml:space="preserve">
+    <value>Novedades de esta versión</value>
+  </data>
+  <data name="AgeHoursMinutes" xml:space="preserve">
+    <value>{0} h {1:00} min</value>
+  </data>
+  <data name="AgeMinutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="AgeUnderAMinute" xml:space="preserve">
+    <value>menos de 1 min</value>
+  </data>
   <data name="AreasAddTo" xml:space="preserve">
     <value>Agregar a</value>
   </data>
@@ -61,6 +85,9 @@
   </data>
   <data name="AreasByUseCount" xml:space="preserve">
     <value>{0:N0} por lo que usan</value>
+  </data>
+  <data name="AreasColor" xml:space="preserve">
+    <value>Color:</value>
   </data>
   <data name="AreasConflict" xml:space="preserve">
     <value>El archivo de áreas cambió desde que lo abriste (¿lo guardó otra persona?). Si lo reemplazás, se pierden esos cambios; con «Recargar» los ves primero.</value>
@@ -221,8 +248,20 @@
   <data name="AreasUseOwnFile" xml:space="preserve">
     <value>Volver al archivo de esta PC</value>
   </data>
+  <data name="AutoCommittedSuffix" xml:space="preserve">
+    <value> · confirmado (autocommit)</value>
+  </data>
   <data name="BackupAll" xml:space="preserve">
     <value>Todos</value>
+  </data>
+  <data name="BackupAreasFailed" xml:space="preserve">
+    <value>No se pudieron guardar las áreas de {0}.</value>
+  </data>
+  <data name="BackupAreasImported" xml:space="preserve">
+    <value>{0} recibieron sus áreas.</value>
+  </data>
+  <data name="BackupAreasKept" xml:space="preserve">
+    <value>{0} ya tenían áreas: se dejaron las suyas.</value>
   </data>
   <data name="BackupChooseLabel" xml:space="preserve">
     <value>Registros a exportar:</value>
@@ -241,6 +280,9 @@
   </data>
   <data name="BackupExported" xml:space="preserve">
     <value>Registros exportados: {0}, a {1}.</value>
+  </data>
+  <data name="BackupExportedAreas" xml:space="preserve">
+    <value>Con las áreas de {0} bases.</value>
   </data>
   <data name="BackupExportedWithPasswords" xml:space="preserve">
     <value>Registros exportados: {0} ({1} con contraseña, cifrada), a {2}.</value>
@@ -268,6 +310,9 @@
   </data>
   <data name="BackupImportTitle" xml:space="preserve">
     <value>Importar registros</value>
+  </data>
+  <data name="BackupIncludeAreas" xml:space="preserve">
+    <value>Incluir las áreas de cada base (al importar, las reciben las bases que todavía no tienen)</value>
   </data>
   <data name="BackupIncludePasswords" xml:space="preserve">
     <value>Incluir también mi contraseña de cada conexión (el archivo va cifrado con una frase)</value>
@@ -320,6 +365,9 @@
   <data name="BackupWithPasswords" xml:space="preserve">
     <value>Con contraseña: {0} (se guardan en el llavero de este equipo).</value>
   </data>
+  <data name="BannerAlsoConnected" xml:space="preserve">
+    <value>También conectadas:</value>
+  </data>
   <data name="BannerEncrypted" xml:space="preserve">
     <value> · conexión cifrada</value>
   </data>
@@ -337,6 +385,9 @@
   </data>
   <data name="BannerNotEncryptedTip" xml:space="preserve">
     <value>La conexión con el servidor va sin cifrar: las consultas y los datos viajan legibles por la red. Para exigir el cifrado, en el registro elegí «Obligatorio (Required)» en «Cifrado de la conexión» (el servidor tiene que aceptarlo).</value>
+  </data>
+  <data name="BannerOtherTip" xml:space="preserve">
+    <value>{0} · {1}. Clic para ir a su pestaña (o abrir una consulta en ella).</value>
   </data>
   <data name="BannerProduction" xml:space="preserve">
     <value>PRODUCCIÓN</value>
@@ -385,6 +436,54 @@
   </data>
   <data name="CloseWhileRunning" xml:space="preserve">
     <value>Hay una ejecución en curso: cancelala (Esc) antes de cerrar la pestaña.</value>
+  </data>
+  <data name="ColorBlue" xml:space="preserve">
+    <value>Azul</value>
+  </data>
+  <data name="ColorBrightRed" xml:space="preserve">
+    <value>Rojo vivo</value>
+  </data>
+  <data name="ColorBrown" xml:space="preserve">
+    <value>Marrón</value>
+  </data>
+  <data name="ColorCrimson" xml:space="preserve">
+    <value>Carmesí</value>
+  </data>
+  <data name="ColorCyan" xml:space="preserve">
+    <value>Turquesa</value>
+  </data>
+  <data name="ColorDarkGreen" xml:space="preserve">
+    <value>Verde oscuro</value>
+  </data>
+  <data name="ColorDarkRed" xml:space="preserve">
+    <value>Rojo oscuro</value>
+  </data>
+  <data name="ColorGreen" xml:space="preserve">
+    <value>Verde</value>
+  </data>
+  <data name="ColorIndigo" xml:space="preserve">
+    <value>Índigo</value>
+  </data>
+  <data name="ColorOlive" xml:space="preserve">
+    <value>Oliva</value>
+  </data>
+  <data name="ColorOrange" xml:space="preserve">
+    <value>Naranja</value>
+  </data>
+  <data name="ColorPurple" xml:space="preserve">
+    <value>Violeta</value>
+  </data>
+  <data name="ColorRed" xml:space="preserve">
+    <value>Rojo</value>
+  </data>
+  <data name="ColorSlate" xml:space="preserve">
+    <value>Gris azulado</value>
+  </data>
+  <data name="ColorTeal" xml:space="preserve">
+    <value>Verde azulado</value>
+  </data>
+  <data name="ColorWine" xml:space="preserve">
+    <value>Bordó</value>
   </data>
   <data name="CommitDone" xml:space="preserve">
     <value>Commit hecho.</value>
@@ -620,6 +719,9 @@
   <data name="DataApplyConflict" xml:space="preserve">
     <value>No se guardó nada: la fila {0} la cambió o la borró otro usuario desde que se leyó. Recargá y volvé a hacer el cambio.</value>
   </data>
+  <data name="DataApplyCount" xml:space="preserve">
+    <value>Aplicar ({0})</value>
+  </data>
   <data name="DataApplyDeletes" xml:space="preserve">
     <value>Vas a borrar {0} fila(s) de {1}.</value>
   </data>
@@ -701,6 +803,9 @@
   <data name="DataPending" xml:space="preserve">
     <value>{0} fila(s) cambiadas · {1} para borrar · {2} nueva(s)</value>
   </data>
+  <data name="DataPendingBar" xml:space="preserve">
+    <value>Hay cambios sin aplicar: no se guardan (ni bloquean nada) hasta «Aplicar», arriba a la derecha. Con «Generar script…» ves los comandos para copiarlos o llevarlos a una consulta; «Descartar» los deja sin hacer. El Commit de la barra de arriba es para las consultas.</value>
+  </data>
   <data name="DataPendingHint" xml:space="preserve">
     <value>Cambios pendientes: no se guardan (ni bloquean nada) hasta «Aplicar».</value>
   </data>
@@ -722,6 +827,9 @@
   <data name="DataPreviewTitle" xml:space="preserve">
     <value>Comandos para aplicar en {0}</value>
   </data>
+  <data name="DataPreviewWithCommit" xml:space="preserve">
+    <value>Terminar con COMMIT (al copiar o llevar a una consulta; «Ejecutar» siempre confirma)</value>
+  </data>
   <data name="DataProfileReadOnly" xml:space="preserve">
     <value>Perfil de solo lectura: los datos no se editan.</value>
   </data>
@@ -731,8 +839,14 @@
   <data name="DataRowChanged" xml:space="preserve">
     <value>La fila cambió o ya no existe.</value>
   </data>
+  <data name="DataScript" xml:space="preserve">
+    <value>Generar script…</value>
+  </data>
   <data name="DataScriptTabTitle" xml:space="preserve">
     <value>Cambios en {0}</value>
+  </data>
+  <data name="DataScriptTip" xml:space="preserve">
+    <value>Los comandos de los cambios pendientes, para copiarlos, llevarlos a una consulta (con o sin COMMIT al final) o ejecutarlos.</value>
   </data>
   <data name="DataTab" xml:space="preserve">
     <value>Datos</value>
@@ -1370,6 +1484,9 @@
   <data name="GridGroupHint" xml:space="preserve">
     <value>Arrastrá un encabezado acá (o clic derecho → Agrupar) para agrupar por esa columna</value>
   </data>
+  <data name="GridHideColumn" xml:space="preserve">
+    <value>Ocultar esta columna</value>
+  </data>
   <data name="GridMaximum" xml:space="preserve">
     <value>Máximo</value>
   </data>
@@ -1414,6 +1531,12 @@
   </data>
   <data name="GridSetNull" xml:space="preserve">
     <value>Poner NULL</value>
+  </data>
+  <data name="GridShowAllColumns" xml:space="preserve">
+    <value>Mostrar todas</value>
+  </data>
+  <data name="GridShowHidden" xml:space="preserve">
+    <value>Mostrar columnas ocultas ({0})</value>
   </data>
   <data name="GridSortAscending" xml:space="preserve">
     <value>Orden ascendente</value>
@@ -1570,6 +1693,15 @@
   </data>
   <data name="ImportTabTitle" xml:space="preserve">
     <value>Importar · {0}</value>
+  </data>
+  <data name="IsolationReadCommitted" xml:space="preserve">
+    <value>Read committed</value>
+  </data>
+  <data name="IsolationSnapshot" xml:space="preserve">
+    <value>Snapshot</value>
+  </data>
+  <data name="IsolationTableStability" xml:space="preserve">
+    <value>Snapshot table stability</value>
   </data>
   <data name="KeepEditing" xml:space="preserve">
     <value>Seguir editando</value>
@@ -2189,6 +2321,9 @@
   <data name="MenuViewStats" xml:space="preserve">
     <value>_Estadísticas</value>
   </data>
+  <data name="MenuWhatsNew" xml:space="preserve">
+    <value>Novedades</value>
+  </data>
   <data name="MessagesTab" xml:space="preserve">
     <value>Mensajes</value>
   </data>
@@ -2477,6 +2612,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="NewTabTip" xml:space="preserve">
     <value>Pestaña de consulta nueva en la misma base (Ctrl+T)</value>
   </data>
+  <data name="NoColor" xml:space="preserve">
+    <value>Sin color</value>
+  </data>
   <data name="NoDatabase" xml:space="preserve">
     <value>Sin base</value>
   </data>
@@ -2545,6 +2683,12 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="OptionsEditor" xml:space="preserve">
     <value>Editor</value>
+  </data>
+  <data name="OptionsEnvironmentColors" xml:space="preserve">
+    <value>Colores de los entornos</value>
+  </data>
+  <data name="OptionsEnvironmentColorsNote" xml:space="preserve">
+    <value>En la franja de la base, las pestañas y el árbol. Todos se leen con letra blanca, y los rojos quedan solo para producción. Las carpetas propias se colorean desde su menú en el árbol.</value>
   </data>
   <data name="OptionsFont" xml:space="preserve">
     <value>Letra</value>
@@ -2665,6 +2809,15 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="OptionsTitle" xml:space="preserve">
     <value>Opciones</value>
+  </data>
+  <data name="OptionsTransactionDanger" xml:space="preserve">
+    <value>…y rojo, con un aviso, a los</value>
+  </data>
+  <data name="OptionsTransactionNote" xml:space="preserve">
+    <value>En la franja de la base se ve hace cuánto está abierta la transacción de la pestaña. Con varias personas, una transacción olvidada traba la OAT y la recolección de basura del servidor.</value>
+  </data>
+  <data name="OptionsTransactionWarn" xml:space="preserve">
+    <value>Transacción de escritura abierta: ámbar a los</value>
   </data>
   <data name="OptionsZoom" xml:space="preserve">
     <value>Ctrl + rueda del mouse agranda o achica la letra (Ctrl+0 la vuelve al tamaño elegido)</value>
@@ -4042,6 +4195,9 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="ToolSearchTip" xml:space="preserve">
     <value>Buscar en metadatos: fuentes, nombres, columnas y descripciones (Ctrl+Shift+F)</value>
   </data>
+  <data name="TraceAnalysisExported" xml:space="preserve">
+    <value>Análisis exportado: {0} consultas, a {1}.</value>
+  </data>
   <data name="TraceAnalysisTab" xml:space="preserve">
     <value>Análisis por consulta</value>
   </data>
@@ -4141,6 +4297,9 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TraceEventsTab" xml:space="preserve">
     <value>Eventos</value>
   </data>
+  <data name="TraceExportAnalysis" xml:space="preserve">
+    <value>Exportar análisis a Excel…</value>
+  </data>
   <data name="TraceFailed" xml:space="preserve">
     <value>Error: {0}</value>
   </data>
@@ -4158,6 +4317,9 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   </data>
   <data name="TraceNoReason" xml:space="preserve">
     <value>no lo dijo</value>
+  </data>
+  <data name="TraceNothingToExport" xml:space="preserve">
+    <value>No hay consultas en el análisis para exportar.</value>
   </data>
   <data name="TraceNothingToSave" xml:space="preserve">
     <value>No hay nada para guardar: el log se arma mientras el trace está activo.</value>
@@ -4234,11 +4396,26 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TraceWarnFullScan" xml:space="preserve">
     <value>recorre {0}</value>
   </data>
+  <data name="TransactionModeOpenTip" xml:space="preserve">
+    <value>Con una transacción abierta no se cambia: primero Commit o Rollback.</value>
+  </data>
+  <data name="TransactionModeProductionTip" xml:space="preserve">
+    <value>En producción y en registros de solo lectura siempre es con Commit explícito y read committed.</value>
+  </data>
+  <data name="TransactionModeTip" xml:space="preserve">
+    <value>Autocommit confirma cada sentencia que escribe al terminar bien. El aislamiento vale para la próxima transacción de escritura: read committed ve lo que otros confirman; snapshot, la foto del momento en que empezó; snapshot table stability además bloquea las tablas que lee.</value>
+  </data>
   <data name="TransactionOpenBanner" xml:space="preserve">
     <value>Transacción de escritura ABIERTA: confirmá (Commit) o deshacé (Rollback)</value>
   </data>
+  <data name="TransactionOpenBannerAge" xml:space="preserve">
+    <value>Transacción de escritura ABIERTA hace {0}: confirmá (Commit) o deshacé (Rollback)</value>
+  </data>
   <data name="TransactionOpenSuffix" xml:space="preserve">
     <value> · transacción ABIERTA (Commit/Rollback)</value>
+  </data>
+  <data name="TransactionVeryOldNotice" xml:space="preserve">
+    <value>La pestaña «{0}» tiene una transacción de escritura abierta hace {1}: mientras siga abierta, traba la recolección de basura del servidor. Confirmala (Commit) o deshacela (Rollback).</value>
   </data>
   <data name="TreeAreaDiagram" xml:space="preserve">
     <value>Diagrama del área</value>
@@ -4305,6 +4482,12 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   </data>
   <data name="TreeFilterSearching" xml:space="preserve">
     <value>Buscando «{0}» en todas las categorías…</value>
+  </data>
+  <data name="TreeFolderColor" xml:space="preserve">
+    <value>Color de la carpeta</value>
+  </data>
+  <data name="TreeFolderNoColor" xml:space="preserve">
+    <value>Sin color propio</value>
   </data>
   <data name="TreeGroupMaintenance" xml:space="preserve">
     <value>Mantenimiento</value>
@@ -4396,6 +4579,12 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="UnexpectedError" xml:space="preserve">
     <value>Error no previsto: {0} (quedó en errors.log, en la carpeta de FbStudio).</value>
   </data>
+  <data name="WelcomeImport" xml:space="preserve">
+    <value>Importar registros…</value>
+  </data>
+  <data name="WelcomeImportText" xml:space="preserve">
+    <value>¿Te pasaron un archivo con los registros del equipo? Importalo y quedan todas las bases, con sus áreas; vos ponés tu usuario y contraseña.</value>
+  </data>
   <data name="WelcomeRegister" xml:space="preserve">
     <value>Registrar base</value>
   </data>
@@ -4404,6 +4593,21 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   </data>
   <data name="WelcomeTitle" xml:space="preserve">
     <value>Registrá tu primera base</value>
+  </data>
+  <data name="WhatsNewEmpty" xml:space="preserve">
+    <value>No se encontró el registro de cambios.</value>
+  </data>
+  <data name="WhatsNewInstalled" xml:space="preserve">
+    <value>instalada</value>
+  </data>
+  <data name="WhatsNewOnGitHub" xml:space="preserve">
+    <value>Ver el registro completo en GitHub</value>
+  </data>
+  <data name="WhatsNewTitle" xml:space="preserve">
+    <value>Novedades de {0}</value>
+  </data>
+  <data name="WhatsNewUnreleased" xml:space="preserve">
+    <value>Próxima versión (en desarrollo)</value>
   </data>
   <data name="WireCryptDisabled" xml:space="preserve">
     <value>Sin cifrar (Disabled)</value>

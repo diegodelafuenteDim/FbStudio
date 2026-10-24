@@ -26,6 +26,9 @@ public partial class MainWindow : Window
     private (PointerPressedEventArgs Pressed, Avalonia.Point Point, TreeNode Node)? _dragStart;
     private TreeNode? _dragging;
 
+    /// <summary>Una base o una carpeta que se mueve dentro del árbol: no es texto, así el editor no escribe su nombre.</summary>
+    private static readonly DataFormat<string> TreeMoveFormat = DataFormat.CreateStringApplicationFormat("fbstudio-tree-move");
+
     public MainWindow()
     {
         InitializeComponent();
@@ -46,6 +49,7 @@ public partial class MainWindow : Window
         ToolRegister.Click += async (_, _) => await OpenProfilesAsync(newRegistration: true);
         MenuRegister.Click += async (_, _) => await OpenProfilesAsync(newRegistration: true);
         WelcomeRegister.Click += async (_, _) => await OpenProfilesAsync(newRegistration: true);
+        WelcomeImport.Click += async (_, _) => { if (Vm is { } vm) await ImportProfilesAsync(vm); };
         MenuEditRegistration.Click += async (_, _) => await OpenProfilesAsync(newRegistration: false);
         MenuNewFolder.Click += async (_, _) => { if (Vm is { } vm) await NewFolderAsync(vm, SelectedDatabase()?.Profile); };
         MenuExportProfiles.Click += async (_, _) => { if (Vm is { } vm) await ExportProfilesAsync(vm); };
@@ -61,6 +65,7 @@ public partial class MainWindow : Window
         MenuExit.Click += (_, _) => Close();
         MenuShortcuts.Click += async (_, _) => await ShowShortcutsAsync();
         MenuAbout.Click += async (_, _) => await new AboutDialog().ShowDialog(this);
+        MenuWhatsNew.Click += async (_, _) => await new WhatsNewDialog().ShowDialog(this);
         MenuOptions.Click += async (_, _) => await OpenOptionsAsync();
         MenuMonitor.Click += (_, _) => Vm?.OpenMonitor(SelectedDatabase()?.Profile);
         MenuStatistics.Click += (_, _) => Vm?.OpenStatistics(SelectedDatabase()?.Profile);
@@ -98,12 +103,14 @@ public partial class MainWindow : Window
                 await vm.Tree.ToggleAsync(n);
             }
         }, RoutingStrategies.Tunnel);
-        // Arrastrar una base o una carpeta propia: a otra carpeta, adentro de otra carpeta o a la raíz.
+        // Arrastrar una base o una carpeta propia: a otra carpeta, adentro de otra carpeta o a la raíz. Un objeto o una
+        // columna, al editor: escribe su nombre donde se suelta.
         Tree.AddHandler(PointerPressedEvent, (_, e) =>
         {
             _dragStart = e.GetCurrentPoint(Tree).Properties.IsLeftButtonPressed
-                         && (e.Source as Control)?.DataContext is TreeNode { Kind: TreeNodeKind.Database } or TreeNode { IsCustomFolder: true }
-                ? (e, e.GetPosition(Tree), (TreeNode)((Control)e.Source!).DataContext!)
+                         && (e.Source as Control)?.DataContext is TreeNode node
+                         && (node.Kind == TreeNodeKind.Database || node.IsCustomFolder || DatabaseTreeViewModel.EditorText(node) is not null)
+                ? (e, e.GetPosition(Tree), node)
                 : null;
         }, RoutingStrategies.Tunnel, handledEventsToo: true);
         Tree.AddHandler(PointerReleasedEvent, (_, _) => _dragStart = null, RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -113,11 +120,18 @@ public partial class MainWindow : Window
             var moved = e.GetPosition(Tree) - start.Point;
             if (Math.Abs(moved.X) + Math.Abs(moved.Y) < 8) return;
             _dragStart = null;
+            if (DatabaseTreeViewModel.EditorText(start.Node) is { } name)
+            {
+                var text = new DataTransfer();
+                text.Add(DataTransferItem.CreateText(name));
+                await DragDrop.DoDragDropAsync(start.Pressed, text, DragDropEffects.Copy);
+                return;
+            }
             _dragging = start.Node;
             try
             {
                 var data = new DataTransfer();
-                data.Add(DataTransferItem.CreateText(start.Node.Text));
+                data.Add(DataTransferItem.Create(TreeMoveFormat, start.Node.Text));
                 await DragDrop.DoDragDropAsync(start.Pressed, data, DragDropEffects.Move);
             }
             finally
@@ -138,6 +152,11 @@ public partial class MainWindow : Window
             if (_dragging is { } dragged && Vm is { } vm) vm.Drop(dragged, (e.Source as Control)?.DataContext as TreeNode);
             e.Handled = true;
         });
+
+        // La consulta nueva va a la base de lo último que se tocó (D-88): un clic en el árbol, aunque sea en la fila que ya
+        // estaba elegida, o volver al editor de la pestaña.
+        Tree.AddHandler(PointerPressedEvent, (_, _) => Vm?.TreeTouched(), RoutingStrategies.Tunnel, handledEventsToo: true);
+        TabHost.AddHandler(GotFocusEvent, (_, _) => Vm?.TabTouched(), RoutingStrategies.Bubble, handledEventsToo: true);
 
         // Clic derecho: el menú de la fila de abajo del puntero (y la elige); en un lugar vacío, registrar o crear carpeta.
         Tree.ContextRequested += (_, e) =>
@@ -189,7 +208,7 @@ public partial class MainWindow : Window
         vm.ConfirmAsync = decision => new ConfirmDialog(decision.Reasons).ShowDialog<bool>(this);
         vm.ConfirmCloseAsync = message => new ConfirmDialog([message], Strings.CloseAndUndo, Strings.DontClose, Strings.OpenTransactionTitle).ShowDialog<bool>(this);
         vm.EditMonitorQueryAsync = editor => new MonitorQueryWindow(editor).ShowDialog<bool>(this);
-        vm.PreviewScriptAsync = preview => new ScriptPreviewWindow(preview).ShowDialog<ScriptPreviewChoice>(this);
+        vm.PreviewScriptAsync = preview => new ScriptPreviewWindow(preview).ShowDialog<ScriptPreviewResult>(this);
         vm.ConfirmActionAsync = prompt => new ConfirmDialog(prompt.Reasons, prompt.RunText, prompt.CancelText, prompt.Title).ShowDialog<bool>(this);
         vm.ConfirmTypedAsync = prompt => new TypedConfirmDialog(prompt).ShowDialog<bool>(this);
         vm.AskParametersAsync = entries => new ParameterDialog(entries).ShowDialog<IReadOnlyList<ParameterEntry>?>(this);
@@ -197,7 +216,11 @@ public partial class MainWindow : Window
         vm.AskTextAsync = prompt => new InputDialog(prompt.Title, prompt.Message, prompt.Initial).ShowDialog<string?>(this);
         vm.ConfirmDiscardAsync = prompt => new ConfirmDialog([prompt.Message], prompt.DiscardLabel, Strings.KeepEditing, Strings.UncompiledChangesTitle).ShowDialog<bool>(this);
         vm.Tabs.CollectionChanged += OnTabsChanged;
-        vm.SettingsChanged += settings => App.ApplyTheme(settings.Theme);
+        vm.SettingsChanged += settings =>
+        {
+            App.ApplyTheme(settings.Theme);
+            App.ApplyEnvironmentColors(settings);
+        };
         foreach (var tab in vm.Tabs) AddView(tab);
         vm.Tree.InsertRequested += text => CurrentEditorView?.InsertAtCaret(text);
         vm.Tree.QueryRequested += async (profile, title, sql) =>
@@ -266,6 +289,12 @@ public partial class MainWindow : Window
         base.OnClosed(e);
         if (_restartAfterClose) StartNewInstance();
         if (Vm is { } vm) await vm.DisposeAsync();
+    }
+
+    /// <summary>Al arrancar una versión nueva, las novedades una vez (D-85). Lo llama App al abrir la ventana.</summary>
+    internal async Task ShowWhatsNewIfUpdatedAsync()
+    {
+        if (Vm?.ShouldShowWhatsNew(AppInfo.VersionNumber, AppInfo.ChangeLog) == true) await new WhatsNewDialog().ShowDialog(this);
     }
 
     /// <summary>Abre otra vez FbStudio (el mismo ejecutable, o «dotnet FbStudio.dll» si se corrió así).</summary>
@@ -599,6 +628,7 @@ public partial class MainWindow : Window
                 if (node.IsCustomFolder)
                 {
                     items.Add(new Separator());
+                    items.Add(FolderColorMenu(vm, node.FolderPath!));
                     items.Add(Item(Strings.TreeRenameFolder, async () =>
                     {
                         var name = await new InputDialog(Strings.TreeRenameFolder.TrimEnd('…'), string.Format(Strings.FolderRenamePrompt, node.FolderPath),
@@ -611,6 +641,28 @@ public partial class MainWindow : Window
                 return null;
         }
         return new ContextMenu { ItemsSource = items, Placement = PlacementMode.Pointer };
+    }
+
+    /// <summary>«Color de la carpeta» (F-20): los de la paleta (sin rojos, que son de producción) y «Sin color propio».</summary>
+    private static MenuItem FolderColorMenu(MainWindowViewModel vm, string folder)
+    {
+        var current = vm.FolderColor(folder);
+        var menu = new MenuItem { Header = Strings.TreeFolderColor };
+        foreach (var choice in ColorChoice.For(null))
+        {
+            var item = new MenuItem
+            {
+                Header = (string.Equals(choice.Hex, current, StringComparison.OrdinalIgnoreCase) ? "● " : "") + choice.Name,
+                Icon = new Border { Width = 14, Height = 14, CornerRadius = new Avalonia.CornerRadius(3), Background = choice.Brush },
+            };
+            item.Click += (_, _) => vm.SetFolderColor(folder, choice.Hex);
+            menu.Items.Add(item);
+        }
+        menu.Items.Add(new Separator());
+        var none = new MenuItem { Header = Strings.TreeFolderNoColor, IsEnabled = current is not null };
+        none.Click += (_, _) => vm.SetFolderColor(folder, null);
+        menu.Items.Add(none);
+        return menu;
     }
 
     private enum ExportFormat
@@ -704,7 +756,7 @@ public partial class MainWindow : Window
             FileTypeChoices = [ProfileFiles],
         });
         if (file?.TryGetLocalPath() is not { } path) return;
-        try { vm.ExportProfiles(path, choice.ProfileIds, choice.IncludeUser, choice.Passphrase); }
+        try { vm.ExportProfiles(path, choice.ProfileIds, choice.IncludeUser, choice.Passphrase, choice.IncludeAreas); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException) { vm.Notify(string.Format(Strings.BackupFailed, ex.Message)); }
     }
 

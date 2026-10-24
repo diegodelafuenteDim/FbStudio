@@ -49,9 +49,12 @@ public sealed partial class TableDataViewModel(EditorTabViewModel tab) : Observa
     [ObservableProperty] private long? _totalCount;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasPending), nameof(PendingText))]
-    [NotifyCanExecuteChangedFor(nameof(ApplyCommand), nameof(DiscardCommand))]
+    [NotifyPropertyChangedFor(nameof(HasPending), nameof(PendingText), nameof(ApplyText))]
+    [NotifyCanExecuteChangedFor(nameof(ApplyCommand), nameof(DiscardCommand), nameof(ScriptCommand))]
     private int _pendingCount;
+
+    /// <summary>«Aplicar (3)»: cuántos cambios esperan, en el mismo botón.</summary>
+    public string ApplyText => PendingCount == 0 ? Strings.DataApply : string.Format(Strings.DataApplyCount, PendingCount);
 
     public bool HasPending => PendingCount > 0;
 
@@ -317,7 +320,16 @@ public sealed partial class TableDataViewModel(EditorTabViewModel tab) : Observa
     /// Si una fila cambió entretanto (control optimista) o está bloqueada, no se guarda nada y los cambios siguen pendientes.
     /// </summary>
     [RelayCommand(CanExecute = nameof(HasPending))]
-    public async Task ApplyAsync()
+    public Task ApplyAsync() => ApplyCoreAsync(alwaysPreview: false);
+
+    /// <summary>
+    /// «Generar script…»: los comandos de los cambios pendientes, para copiarlos, llevarlos a una consulta (con o sin
+    /// COMMIT al final) o ejecutarlos, aunque en Opciones esté elegido aplicar directamente.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(HasPending))]
+    public Task ScriptAsync() => ApplyCoreAsync(alwaysPreview: true);
+
+    private async Task ApplyCoreAsync(bool alwaysPreview)
     {
         if (tab.Profile is not { } profile || _changes is null || !CanEditTable) return;
         var statements = _changes.BuildStatements(Table, returning: !IsView);
@@ -326,18 +338,22 @@ public sealed partial class TableDataViewModel(EditorTabViewModel tab) : Observa
         var reasons = new List<string>();
         if (profile.IsProduction) reasons.Add(string.Format(Strings.DataApplyProduction, statements.Count, Table, profile.Name));
         if (_changes.DeleteCount > 0) reasons.Add(string.Format(Strings.DataApplyDeletes, _changes.DeleteCount, Table));
-        if (tab.Owner.Options.PreviewDataChanges)
+        if (alwaysPreview || tab.Owner.Options.PreviewDataChanges)
         {
             // Primero los comandos (con los valores y el control de que nadie cambió la fila); los avisos van arriba.
             var script = TableChanges.Script(Table, statements);
-            switch (await tab.Owner.PreviewScriptAsync(new ScriptPreview(string.Format(Strings.DataPreviewTitle, Table), script, reasons)))
+            var choice = await tab.Owner.PreviewScriptAsync(new ScriptPreview(string.Format(Strings.DataPreviewTitle, Table), script, reasons,
+                tab.Owner.Options.DataScriptWithCommit));
+            if (choice.WithCommit != tab.Owner.Options.DataScriptWithCommit)
+                tab.Owner.SaveSettings(tab.Owner.Options with { DataScriptWithCommit = choice.WithCommit }); // se recuerda
+            switch (choice.Choice)
             {
                 case ScriptPreviewChoice.Cancel:
                     Status = Strings.NotRunCancelledInConfirmation;
                     return;
                 case ScriptPreviewChoice.OpenInTab:
-                    // A una pestaña de consulta, para revisarlo o cambiarlo y correrlo a mano (con Commit o Rollback).
-                    tab.Owner.OpenQueryTab(profile, string.Format(Strings.DataScriptTabTitle, Table), script);
+                    // A una pestaña de consulta, para revisarlo o cambiarlo y correrlo (sin COMMIT, con Commit o Rollback a mano).
+                    tab.Owner.OpenQueryTab(profile, string.Format(Strings.DataScriptTabTitle, Table), TableChanges.Script(Table, statements, choice.WithCommit));
                     var moved = _changes.Count;
                     _changes.Clear();
                     Changed();

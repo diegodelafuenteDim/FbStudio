@@ -1,12 +1,22 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:res="using:FbStudio.App.Resources"
+        xmlns:coreres="using:FbStudio.Core.Resources"
         xmlns:vm="using:FbStudio.App.ViewModels"
         x:Class="FbStudio.App.Views.OptionsWindow"
         x:DataType="vm:OptionsViewModel"
         Title="{x:Static res:Strings.OptionsTitle}"
         Width="720" Height="500" MinWidth="600" MinHeight="420"
         WindowStartupLocation="CenterOwner">
+  <Window.DataTemplates>
+    <!-- Un color de la paleta: la muestra y su nombre (F-20). -->
+    <DataTemplate x:DataType="vm:ColorChoice">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Border Width="16" Height="16" CornerRadius="3" Background="{Binding Brush}" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+      </StackPanel>
+    </DataTemplate>
+  </Window.DataTemplates>
   <Window.Styles>
     <Style Selector="TextBlock.label">
       <Setter Property="VerticalAlignment" Value="Center" />
@@ -49,6 +59,16 @@
             <ComboBox Grid.Column="1" x:Name="LanguageBox" ItemsSource="{Binding Languages}" SelectedIndex="{Binding LanguageIndex}" MinWidth="220" />
           </Grid>
           <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsLanguageNote}" />
+          <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsEnvironmentColors}" FontWeight="SemiBold" Margin="0,10,0,4" />
+          <Grid ColumnDefinitions="250,*" RowDefinitions="Auto,Auto,Auto">
+            <TextBlock Classes="label" Text="{x:Static coreres:CoreStrings.EnvDevelopment}" />
+            <ComboBox Grid.Column="1" x:Name="DevelopmentColorBox" ItemsSource="{Binding DevelopmentColors}" SelectedItem="{Binding DevelopmentColor}" MinWidth="220" />
+            <TextBlock Grid.Row="1" Classes="label" Text="{x:Static coreres:CoreStrings.EnvTest}" />
+            <ComboBox Grid.Row="1" Grid.Column="1" x:Name="TestColorBox" ItemsSource="{Binding TestColors}" SelectedItem="{Binding TestColor}" MinWidth="220" />
+            <TextBlock Grid.Row="2" Classes="label" Text="{x:Static coreres:CoreStrings.EnvProduction}" />
+            <ComboBox Grid.Row="2" Grid.Column="1" x:Name="ProductionColorBox" ItemsSource="{Binding ProductionColors}" SelectedItem="{Binding ProductionColor}" MinWidth="220" />
+          </Grid>
+          <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsEnvironmentColorsNote}" />
         </StackPanel>
       </TabItem>
 
@@ -125,6 +145,15 @@
             <TextBlock Grid.Column="2" Classes="label" Text="{x:Static res:Strings.Seconds}" Margin="8,6,0,6" />
           </Grid>
           <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsLockTimeoutNote}" />
+          <Grid ColumnDefinitions="250,Auto,Auto" RowDefinitions="Auto,Auto">
+            <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsTransactionWarn}" />
+            <NumericUpDown Grid.Column="1" Value="{Binding TransactionWarnMinutes}" Minimum="1" Maximum="1440" Increment="1" FormatString="0" Width="140" Margin="0,4" />
+            <TextBlock Grid.Column="2" Classes="label" Text="{x:Static res:Strings.Minutes}" Margin="8,6,0,6" />
+            <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.OptionsTransactionDanger}" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding TransactionDangerMinutes}" Minimum="1" Maximum="10080" Increment="1" FormatString="0" Width="140" Margin="0,4" />
+            <TextBlock Grid.Row="1" Grid.Column="2" Classes="label" Text="{x:Static res:Strings.Minutes}" Margin="8,6,0,6" />
+          </Grid>
+          <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsTransactionNote}" />
           <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsDataApply}" />
           <RadioButton GroupName="dataApply" IsChecked="{Binding PreviewDataChanges}" Content="{x:Static res:Strings.OptionsDataApplyPreview}" Margin="0,2" />
           <RadioButton GroupName="dataApply" IsChecked="{Binding ApplyDirectly}" Content="{x:Static res:Strings.OptionsDataApplyDirect}" Margin="0,2" />

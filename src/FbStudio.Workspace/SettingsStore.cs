@@ -1,4 +1,5 @@
 using System.Text.Json;
+using FbStudio.Core.Profiles;
 using FbStudio.Core.Resources;
 
 namespace FbStudio.Workspace;
@@ -32,6 +33,12 @@ public sealed record AppSettings
     /// </summary>
     public bool PreviewDataChanges { get; init; } = true;
 
+    /// <summary>
+    /// El script de los cambios de la pestaña Datos (para copiarlo o llevarlo a una consulta) termina con COMMIT. Se
+    /// recuerda lo último elegido en la ventana de los comandos; de fábrica no, para confirmarlo a mano.
+    /// </summary>
+    public bool DataScriptWithCommit { get; init; }
+
     /// <summary>Un script se detiene en el primer error; false = sigue con la siguiente sentencia.</summary>
     public bool ScriptStopOnError { get; init; } = true;
 
@@ -44,13 +51,34 @@ public sealed record AppSettings
     /// <summary>Si la OAT es de un backup o un sweep (gbak, gfix, nbackup), se informa sin alarma.</summary>
     public bool OatIgnoreMaintenance { get; init; } = true;
 
+    /// <summary>
+    /// Una transacción de escritura abierta en una pestaña hace más de estos minutos se marca en ámbar… (con varias
+    /// personas, una olvidada traba la OAT y la recolección de basura del servidor).
+    /// </summary>
+    public int TransactionWarnMinutes { get; init; } = 5;
+
+    /// <summary>…y pasados estos, en rojo, con un aviso.</summary>
+    public int TransactionDangerMinutes { get; init; } = 15;
+
     /// <summary>Cuánto espera una escritura un registro bloqueado por otra transacción antes de dar error.</summary>
     public int LockTimeoutSeconds { get; init; } = 10;
 
     public AppTheme Theme { get; init; } = AppTheme.System;
 
+    /// <summary>Color propio de cada entorno (F-20), de la paleta; sin entrada (o null), el de siempre.</summary>
+    public Dictionary<ProfileEnvironment, string>? EnvironmentColors { get; init; }
+
+    /// <summary>Color propio de cada carpeta del árbol, por su ruta («Clientes/Norte»), sin distinguir mayúsculas; null si ninguna.</summary>
+    public Dictionary<string, string>? FolderColors { get; init; }
+
     /// <summary>Idioma de la interfaz: "" igual que Windows, "es" o "en". Se aplica al volver a abrir FbStudio.</summary>
     public string Language { get; init; } = "";
+
+    /// <summary>
+    /// La última versión de FbStudio que se abrió en este equipo (D-85): con una nueva, Ayuda → Novedades se abre sola
+    /// una vez. Null en una instalación nueva (o anterior a esto).
+    /// </summary>
+    public string? LastSeenVersion { get; init; }
 
     public string EditorFontFamily { get; init; } = DefaultFont;
     public double EditorFontSize { get; init; } = 14;
@@ -77,9 +105,19 @@ public sealed record AppSettings
         HistoryRetentionDays = Math.Clamp(HistoryRetentionDays, 1, 3650),
         DefaultRowLimit = RowLimits.Contains(DefaultRowLimit) ? DefaultRowLimit : 10_000,
         LockTimeoutSeconds = Math.Clamp(LockTimeoutSeconds, 1, 600),
+        TransactionWarnMinutes = Math.Clamp(TransactionWarnMinutes, 1, 1440),
+        TransactionDangerMinutes = Math.Clamp(TransactionDangerMinutes, Math.Clamp(TransactionWarnMinutes, 1, 1440), 10080),
         OatWarnMinutes = Math.Clamp(OatWarnMinutes, 1, 1440),
         OatDangerMinutes = Math.Clamp(OatDangerMinutes, Math.Clamp(OatWarnMinutes, 1, 1440), 10080),
         Theme = Enum.IsDefined(Theme) ? Theme : AppTheme.System,
+        // Solo colores de la paleta (un rojo fuera de producción, o uno escrito a mano en el archivo, se descarta) y sin
+        // repetir el de siempre.
+        EnvironmentColors = NullIfEmpty((EnvironmentColors ?? []).Where(kv => Enum.IsDefined(kv.Key) && ColorPalette.IsAllowed(kv.Key, kv.Value)
+                && !string.Equals(kv.Value.Trim(), ColorPalette.Default(kv.Key), StringComparison.OrdinalIgnoreCase))
+            .ToDictionary(kv => kv.Key, kv => kv.Value.Trim().ToUpperInvariant())),
+        FolderColors = NullIfEmpty((FolderColors ?? []).Where(kv => ProfileFolders.Clean(kv.Key) is not null && ColorPalette.IsAllowed(null, kv.Value))
+            .DistinctBy(kv => ProfileFolders.Clean(kv.Key)!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(kv => ProfileFolders.Clean(kv.Key)!, kv => kv.Value.Trim().ToUpperInvariant(), StringComparer.OrdinalIgnoreCase)),
         Language = Language is "es" or "en" ? Language : "",
         EditorFontFamily = string.IsNullOrWhiteSpace(EditorFontFamily) ? DefaultFont : EditorFontFamily.Trim(),
         EditorFontSize = Math.Clamp(EditorFontSize, 8, 40),
@@ -88,6 +126,9 @@ public sealed record AppSettings
             .Select(t => t with { Abbreviation = t.Abbreviation.Trim(), Name = t.Name?.Trim() ?? "" })
             .DistinctBy(t => t.Abbreviation, StringComparer.OrdinalIgnoreCase).ToList(),
     };
+
+    // Sin colores propios queda null: así las opciones de fábrica siguen siendo iguales a new AppSettings().
+    private static Dictionary<TKey, string>? NullIfEmpty<TKey>(Dictionary<TKey, string> d) where TKey : notnull => d.Count > 0 ? d : null;
 
     /// <summary>Las plantillas que valen: las guardadas o, si no hay, las de fábrica.</summary>
     public IReadOnlyList<FbStudio.Core.Sql.SqlTemplate> EffectiveTemplates => Templates ?? FbStudio.Core.Sql.SqlTemplates.Defaults;

@@ -103,6 +103,7 @@ public sealed class AreaStore(string? folder)
             Description = string.IsNullOrWhiteSpace(a.Description) ? null : a.Description.Trim(),
             Rules = Patterns(a.Rules),
             Exclude = Patterns(a.Exclude),
+            Color = ColorPalette.IsAllowed(null, a.Color) ? a.Color!.Trim().ToUpperInvariant() : null, // sin rojos, que son de producción
         }).ToList(),
     };
 

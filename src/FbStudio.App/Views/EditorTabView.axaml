@@ -146,7 +146,10 @@
                          Foreground="{DynamicResource FbsWarningBrush}" />
               <Button x:Name="DataApply" Command="{Binding Data.ApplyCommand, FallbackValue={x:Null}}" Theme="{DynamicResource SolidButton}" Classes="Primary"
                       ToolTip.Tip="{x:Static res:Strings.DataApplyTip}">
-                <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="ContentSave" /><TextBlock Text="{x:Static res:Strings.DataApply}" /></StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="ContentSave" /><TextBlock Text="{Binding Data.ApplyText, FallbackValue={x:Static res:Strings.DataApply}}" /></StackPanel>
+              </Button>
+              <Button x:Name="DataScript" Command="{Binding Data.ScriptCommand, FallbackValue={x:Null}}" ToolTip.Tip="{x:Static res:Strings.DataScriptTip}">
+                <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="CodeTags" /><TextBlock Text="{x:Static res:Strings.DataScript}" /></StackPanel>
               </Button>
               <Button Command="{Binding Data.DiscardCommand, FallbackValue={x:Null}}" Content="{x:Static res:Strings.DataDiscard}" />
               <Button x:Name="DataNewRow" IsEnabled="{Binding Data.CanEditTable, FallbackValue=False}" ToolTip.Tip="{x:Static res:Strings.DataNewRowTip}">
@@ -161,6 +164,11 @@
                      FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" />
           </DockPanel>
           <TextBlock DockPanel.Dock="Bottom" Text="{Binding Data.Status, FallbackValue=''}" Opacity="0.7" FontSize="12" Margin="8,3" TextTrimming="CharacterEllipsis" />
+          <!-- Con cambios sin aplicar: dónde se guardan (el Commit de arriba es para las consultas, no para esto). -->
+          <Border DockPanel.Dock="Top" IsVisible="{Binding Data.HasPending, FallbackValue=False}" Margin="6,0,6,4" Padding="10,5" CornerRadius="4"
+                  Background="{DynamicResource FbsWarningBackgroundBrush}">
+            <TextBlock Text="{x:Static res:Strings.DataPendingBar}" TextWrapping="Wrap" FontSize="12" />
+          </Border>
           <rg:DrawnGrid x:Name="DataGrid" />
         </DockPanel>
       </TabItem>

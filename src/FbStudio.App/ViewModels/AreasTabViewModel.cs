@@ -48,6 +48,11 @@ public sealed partial class AreasTabViewModel : EditorTabViewModel
     [ObservableProperty] private string _excludeText = "";
     [ObservableProperty] private bool _includeDependents;
 
+    /// <summary>Color del área (D-86): «Sin color» o uno de la paleta de las carpetas (sin rojos).</summary>
+    public IReadOnlyList<ColorChoice> AreaColors { get; } = [ColorChoice.None, .. ColorChoice.For(null)];
+
+    [ObservableProperty] private ColorChoice? _areaColor;
+
     public IReadOnlyList<string> KindChoices { get; }
     [ObservableProperty] private int _kindIndex;
     [ObservableProperty] private string _previewFilter = "";
@@ -126,6 +131,7 @@ public sealed partial class AreasTabViewModel : EditorTabViewModel
         RulesText = value is { IsUnassigned: false } ? SchemaAreas.FormatRules(value.Area.Rules) : "";
         ExcludeText = value is { IsUnassigned: false } ? SchemaAreas.FormatRules(value.Area.Exclude) : "";
         IncludeDependents = value is { IsUnassigned: false } && value.Area.IncludeDependents;
+        AreaColor = AreaColors.FirstOrDefault(c => string.Equals(c.Hex, value?.Area.Color ?? "", StringComparison.OrdinalIgnoreCase)) ?? ColorChoice.None;
         _filling = false;
         OnPropertyChanged(nameof(AddTargets));
         RebuildPreview();
@@ -136,6 +142,7 @@ public sealed partial class AreasTabViewModel : EditorTabViewModel
     partial void OnRulesTextChanged(string value) => Edit(a => a with { Rules = SchemaAreas.ParseRules(value) });
     partial void OnExcludeTextChanged(string value) => Edit(a => a with { Exclude = SchemaAreas.ParseRules(value) });
     partial void OnIncludeDependentsChanged(bool value) => Edit(a => a with { IncludeDependents = value });
+    partial void OnAreaColorChanged(ColorChoice? value) => Edit(a => a with { Color = string.IsNullOrEmpty(value?.Hex) ? null : value.Hex });
     partial void OnKindIndexChanged(int value) => RebuildPreview();
     partial void OnPreviewFilterChanged(string value) => RebuildPreview();
 
@@ -396,8 +403,13 @@ public sealed partial class AreaItem : ObservableObject
     public bool IsUnassigned { get; private init; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Name), nameof(Subtitle))]
+    [NotifyPropertyChangedFor(nameof(Name), nameof(Subtitle), nameof(IconBrush), nameof(HasIconBrush))]
     private SchemaArea _area;
+
+    /// <summary>El color del área, para su ícono (D-86); null: el de siempre.</summary>
+    public Avalonia.Media.IBrush? IconBrush => Area.Color is { } hex ? new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(hex)) : null;
+
+    public bool HasIconBrush => Area.Color is not null;
 
     /// <summary>Cuántos objetos tiene (null mientras no se leyeron los de la base).</summary>
     [ObservableProperty]

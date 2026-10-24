@@ -244,7 +244,8 @@ public sealed class TableChanges(IReadOnlyList<DbColumn> columns)
     /// El script con los valores, tal como se va a ejecutar (para verlo antes de aplicar, copiarlo o llevarlo a una
     /// pestaña de consulta). Las sentencias son las mismas, con los valores escritos en lugar de parámetros.
     /// </summary>
-    public static string Script(string table, IReadOnlyList<ChangeStatement> statements)
+    /// <param name="withCommit">Termina con «COMMIT;» (para un script que se copia o se lleva a una consulta); sin eso queda para confirmarlo a mano.</param>
+    public static string Script(string table, IReadOnlyList<ChangeStatement> statements, bool withCommit = false)
     {
         var updates = statements.Count(s => !s.IsDelete && !s.IsInsert);
         var deletes = statements.Count(s => s.IsDelete);
@@ -255,6 +256,7 @@ public sealed class TableChanges(IReadOnlyList<DbColumn> columns)
             "-- " + Resources.CoreStrings.DataScriptCheck,
         };
         lines.AddRange(statements.Select(s => s.Readable));
+        if (withCommit) lines.Add("COMMIT;");
         return string.Join("\n", lines);
     }
 

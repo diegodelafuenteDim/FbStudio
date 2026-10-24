@@ -39,6 +39,19 @@ public sealed class AreaStoreTests : IDisposable
     }
 
     [Fact]
+    public void El_color_de_un_area_se_guarda_y_un_rojo_se_descarta()
+    {
+        var store = new AreaStore(_folder);
+        var profile = Profile();
+        store.Save(store.PathFor(profile), profile.Id, File1(
+            new SchemaArea { Name = "Laboratorio", Color = "#00796b" },
+            new SchemaArea { Name = "Roja", Color = "#C62828" },                 // los rojos son de producción
+            new SchemaArea { Name = "Rara", Color = "violeta" }), null);
+        var areas = new AreaStore(_folder).Load(profile).File.Areas;
+        Assert.Equal(["#00796B", null, null], areas.Select(a => a.Color));
+    }
+
+    [Fact]
     public void Un_archivo_compartido_no_se_pisa_si_otro_lo_cambio()
     {
         var shared = Path.Combine(_folder, "red", "areas-clinica.json");

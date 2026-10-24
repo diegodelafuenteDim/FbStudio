@@ -5,14 +5,20 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AboutCopied" xml:space="preserve">
+    <value>Copied: paste it in the report</value>
+  </data>
+  <data name="AboutCopyInfo" xml:space="preserve">
+    <value>Copy version and system</value>
+  </data>
   <data name="AboutDiscussions" xml:space="preserve">
     <value>Questions and ideas</value>
   </data>
   <data name="AboutHelp" xml:space="preserve">
-    <value>Bugs and feature requests go to GitHub issues; questions and ideas, to Discussions.</value>
+    <value>Bugs and requests go to GitHub, in English or Spanish; questions and ideas, to Discussions.</value>
   </data>
   <data name="AboutHelpTitle" xml:space="preserve">
-    <value>Bugs, requests and questions</value>
+    <value>Help and feedback</value>
   </data>
   <data name="AboutLicense" xml:space="preserve">
     <value>Apache 2.0 with the Commons Clause: free to use (also at work), modify and share, but not to sell.</value>
@@ -26,8 +32,14 @@
   <data name="AboutReport" xml:space="preserve">
     <value>Report a bug or request a feature</value>
   </data>
+  <data name="AboutReportBug" xml:space="preserve">
+    <value>Report a bug</value>
+  </data>
   <data name="AboutRepository" xml:space="preserve">
-    <value>Repository</value>
+    <value>Source code on GitHub</value>
+  </data>
+  <data name="AboutRequestFeature" xml:space="preserve">
+    <value>Request a feature</value>
   </data>
   <data name="AboutTagline" xml:space="preserve">
     <value>A free IDE and administration tool for Firebird databases.</value>
@@ -47,6 +59,18 @@
   <data name="AboutVersion" xml:space="preserve">
     <value>Version {0}</value>
   </data>
+  <data name="AboutWhatsNew" xml:space="preserve">
+    <value>What's new in this version</value>
+  </data>
+  <data name="AgeHoursMinutes" xml:space="preserve">
+    <value>{0} h {1:00} min</value>
+  </data>
+  <data name="AgeMinutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="AgeUnderAMinute" xml:space="preserve">
+    <value>less than 1 min</value>
+  </data>
   <data name="AreasAddTo" xml:space="preserve">
     <value>Add to</value>
   </data>
@@ -61,6 +85,9 @@
   </data>
   <data name="AreasByUseCount" xml:space="preserve">
     <value>{0:N0} by what they use</value>
+  </data>
+  <data name="AreasColor" xml:space="preserve">
+    <value>Color:</value>
   </data>
   <data name="AreasConflict" xml:space="preserve">
     <value>The areas file changed since you opened it (did someone else save it?). Replacing it loses those changes; use “Reload” to see them first.</value>
@@ -221,8 +248,20 @@
   <data name="AreasUseOwnFile" xml:space="preserve">
     <value>Back to this PC's file</value>
   </data>
+  <data name="AutoCommittedSuffix" xml:space="preserve">
+    <value> · committed (autocommit)</value>
+  </data>
   <data name="BackupAll" xml:space="preserve">
     <value>All</value>
+  </data>
+  <data name="BackupAreasFailed" xml:space="preserve">
+    <value>The areas of {0} could not be saved.</value>
+  </data>
+  <data name="BackupAreasImported" xml:space="preserve">
+    <value>{0} got their areas.</value>
+  </data>
+  <data name="BackupAreasKept" xml:space="preserve">
+    <value>{0} already had areas: theirs were kept.</value>
   </data>
   <data name="BackupChooseLabel" xml:space="preserve">
     <value>Registrations to export:</value>
@@ -241,6 +280,9 @@
   </data>
   <data name="BackupExported" xml:space="preserve">
     <value>Registrations exported: {0}, to {1}.</value>
+  </data>
+  <data name="BackupExportedAreas" xml:space="preserve">
+    <value>With the areas of {0} databases.</value>
   </data>
   <data name="BackupExportedWithPasswords" xml:space="preserve">
     <value>Registrations exported: {0} ({1} with a password, encrypted), to {2}.</value>
@@ -268,6 +310,9 @@
   </data>
   <data name="BackupImportTitle" xml:space="preserve">
     <value>Import registrations</value>
+  </data>
+  <data name="BackupIncludeAreas" xml:space="preserve">
+    <value>Include each database's areas (on import, databases that have none get them)</value>
   </data>
   <data name="BackupIncludePasswords" xml:space="preserve">
     <value>Also include my password for each connection (the file is encrypted with a passphrase)</value>
@@ -320,6 +365,9 @@
   <data name="BackupWithPasswords" xml:space="preserve">
     <value>With a password: {0} (kept in this computer's keyring).</value>
   </data>
+  <data name="BannerAlsoConnected" xml:space="preserve">
+    <value>Also connected:</value>
+  </data>
   <data name="BannerEncrypted" xml:space="preserve">
     <value> · encrypted connection</value>
   </data>
@@ -337,6 +385,9 @@
   </data>
   <data name="BannerNotEncryptedTip" xml:space="preserve">
     <value>The connection to the server is not encrypted: queries and data travel readable over the network. To require encryption, choose «Required» in «Connection encryption» in the registration (the server has to accept it).</value>
+  </data>
+  <data name="BannerOtherTip" xml:space="preserve">
+    <value>{0} · {1}. Click to go to its tab (or open a query on it).</value>
   </data>
   <data name="BannerProduction" xml:space="preserve">
     <value>PRODUCTION</value>
@@ -385,6 +436,54 @@
   </data>
   <data name="CloseWhileRunning" xml:space="preserve">
     <value>An execution is in progress: cancel it (Esc) before closing the tab.</value>
+  </data>
+  <data name="ColorBlue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="ColorBrightRed" xml:space="preserve">
+    <value>Bright red</value>
+  </data>
+  <data name="ColorBrown" xml:space="preserve">
+    <value>Brown</value>
+  </data>
+  <data name="ColorCrimson" xml:space="preserve">
+    <value>Crimson</value>
+  </data>
+  <data name="ColorCyan" xml:space="preserve">
+    <value>Cyan</value>
+  </data>
+  <data name="ColorDarkGreen" xml:space="preserve">
+    <value>Dark green</value>
+  </data>
+  <data name="ColorDarkRed" xml:space="preserve">
+    <value>Dark red</value>
+  </data>
+  <data name="ColorGreen" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="ColorIndigo" xml:space="preserve">
+    <value>Indigo</value>
+  </data>
+  <data name="ColorOlive" xml:space="preserve">
+    <value>Olive</value>
+  </data>
+  <data name="ColorOrange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="ColorPurple" xml:space="preserve">
+    <value>Purple</value>
+  </data>
+  <data name="ColorRed" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="ColorSlate" xml:space="preserve">
+    <value>Slate</value>
+  </data>
+  <data name="ColorTeal" xml:space="preserve">
+    <value>Teal</value>
+  </data>
+  <data name="ColorWine" xml:space="preserve">
+    <value>Wine</value>
   </data>
   <data name="CommitDone" xml:space="preserve">
     <value>Commit done.</value>
@@ -620,6 +719,9 @@
   <data name="DataApplyConflict" xml:space="preserve">
     <value>Nothing was saved: row {0} was changed or deleted by someone else since it was read. Reload and make the change again.</value>
   </data>
+  <data name="DataApplyCount" xml:space="preserve">
+    <value>Apply ({0})</value>
+  </data>
   <data name="DataApplyDeletes" xml:space="preserve">
     <value>You are about to delete {0} row(s) from {1}.</value>
   </data>
@@ -701,6 +803,9 @@
   <data name="DataPending" xml:space="preserve">
     <value>{0} row(s) changed · {1} to delete · {2} new</value>
   </data>
+  <data name="DataPendingBar" xml:space="preserve">
+    <value>There are unapplied changes: nothing is saved (or locked) until "Apply", top right. "Generate script…" shows the commands to copy them or take them to a query; "Discard" drops them. The Commit in the top toolbar is for queries.</value>
+  </data>
   <data name="DataPendingHint" xml:space="preserve">
     <value>Pending changes: they are not saved (and lock nothing) until “Apply”.</value>
   </data>
@@ -722,6 +827,9 @@
   <data name="DataPreviewTitle" xml:space="preserve">
     <value>Commands to apply to {0}</value>
   </data>
+  <data name="DataPreviewWithCommit" xml:space="preserve">
+    <value>End with COMMIT (when copying or taking it to a query; "Run" always commits)</value>
+  </data>
   <data name="DataProfileReadOnly" xml:space="preserve">
     <value>Read-only profile: data cannot be edited.</value>
   </data>
@@ -731,8 +839,14 @@
   <data name="DataRowChanged" xml:space="preserve">
     <value>The row changed or no longer exists.</value>
   </data>
+  <data name="DataScript" xml:space="preserve">
+    <value>Generate script…</value>
+  </data>
   <data name="DataScriptTabTitle" xml:space="preserve">
     <value>Changes to {0}</value>
+  </data>
+  <data name="DataScriptTip" xml:space="preserve">
+    <value>The commands for the pending changes, to copy them, take them to a query (with or without COMMIT at the end) or run them.</value>
   </data>
   <data name="DataTab" xml:space="preserve">
     <value>Data</value>
@@ -747,7 +861,7 @@
     <value>This view is read-only: it does not come from a single table or does not show its primary key.</value>
   </data>
   <data name="DataWherePlaceholder" xml:space="preserve">
-    <value>Additional WHERE (SQL), e.g.: FECHA &gt;= '2026-10-01' AND ESTADO = 1 · Enter applies</value>
+    <value>Additional WHERE (SQL), e.g.: CREATED &gt;= '2026-10-01' AND STATUS = 1 · Enter applies</value>
   </data>
   <data name="Days" xml:space="preserve">
     <value>days</value>
@@ -1370,6 +1484,9 @@
   <data name="GridGroupHint" xml:space="preserve">
     <value>Drag a header here (or right-click → Group) to group by that column</value>
   </data>
+  <data name="GridHideColumn" xml:space="preserve">
+    <value>Hide this column</value>
+  </data>
   <data name="GridMaximum" xml:space="preserve">
     <value>Maximum</value>
   </data>
@@ -1414,6 +1531,12 @@
   </data>
   <data name="GridSetNull" xml:space="preserve">
     <value>Set to NULL</value>
+  </data>
+  <data name="GridShowAllColumns" xml:space="preserve">
+    <value>Show all</value>
+  </data>
+  <data name="GridShowHidden" xml:space="preserve">
+    <value>Show hidden columns ({0})</value>
   </data>
   <data name="GridSortAscending" xml:space="preserve">
     <value>Sort ascending</value>
@@ -1570,6 +1693,15 @@
   </data>
   <data name="ImportTabTitle" xml:space="preserve">
     <value>Import · {0}</value>
+  </data>
+  <data name="IsolationReadCommitted" xml:space="preserve">
+    <value>Read committed</value>
+  </data>
+  <data name="IsolationSnapshot" xml:space="preserve">
+    <value>Snapshot</value>
+  </data>
+  <data name="IsolationTableStability" xml:space="preserve">
+    <value>Snapshot table stability</value>
   </data>
   <data name="KeepEditing" xml:space="preserve">
     <value>Keep editing</value>
@@ -2189,6 +2321,9 @@
   <data name="MenuViewStats" xml:space="preserve">
     <value>_Statistics</value>
   </data>
+  <data name="MenuWhatsNew" xml:space="preserve">
+    <value>What's new</value>
+  </data>
   <data name="MessagesTab" xml:space="preserve">
     <value>Messages</value>
   </data>
@@ -2477,6 +2612,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="NewTabTip" xml:space="preserve">
     <value>New query tab on the same database (Ctrl+T)</value>
   </data>
+  <data name="NoColor" xml:space="preserve">
+    <value>No color</value>
+  </data>
   <data name="NoDatabase" xml:space="preserve">
     <value>No database</value>
   </data>
@@ -2545,6 +2683,12 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="OptionsEditor" xml:space="preserve">
     <value>Editor</value>
+  </data>
+  <data name="OptionsEnvironmentColors" xml:space="preserve">
+    <value>Environment colors</value>
+  </data>
+  <data name="OptionsEnvironmentColorsNote" xml:space="preserve">
+    <value>In the database bar, the tabs and the tree. All of them read well with white text, and reds are kept for production only. Your own folders are colored from their menu in the tree.</value>
   </data>
   <data name="OptionsFont" xml:space="preserve">
     <value>Font</value>
@@ -2665,6 +2809,15 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="OptionsTitle" xml:space="preserve">
     <value>Options</value>
+  </data>
+  <data name="OptionsTransactionDanger" xml:space="preserve">
+    <value>…and red, with a notice, after</value>
+  </data>
+  <data name="OptionsTransactionNote" xml:space="preserve">
+    <value>The database bar shows how long the tab's transaction has been open. With several people, a forgotten transaction holds back the OAT and the server's garbage collection.</value>
+  </data>
+  <data name="OptionsTransactionWarn" xml:space="preserve">
+    <value>Open write transaction: amber after</value>
   </data>
   <data name="OptionsZoom" xml:space="preserve">
     <value>Ctrl + mouse wheel enlarges or shrinks the font (Ctrl+0 resets it to the chosen size)</value>
@@ -3138,7 +3291,7 @@ ORDER BY a.MON$TIMESTAMP</value>
     <value>Pick a database: double-click it in the tree on the left.</value>
   </data>
   <data name="SearchPlaceholder" xml:space="preserve">
-    <value>Text to search (case-insensitive): CLINICA_TURNOS, GEN_ID(, fecha_alta…</value>
+    <value>Text to search (case-insensitive): SALES_ORDERS, GEN_ID(, created_at…</value>
   </data>
   <data name="SearchRunning" xml:space="preserve">
     <value>Searching for “{0}” in {1}…</value>
@@ -4042,6 +4195,9 @@ Double-click a column    Insert the name into the editor</value>
   <data name="ToolSearchTip" xml:space="preserve">
     <value>Search metadata: sources, names, columns and descriptions (Ctrl+Shift+F)</value>
   </data>
+  <data name="TraceAnalysisExported" xml:space="preserve">
+    <value>Analysis exported: {0} queries, to {1}.</value>
+  </data>
   <data name="TraceAnalysisTab" xml:space="preserve">
     <value>Analysis by query</value>
   </data>
@@ -4141,6 +4297,9 @@ Double-click a column    Insert the name into the editor</value>
   <data name="TraceEventsTab" xml:space="preserve">
     <value>Events</value>
   </data>
+  <data name="TraceExportAnalysis" xml:space="preserve">
+    <value>Export analysis to Excel…</value>
+  </data>
   <data name="TraceFailed" xml:space="preserve">
     <value>Error: {0}</value>
   </data>
@@ -4158,6 +4317,9 @@ Double-click a column    Insert the name into the editor</value>
   </data>
   <data name="TraceNoReason" xml:space="preserve">
     <value>not given</value>
+  </data>
+  <data name="TraceNothingToExport" xml:space="preserve">
+    <value>There are no queries in the analysis to export.</value>
   </data>
   <data name="TraceNothingToSave" xml:space="preserve">
     <value>There is nothing to save: the log is built while the trace runs.</value>
@@ -4234,11 +4396,26 @@ Double-click a column    Insert the name into the editor</value>
   <data name="TraceWarnFullScan" xml:space="preserve">
     <value>full scan of {0}</value>
   </data>
+  <data name="TransactionModeOpenTip" xml:space="preserve">
+    <value>It cannot change while a transaction is open: Commit or Rollback first.</value>
+  </data>
+  <data name="TransactionModeProductionTip" xml:space="preserve">
+    <value>In production and in read-only registrations it is always explicit Commit and read committed.</value>
+  </data>
+  <data name="TransactionModeTip" xml:space="preserve">
+    <value>Autocommit commits each writing statement when it ends well. The isolation applies to the next write transaction: read committed sees what others commit; snapshot, the picture at the moment it started; snapshot table stability also locks the tables it reads.</value>
+  </data>
   <data name="TransactionOpenBanner" xml:space="preserve">
     <value>Write transaction OPEN: confirm it (Commit) or undo it (Rollback)</value>
   </data>
+  <data name="TransactionOpenBannerAge" xml:space="preserve">
+    <value>Write transaction OPEN for {0}: Commit or Rollback</value>
+  </data>
   <data name="TransactionOpenSuffix" xml:space="preserve">
     <value> · transaction OPEN (Commit/Rollback)</value>
+  </data>
+  <data name="TransactionVeryOldNotice" xml:space="preserve">
+    <value>The tab «{0}» has had a write transaction open for {1}: while it stays open, it holds back the server's garbage collection. Commit it or roll it back.</value>
   </data>
   <data name="TreeAreaDiagram" xml:space="preserve">
     <value>Area diagram</value>
@@ -4301,10 +4478,16 @@ Double-click a column    Insert the name into the editor</value>
     <value>… of {0:N0}</value>
   </data>
   <data name="TreeFilterPlaceholder" xml:space="preserve">
-    <value>Filter objects (text or CLINICA_*)</value>
+    <value>Filter objects (text or SALES_*)</value>
   </data>
   <data name="TreeFilterSearching" xml:space="preserve">
     <value>Searching for “{0}” in every category…</value>
+  </data>
+  <data name="TreeFolderColor" xml:space="preserve">
+    <value>Folder color</value>
+  </data>
+  <data name="TreeFolderNoColor" xml:space="preserve">
+    <value>No color of its own</value>
   </data>
   <data name="TreeGroupMaintenance" xml:space="preserve">
     <value>Maintenance</value>
@@ -4396,6 +4579,12 @@ Double-click a column    Insert the name into the editor</value>
   <data name="UnexpectedError" xml:space="preserve">
     <value>Unexpected error: {0} (saved in errors.log, in the FbStudio folder).</value>
   </data>
+  <data name="WelcomeImport" xml:space="preserve">
+    <value>Import registrations…</value>
+  </data>
+  <data name="WelcomeImportText" xml:space="preserve">
+    <value>Did you get a file with your team's registrations? Import it and you get all the databases, with their areas; you enter your own user and password.</value>
+  </data>
   <data name="WelcomeRegister" xml:space="preserve">
     <value>Register database</value>
   </data>
@@ -4404,6 +4593,21 @@ Double-click a column    Insert the name into the editor</value>
   </data>
   <data name="WelcomeTitle" xml:space="preserve">
     <value>Register your first database</value>
+  </data>
+  <data name="WhatsNewEmpty" xml:space="preserve">
+    <value>The changelog was not found.</value>
+  </data>
+  <data name="WhatsNewInstalled" xml:space="preserve">
+    <value>installed</value>
+  </data>
+  <data name="WhatsNewOnGitHub" xml:space="preserve">
+    <value>See the full changelog on GitHub</value>
+  </data>
+  <data name="WhatsNewTitle" xml:space="preserve">
+    <value>What's new in {0}</value>
+  </data>
+  <data name="WhatsNewUnreleased" xml:space="preserve">
+    <value>Next version (in development)</value>
   </data>
   <data name="WireCryptDisabled" xml:space="preserve">
     <value>Not encrypted (Disabled)</value>

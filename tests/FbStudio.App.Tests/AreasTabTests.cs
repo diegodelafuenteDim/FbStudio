@@ -89,6 +89,11 @@ public sealed class AreasTabTests(FirebirdFixture fb, HeadlessFixture ui) : IAsy
         tab.ExcludeText = "TURNOS_DET";
         Assert.True(tab.IsModified);
         Assert.Contains(vm.ExitWarnings(), m => m.StartsWith("Hay cambios sin compilar o sin guardar en: «" + tab.BaseTitle + "»"));
+        Assert.Same(ColorChoice.None, tab.AreaColor);                                      // sin color
+        Assert.DoesNotContain(tab.AreaColors, c => c.Hex.Length > 0 && ColorPalette.IsRed(c.Hex)); // sin rojos: son de producción
+        tab.AreaColor = tab.AreaColors.Single(c => c.Hex == "#00796B");
+        Assert.Equal("#00796B", tab.SelectedArea!.Area.Color);
+        Assert.True(tab.SelectedArea.HasIconBrush);
         var names = tab.Preview.Select(r => r.Name).ToList();
         Assert.Contains("TURNOS", names);
         Assert.Contains("V_TURNOS", names);
@@ -175,6 +180,7 @@ public sealed class AreasTabTests(FirebirdFixture fb, HeadlessFixture ui) : IAsy
         Assert.False(tab.IsModified);
         var own = Path.Combine(_folder, "areas", $"{fb.Profile.Id:N}.json");
         Assert.True(File.Exists(own));
+        Assert.Contains("\"Color\": \"#00796B\"", File.ReadAllText(own));                 // el color se guarda con el área
         Assert.StartsWith("Archivo de esta PC: ", tab.FileText);
 
         // El árbol: «Áreas» al final de la base, cada área con sus objetos por tipo, y «Sin área».
@@ -183,6 +189,8 @@ public sealed class AreasTabTests(FirebirdFixture fb, HeadlessFixture ui) : IAsy
         await vm.Tree.ToggleAsync(areasNode);
         Assert.Equal(["Turnos", "Detalle", _prefix, "Sin área"], areasNode.Children!.Select(n => n.Text));
         var turnosNode = areasNode.Children![0];
+        Assert.Equal(Avalonia.Media.Color.Parse("#00796B"), ((Avalonia.Media.ISolidColorBrush)turnosNode.IconBrush!).Color);
+        Assert.Null(areasNode.Children![^1].IconBrush);                                     // «Sin área»: sin color
         await vm.Tree.ToggleAsync(turnosNode);
         Assert.Contains(turnosNode.Children!, c => c.Category == DbObjectKind.Trigger);
         var tables = turnosNode.Children!.Single(c => c.Category == DbObjectKind.Table);

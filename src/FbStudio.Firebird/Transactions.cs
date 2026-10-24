@@ -1,3 +1,4 @@
+using FbStudio.Core.Sql;
 using FirebirdSql.Data.FirebirdClient;
 
 namespace FbStudio.Firebird;
@@ -16,10 +17,14 @@ internal static class Transactions
     /// <paramref name="lockTimeout"/> (10 s por defecto, opción del sistema): mejor un error claro que una pestaña
     /// colgada detrás de otra transacción.
     /// </summary>
-    public static FbTransactionOptions ReadWrite(TimeSpan lockTimeout) => new()
+    public static FbTransactionOptions ReadWrite(TimeSpan lockTimeout, TransactionIsolation isolation = TransactionIsolation.ReadCommitted) => new()
     {
-        TransactionBehavior = FbTransactionBehavior.Write | FbTransactionBehavior.ReadCommitted
-                              | FbTransactionBehavior.RecVersion | FbTransactionBehavior.Wait,
+        TransactionBehavior = FbTransactionBehavior.Write | FbTransactionBehavior.Wait | isolation switch
+        {
+            TransactionIsolation.Snapshot => FbTransactionBehavior.Concurrency,
+            TransactionIsolation.SnapshotTableStability => FbTransactionBehavior.Consistency,
+            _ => FbTransactionBehavior.ReadCommitted | FbTransactionBehavior.RecVersion,
+        },
         WaitTimeout = lockTimeout,
     };
 

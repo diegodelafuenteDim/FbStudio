@@ -212,6 +212,85 @@ public class QuerySessionTests(FirebirdFixture fb)
         return result;
     }
 
+    private static string Lit(object? value) => value is null or DBNull ? "NULL" : Core.Sql.SqlIdentifier.Literal(Convert.ToString(value)!);
+
+    [Fact]
+    public async Task Autocommit_confirma_cada_sentencia_y_en_produccion_no()
+    {
+        await using var other = fb.NewSession();
+        var original = (await FirebirdFixture.RunAsync(other, "SELECT OBS FROM TURNOS WHERE ID = 30")).Rows[0][0];
+        await using var dev = fb.NewSession();
+        dev.AutoCommit = true;
+        var (o, _) = await FirebirdFixture.RunAsync(dev, "UPDATE TURNOS SET OBS = 'autocommit' WHERE ID = 30");
+        Assert.Null(o.Error);
+        Assert.True(o.AutoCommitted);
+        Assert.False(dev.InTransaction);
+        Assert.Equal("autocommit", (await FirebirdFixture.RunAsync(other, "SELECT OBS FROM TURNOS WHERE ID = 30")).Rows[0][0]); // ya lo ve otra conexión
+
+        // En producción la sesión lo ignora, aunque se lo pidan: queda para Commit o Rollback.
+        await using var prod = new QuerySession(fb.Profile with { Environment = Core.Profiles.ProfileEnvironment.Produccion }, fb.Password) { AutoCommit = true };
+        var (p, _) = await FirebirdFixture.RunAsync(prod, "UPDATE TURNOS SET OBS = 'produccion' WHERE ID = 30");
+        Assert.False(p.AutoCommitted);
+        Assert.True(prod.InTransaction);
+        await prod.RollbackAsync();
+
+        await FirebirdFixture.RunAsync(dev, $"UPDATE TURNOS SET OBS = {Lit(original)} WHERE ID = 30");
+    }
+
+    [Fact]
+    public async Task Snapshot_ve_la_foto_del_principio_y_read_committed_lo_confirmado()
+    {
+        await using var b = fb.NewSession();
+        b.AutoCommit = true;
+        var original = (await FirebirdFixture.RunAsync(b, "SELECT OBS FROM TURNOS WHERE ID = 32")).Rows[0][0];
+        await using var a = fb.NewSession();
+        async Task<object> ObsInA() => (await FirebirdFixture.RunAsync(a, "SELECT OBS FROM TURNOS WHERE ID = 32")).Rows[0][0];
+
+        a.Isolation = Core.Sql.TransactionIsolation.Snapshot;
+        await FirebirdFixture.RunAsync(a, "UPDATE TURNOS SET OBS = OBS WHERE ID = 31");     // abre la de escritura, en snapshot
+        var before = await ObsInA();
+        await FirebirdFixture.RunAsync(b, "UPDATE TURNOS SET OBS = 'cambio de b' WHERE ID = 32");
+        Assert.Equal(before, await ObsInA());                                          // la foto del momento en que empezó
+        await a.RollbackAsync();
+
+        a.Isolation = Core.Sql.TransactionIsolation.ReadCommitted;
+        await FirebirdFixture.RunAsync(a, "UPDATE TURNOS SET OBS = OBS WHERE ID = 31");
+        await FirebirdFixture.RunAsync(b, "UPDATE TURNOS SET OBS = 'otro cambio' WHERE ID = 32");
+        Assert.Equal("otro cambio", await ObsInA());                                   // ve lo que otros confirman
+        await a.RollbackAsync();
+
+        await FirebirdFixture.RunAsync(b, $"UPDATE TURNOS SET OBS = {Lit(original)} WHERE ID = 32");
+    }
+
+    [Fact]
+    public async Task Catalogo_con_las_columnas_de_un_procedimiento_de_paquete()
+    {
+        async Task Exec(string sql)
+        {
+            await using var c = FbConnectionFactory.Create(fb.Profile, fb.Password, "test");
+            await c.OpenAsync();
+            await using var tx = await c.BeginTransactionAsync();
+            await using (var cmd = new FirebirdSql.Data.FirebirdClient.FbCommand(sql, c, tx)) await cmd.ExecuteNonQueryAsync();
+            await tx.CommitAsync();
+        }
+        // Se crea y se borra acá: la base de Docker es compartida y otras pruebas cuentan los paquetes.
+        await Exec("CREATE PACKAGE PKG_PRUEBA_FROM AS BEGIN PROCEDURE DESDE (N INTEGER) RETURNS (FECHA TIMESTAMP, VALOR INTEGER); END");
+        await Exec("CREATE PACKAGE BODY PKG_PRUEBA_FROM AS BEGIN PROCEDURE DESDE (N INTEGER) RETURNS (FECHA TIMESTAMP, VALOR INTEGER) AS "
+                   + "BEGIN FECHA = CURRENT_TIMESTAMP; VALOR = N; SUSPEND; END END");
+        try
+        {
+            var catalog = await MetadataReader.LoadCatalogAsync(fb.Profile, fb.Password);
+            Assert.Equal(["FECHA", "VALOR"], catalog.Columns["PKG_PRUEBA_FROM.DESDE"]);
+            Assert.DoesNotContain("PKG_PRUEBA_FROM.DESDE", catalog.Procedures);
+            Assert.DoesNotContain("PKG_PRUEBA_FROM.DESDE", catalog.Tables);
+        }
+        finally
+        {
+            await Exec("DROP PACKAGE BODY PKG_PRUEBA_FROM");
+            await Exec("DROP PACKAGE PKG_PRUEBA_FROM");
+        }
+    }
+
     [Fact]
     public async Task Catalogo_de_metadatos_para_autocompletar()
     {

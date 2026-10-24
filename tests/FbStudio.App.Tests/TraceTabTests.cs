@@ -97,6 +97,14 @@ public sealed class TraceTabTests(FirebirdFixture fb, HeadlessFixture ui) : IDis
         Assert.Contains(trace.Events, e => e.Sql?.Contains("PACIENTE 7") == true);
         Assert.StartsWith("Log abierto:", trace.Status);
 
+        // El análisis, a Excel: las consultas que se ven, con las mismas columnas.
+        var xlsx = Path.Combine(_folder, "analisis.xlsx");
+        Assert.Equal(view.Analysis.VisibleRowIndexes().Count, view.ExportAnalysisTo(xlsx));
+        Assert.StartsWith("Análisis exportado:", trace.Status);
+        var sheet = Core.Import.ImportFile.Excel(xlsx);
+        Assert.Equal(view.Analysis.Columns.Select(c => c.Name), sheet.Headers);
+        Assert.Contains(sheet.Rows(), r => r[4]?.ToString()?.Contains("FROM TURNOS") == true);
+
         w.Close();
         await vm.DisposeAsync();
     }, CancellationToken.None);

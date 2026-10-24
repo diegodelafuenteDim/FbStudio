@@ -214,8 +214,32 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
     /// <summary>En qué orden se ven las columnas: índices de <see cref="Columns"/>, de izquierda a derecha.</summary>
     public IReadOnlyList<int> ColumnOrder => _canvas.Order;
 
-    /// <summary>Las columnas en el orden en que se ven.</summary>
-    public IEnumerable<ColumnInfo> DisplayColumns => _canvas.Order.Select(i => Columns[i]);
+    /// <summary>Las columnas que se ven, en su orden (sin las ocultas).</summary>
+    public IEnumerable<ColumnInfo> DisplayColumns => _canvas.Order.Where(i => !_canvas.IsHidden(i)).Select(i => Columns[i]);
+
+    /// <summary>Columnas ocultas (índices de <see cref="Columns"/>): siguen en el orden, con ancho 0.</summary>
+    public IReadOnlyCollection<int> HiddenColumns => _canvas.Hidden;
+
+    public bool IsColumnHidden(int column) => _canvas.IsHidden(column);
+
+    /// <summary>
+    /// Oculta una columna (o la vuelve a mostrar). Es solo la vista: sigue en los filtros, el orden y los totales, en
+    /// «Copiar como INSERT / UPDATE» y en las exportaciones; no se copia como texto ni se elige con el teclado. La última
+    /// que se ve no se puede ocultar.
+    /// </summary>
+    public void SetColumnHidden(int column, bool hidden)
+    {
+        if (!_canvas.SetHidden(column, hidden)) return;
+        UpdateScrollBars();
+        RaiseColumnLayoutChanged();
+    }
+
+    public void ShowAllColumns()
+    {
+        if (!_canvas.ShowAll()) return;
+        UpdateScrollBars();
+        RaiseColumnLayoutChanged();
+    }
 
     /// <summary>Se movió, se ensanchó o se restauró una columna a mano (para recordarlo).</summary>
     public event Action? ColumnLayoutChanged;
@@ -233,9 +257,11 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
 
     public double ColumnWidth(int column) => _canvas.ColumnWidth(column);
 
-    /// <summary>Orden y anchos actuales, por nombre de columna.</summary>
+    /// <summary>Orden, anchos y columnas ocultas, por nombre de columna.</summary>
     public GridColumnLayout ColumnLayout() =>
-        new([.. DisplayColumns.Select(c => c.Name)], Columns.Select((c, i) => (c.Name, Width: _canvas.ColumnWidth(i))).DistinctBy(x => x.Name).ToDictionary(x => x.Name, x => x.Width));
+        new([.. _canvas.Order.Select(i => Columns[i].Name)],
+            Columns.Select((c, i) => (c.Name, Width: _canvas.ColumnWidth(i))).DistinctBy(x => x.Name).ToDictionary(x => x.Name, x => x.Width),
+            _canvas.Hidden.Count > 0 ? [.. _canvas.Order.Where(_canvas.IsHidden).Select(i => Columns[i].Name)] : null);
 
     /// <summary>
     /// Pone el orden y los anchos guardados. Las columnas que no figuran (nuevas en la tabla) van al final, en su orden;
@@ -248,11 +274,12 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         var order = layout.Order.Where(byName.ContainsKey).Select(n => byName[n]).Distinct().ToList();
         order.AddRange(Enumerable.Range(0, Columns.Length).Except(order));
         var widths = layout.Widths.Where(w => byName.ContainsKey(w.Key)).ToDictionary(w => byName[w.Key], w => w.Value);
-        _canvas.SetLayout([.. order], widths);
+        var hidden = (layout.Hidden ?? []).Where(byName.ContainsKey).Select(n => byName[n]);
+        _canvas.SetLayout([.. order], widths, hidden);
         UpdateScrollBars();
     }
 
-    /// <summary>Vuelve al orden de la consulta y a los anchos según el contenido.</summary>
+    /// <summary>Vuelve al orden de la consulta y a los anchos según el contenido, con todas las columnas a la vista.</summary>
     public void ResetColumnLayout()
     {
         _canvas.ResetLayout();
@@ -295,10 +322,13 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
     /// </summary>
     public Func<IReadOnlyList<int>, bool, Task>? CopyAsScript { get; set; }
 
-    /// <summary>Las filas como se ven: las columnas en el orden de la pantalla y, en Datos, con los cambios sin aplicar.</summary>
+    /// <summary>
+    /// Las filas como se ven: las columnas en el orden de la pantalla (también las ocultas: un INSERT sin ellas perdería
+    /// datos) y, en Datos, con los cambios sin aplicar.
+    /// </summary>
     public (IReadOnlyList<ColumnInfo> Columns, IReadOnlyList<object?[]> Rows) DisplayedRows(IReadOnlyList<int> rowIndexes)
     {
-        var columns = DisplayColumns.ToList();
+        var columns = _canvas.Order.Select(i => Columns[i]).ToList();
         var rows = rowIndexes.Where(r => r >= 0 && r < Rows.Count).Select(r =>
         {
             var row = Rows[r];
@@ -713,13 +743,16 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         if (Source?.AddRow() is not { } row) return false;
         var display = Rows.IndexOf(row);
         if (display < 0) return false;
-        var column = ColumnOrder.FirstOrDefault(Source.CanEdit); // la primera que se ve y se puede escribir
+        var column = ColumnOrder.Where(c => !_canvas.IsHidden(c)).FirstOrDefault(Source.CanEdit); // la primera que se ve y se puede escribir
         Offset = new Vector(0, 0);
         SelectCell(display, column);
         _canvas.Focus();
         _canvas.OpenEditorAtSelection();
         return true;
     }
+
+    /// <summary>Para las pruebas: la columna de la celda elegida (−1 si no hay).</summary>
+    internal int SelectedColumn => _canvas.SelectedColumn;
 
     /// <summary>Para las pruebas: escribe en la celda elegida como si se tipeara y se apretara Enter.</summary>
     internal bool EditSelectedCell(string text)
@@ -778,6 +811,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         private readonly DrawnGrid _owner;
         private double[] _widths = [], _lefts = []; // ancho por columna; borde izquierdo por posición en pantalla
         private int[] _order = [], _pos = [];       // posición → columna y columna → posición (reordenar arrastrando)
+        private readonly HashSet<int> _hidden = [];  // columnas ocultas: siguen en el orden, con ancho 0
         private int _dropPosition = -1;             // dónde caería la columna que se arrastra (−1: no cae en el encabezado)
         private bool _autoFitPending; // se ajustan los anchos con las primeras filas de cada resultado
         private Dictionary<(int, int), FormattedText> _cache = new(), _next = new();
@@ -826,6 +860,46 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
 
         public IReadOnlyList<int> Order => _order;
 
+        public IReadOnlyCollection<int> Hidden => _hidden;
+
+        public int SelectedColumn => _selected.Column;
+
+        public bool IsHidden(int column) => _hidden.Contains(column);
+
+        /// <summary>Oculta o muestra una columna; false si no cambió nada (o si es la última que se ve).</summary>
+        public bool SetHidden(int column, bool hidden)
+        {
+            if (column < 0 || column >= Columns.Length) return false;
+            if (hidden && (_hidden.Contains(column) || _hidden.Count >= Columns.Length - 1)) return false;
+            if (!hidden && !_hidden.Remove(column)) return false;
+            if (hidden)
+            {
+                _hidden.Add(column);
+                if (_selected.Column == column) _selected = (_selected.Display, _order[VisibleAt(_pos[column], 1)]);
+            }
+            AfterLayoutChange();
+            return true;
+        }
+
+        public bool ShowAll()
+        {
+            if (_hidden.Count == 0) return false;
+            _hidden.Clear();
+            AfterLayoutChange();
+            return true;
+        }
+
+        /// <summary>La posición visible más cercana a <paramref name="position"/>, yendo en <paramref name="direction"/> (y si no hay, al revés).</summary>
+        private int VisibleAt(int position, int direction)
+        {
+            if (_order.Length == 0) return 0;
+            position = Math.Clamp(position, 0, _order.Length - 1);
+            var step = direction < 0 ? -1 : 1;
+            for (var p = position; p >= 0 && p < _order.Length; p += step) if (!_hidden.Contains(_order[p])) return p;
+            for (var p = position; p >= 0 && p < _order.Length; p -= step) if (!_hidden.Contains(_order[p])) return p;
+            return position;
+        }
+
         public double ColumnWidth(int column) => column >= 0 && column < _widths.Length ? _widths[column] : 0;
 
         public void Reset(bool keepWidths = false)
@@ -834,6 +908,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             {
                 _widths = DefaultWidths();
                 _order = [.. Enumerable.Range(0, Columns.Length)];
+                _hidden.Clear();
                 RecomputeLefts();
                 OffsetX = OffsetY = 0;
                 _autoFitPending = true;
@@ -865,11 +940,14 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             return true;
         }
 
-        /// <summary>Orden y anchos guardados; con anchos guardados no se ajustan solos con las primeras filas.</summary>
-        public void SetLayout(int[] order, IReadOnlyDictionary<int, double> widths)
+        /// <summary>Orden, anchos y ocultas guardados; con anchos guardados no se ajustan solos con las primeras filas.</summary>
+        public void SetLayout(int[] order, IReadOnlyDictionary<int, double> widths, IEnumerable<int>? hidden = null)
         {
             if (order.Length != Columns.Length) return;
             _order = order;
+            _hidden.Clear();
+            foreach (var c in hidden ?? []) if (c >= 0 && c < Columns.Length) _hidden.Add(c);
+            if (_hidden.Count >= Columns.Length) _hidden.Clear(); // al menos una a la vista
             foreach (var (column, width) in widths) if (column < _widths.Length) _widths[column] = Math.Clamp(width, 30, 2000);
             if (widths.Count > 0) _autoFitPending = false;
             AfterLayoutChange();
@@ -878,6 +956,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         public void ResetLayout()
         {
             _order = [.. Enumerable.Range(0, Columns.Length)];
+            _hidden.Clear();
             _widths = DefaultWidths();
             if (_owner.Rows.Count > 0) AutoFitAll(); else _autoFitPending = true;
             AfterLayoutChange();
@@ -935,7 +1014,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         public void MoveSelection(int rows, int columns)
         {
             if (_selected.Display < 0 || Columns.Length == 0) return;
-            _selected = (Math.Clamp(_selected.Display + rows, 0, Math.Max(0, _owner.DisplayCount - 1)), _order[Math.Clamp(_pos[_selected.Column] + columns, 0, Columns.Length - 1)]);
+            _selected = (Math.Clamp(_selected.Display + rows, 0, Math.Max(0, _owner.DisplayCount - 1)), _order[VisibleAt(_pos[_selected.Column] + columns, columns)]);
             _rows.Clear();
             _anchor = _selected.Display;
             _owner.ScrollIntoView(_selected.Display, _selected.Column);
@@ -1003,7 +1082,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             _pos = new int[_order.Length];
             for (var p = 0; p < _order.Length; p++) _pos[_order[p]] = p;
             _lefts = new double[_widths.Length + 1];
-            for (var p = 0; p < _order.Length; p++) _lefts[p + 1] = _lefts[p] + _widths[_order[p]];
+            for (var p = 0; p < _order.Length; p++) _lefts[p + 1] = _lefts[p] + (_hidden.Contains(_order[p]) ? 0 : _widths[_order[p]]);
         }
 
         private static double Measure(string text, Typeface face, double size = 13) =>
@@ -1025,7 +1104,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         {
             if (x < GutterWidth) return -1;
             var dx = x - GutterWidth + OffsetX;
-            for (var p = 0; p < _order.Length; p++) if (Math.Abs(dx - _lefts[p + 1]) <= ResizeGrip) return _order[p];
+            for (var p = 0; p < _order.Length; p++) if (!_hidden.Contains(_order[p]) && Math.Abs(dx - _lefts[p + 1]) <= ResizeGrip) return _order[p];
             return -1;
         }
 
@@ -1138,7 +1217,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                 _rows.Clear();
                 _anchor = d;
             }
-            _selected = (d, c >= 0 ? c : _order.FirstOrDefault());
+            _selected = (d, c >= 0 ? c : _order.Length > 0 ? _order[VisibleAt(0, 1)] : 0);
             InvalidateVisual();
         }
 
@@ -1241,6 +1320,19 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                     items.Add(grouped ? Item(Strings.GridUngroupColumn, () => _owner.RemoveGroup(col)) : Item(Strings.GridGroupByColumn, () => _owner.AddGroup(col)));
                 items.Add(Item(Strings.GridAutoFit, () => { AutoFit(col); _owner.RaiseColumnLayoutChanged(); }));
                 items.Add(Item(Strings.GridResetColumns, () => _owner.ResetColumnLayout()));
+                items.Add(Item(Strings.GridHideColumn, () => _owner.SetColumnHidden(col, true), _hidden.Count < Columns.Length - 1));
+                if (_hidden.Count > 0)
+                {
+                    var show = new MenuItem { Header = string.Format(Strings.GridShowHidden, _hidden.Count) };
+                    foreach (var c in _order.Where(_hidden.Contains))
+                    {
+                        var column = c;
+                        show.Items.Add(Item(Columns[column].Name, () => _owner.SetColumnHidden(column, false)));
+                    }
+                    show.Items.Add(new Separator());
+                    show.Items.Add(Item(Strings.GridShowAllColumns, () => _owner.ShowAllColumns()));
+                    items.Add(show);
+                }
                 items.Add(Item(string.Format(Strings.GridCopyColumn, _owner.VisibleRowIndexes().Count), () => _ = CopyTextAsync(_owner.ColumnClipboardText(col))));
                 items.Add(new Separator());
                 items.Add(Item(Strings.GridFilterMenu, () => _owner.OpenFilterPopup(col)));
@@ -1378,7 +1470,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                 default: return;
             }
             var previous = _selected.Display < 0 ? 0 : _selected.Display;
-            _selected = (Math.Clamp(d, 0, count - 1), _order[Math.Clamp(c, 0, Columns.Length - 1)]);
+            _selected = (Math.Clamp(d, 0, count - 1), _order[VisibleAt(c, e.Key is Key.Left or Key.End ? -1 : 1)]);
             if (e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key is Key.Up or Key.Down or Key.PageUp or Key.PageDown)
             {
                 if (_anchor < 0) _anchor = previous;
@@ -1511,6 +1603,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                         for (var p = firstCol; p <= lastCol; p++)
                         {
                             var c = _order[p];
+                            if (_hidden.Contains(c)) continue;
                             var x = GutterWidth + _lefts[p] - OffsetX;
                             if (_selected == (d, c)) ctx.FillRectangle(pal.Selection, new Rect(x, y, _widths[c], RowHeight));
                             object? pending = null;
@@ -1540,6 +1633,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                     for (var p = firstCol; p <= lastCol; p++)
                     {
                         var c = _order[p];
+                        if (_hidden.Contains(c)) continue;
                         var lx = GutterWidth + _lefts[p + 1] - OffsetX - 0.5;
                         if (lx > GutterWidth) ctx.DrawLine(pal.Line, new Point(lx, y), new Point(lx, y + RowHeight));
                     }
@@ -1571,6 +1665,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                 for (var p = firstCol; p <= lastCol; p++)
                 {
                     var c = _order[p];
+                    if (_hidden.Contains(c)) continue;
                     var x = GutterWidth + _lefts[p + 1] - OffsetX - 0.5;
                     if (x > GutterWidth) ctx.DrawLine(pal.Line, new Point(x, top), new Point(x, bottom));
                 }
@@ -1609,6 +1704,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                 for (var p = firstCol; p <= lastCol; p++)
                 {
                     var c = _order[p];
+                    if (_hidden.Contains(c)) continue;
                     var x = GutterWidth + _lefts[p] - OffsetX;
                     var sorted = spec.SortColumn == c && spec.SortDirection != SortDirection.None;
                     var grouped = spec.GroupBy.Contains(c);
@@ -1632,6 +1728,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                 for (var p = firstCol; p <= lastCol; p++)
                 {
                     var c = _order[p];
+                    if (_hidden.Contains(c)) continue;
                     var x = GutterWidth + _lefts[p] - OffsetX;
                     var filtered = _owner.Spec.Filters.TryGetValue(c, out var f);
                     // ▾ a la derecha: abre la ventanita de filtro según el tipo de la columna.
@@ -1669,6 +1766,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                 for (var p = firstCol; p <= lastCol; p++)
                 {
                     var c = _order[p];
+                    if (_hidden.Contains(c)) continue;
                     var text = _owner.AggregateText(c);
                     if (text.Length == 0) continue;
                     var x = GutterWidth + _lefts[p] - OffsetX;

@@ -6,6 +6,11 @@ namespace FbStudio.Core.Tests;
 public class DdlWriterTests
 {
     [Fact]
+    public void Juego_de_caracteres_e_intercalacion_con_un_nombre_raro_van_entre_comillas() =>
+        Assert.Equal("NOTA VARCHAR(10) CHARACTER SET UTF8 COLLATE \"mi_orden\"",
+            DdlWriter.Parameter(new FieldDefinition("NOTA", "VARCHAR(10)", CharacterSet: "UTF8", Collation: "mi_orden")));
+
+    [Fact]
     public void Un_comentario_de_una_linea_no_se_corta() =>
         Assert.Equal("-- dueño: A B C", "-- " + SqlIdentifier.OneLine("dueño: A\r\nB\nC"));
 

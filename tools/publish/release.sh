@@ -14,6 +14,17 @@ if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$ ]]; then
   exit 1
 fi
 version="${tag#v}"
+
+# Lo nuevo de esta versión, de CHANGELOG.md: sin su sección no se publica (cada versión dice qué cambió).
+changelog="${CHANGELOG:-CHANGELOG.md}"
+changes="$(awk -v head="## [$version]" '
+  index($0, "## [") == 1 { inside = (index($0, head) == 1); next }
+  inside { print }' "$changelog" 2>/dev/null | sed '/./,$!d' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')"
+if ! grep -q '^- ' <<< "$changes"; then
+  echo "CHANGELOG.md has no changes for $version: add a \"## [$version] - date\" section (### English and ### Español)" >&2
+  exit 1
+fi
+
 cd "$dir"
 
 # Lo que llegó acá es lo que armó cada trabajo.
@@ -49,6 +60,7 @@ notes=$(cat <<EOF
 To check a download: \`sha256sum -c SHA256SUMS.txt --ignore-missing\`.
 EOF
 )
+notes+=$'\n\n'"## What's new · Novedades"$'\n\n'"$changes"
 
 # Una versión con sufijo (0.2.0-beta.1) sale como pre-release.
 prerelease=()

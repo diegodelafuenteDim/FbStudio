@@ -52,7 +52,12 @@ public sealed class MetadataCatalog
     /// <summary>Firmas por nombre («P_TURNOS_DESDE», «PKG_TURNOS.CANTIDAD»), sin distinguir mayúsculas.</summary>
     public IReadOnlyDictionary<string, RoutineSignature> Signatures { get; init; } = NoSignatures;
 
-    public MetadataCatalog(IEnumerable<(string Table, string Column)> pairs, IEnumerable<(string Procedure, string? Output)>? procedures = null)
+    /// <param name="packageProcedures">
+    /// Procedimientos de paquetes («PKG.PROC») con sus parámetros de salida: sus columnas en el FROM, sin sumarlos a la
+    /// lista de procedimientos (en el autocompletado se ofrecen dentro de su paquete).
+    /// </param>
+    public MetadataCatalog(IEnumerable<(string Table, string Column)> pairs, IEnumerable<(string Procedure, string? Output)>? procedures = null,
+        IEnumerable<(string Procedure, string? Output)>? packageProcedures = null)
     {
         var map = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
         foreach (var (table, column) in pairs)
@@ -71,6 +76,12 @@ public sealed class MetadataCatalog
             outs.Add(output);
         }
         Procedures = procs.ToList();
+        foreach (var (procedure, output) in packageProcedures ?? [])
+        {
+            if (output is null) continue;
+            if (!map.TryGetValue(procedure, out var outs)) map[procedure] = outs = [];
+            outs.Add(output);
+        }
         Columns = map.ToDictionary(kv => kv.Key, kv => (IReadOnlyList<string>)kv.Value, StringComparer.OrdinalIgnoreCase);
     }
 

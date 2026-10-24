@@ -59,8 +59,20 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
     /// <summary>Espera máxima ante un registro bloqueado; vale para la próxima transacción de escritura que se abra.</summary>
     public TimeSpan LockTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
+    /// <summary>
+    /// Aislamiento de la próxima transacción de escritura (D-84). En producción no se usa: siempre read committed,
+    /// aunque la pantalla pida otro (la sesión no confía en eso).
+    /// </summary>
+    public TransactionIsolation Isolation { get; set; } = TransactionIsolation.ReadCommitted;
+
+    /// <summary>Confirmar cada sentencia que escribe al terminar bien (D-84). En producción se ignora: Commit explícito.</summary>
+    public bool AutoCommit { get; set; }
+
     /// <summary>Número de la transacción de escritura abierta (para saber quién tiene un registro bloqueado).</summary>
     public long? TransactionId { get; private set; }
+
+    /// <summary>Desde cuándo está abierta la transacción de escritura (UTC); null si no hay.</summary>
+    public DateTime? TransactionStartedAt { get; private set; }
 
     /// <summary>Se dispara cuando se abre o se cierra la transacción de escritura.</summary>
     public event Action? TransactionChanged;
@@ -132,7 +144,9 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
             if (_tx is not null) tx = _tx;
             else if (statement.Modifies)
             {
-                _tx = tx = await connection.BeginTransactionAsync(Transactions.ReadWrite(LockTimeout), ct);
+                _tx = tx = await connection.BeginTransactionAsync(
+                    Transactions.ReadWrite(LockTimeout, Profile.IsProduction ? TransactionIsolation.ReadCommitted : Isolation), ct);
+                TransactionStartedAt = DateTime.UtcNow;
                 await using (var id = new FbCommand("SELECT CURRENT_TRANSACTION FROM RDB$DATABASE", connection, tx))
                     TransactionId = Convert.ToInt64(await id.ExecuteScalarAsync(ct));
                 startedTxHere = true;
@@ -165,7 +179,21 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
                     else outcome.RecordsAffected = reader.RecordsAffected; // en un SELECT no tiene sentido
                 }
                 if (readOnlyTx) await tx.CommitAsync(CancellationToken.None);
-                startedTxHere = false; // salió bien: la transacción de escritura queda abierta a propósito
+                startedTxHere = false; // salió bien: la transacción de escritura queda abierta a propósito…
+                if (AutoCommit && !Profile.IsProduction && !readOnlyTx && _tx is not null)
+                {
+                    // …salvo con autocommit: se confirma ya (si el commit falla, se deshace y sale el error).
+                    try
+                    {
+                        await CommitCoreAsync(ct);
+                        outcome.AutoCommitted = true;
+                    }
+                    catch (FbException)
+                    {
+                        await RollbackCoreAsync();
+                        throw;
+                    }
+                }
             }
             finally
             {
@@ -238,6 +266,7 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
         await _tx.DisposeAsync();
         _tx = null;
         TransactionId = null;
+        TransactionStartedAt = null;
         TransactionChanged?.Invoke();
     }
 
@@ -250,6 +279,7 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
             await _tx.DisposeAsync();
             _tx = null;
             TransactionId = null;
+            TransactionStartedAt = null;
             TransactionChanged?.Invoke();
         }
     }
@@ -401,7 +431,7 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
         try
         {
             // Si la conexión ya no existe (la cortaron desde el monitoreo, se cayó el servidor), cerrar igual.
-            try { await RollbackCoreAsync(); } catch (Exception) { _tx = null; TransactionId = null; }
+            try { await RollbackCoreAsync(); } catch (Exception) { _tx = null; TransactionId = null; TransactionStartedAt = null; }
             try { if (_connection is not null) await _connection.DisposeAsync(); } catch (Exception) { }
             try { if (_monitor is not null) await _monitor.DisposeAsync(); } catch (Exception) { }
             _connection = _monitor = null;

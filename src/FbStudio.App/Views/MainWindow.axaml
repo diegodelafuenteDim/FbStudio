@@ -27,13 +27,49 @@
       <Setter Property="Background" Value="#5F6B7A" />
     </Style>
     <Style Selector="Border#EnvBanner.dev">
-      <Setter Property="Background" Value="#2E7D32" />
+      <Setter Property="Background" Value="{DynamicResource FbsBannerDevBrush}" />
     </Style>
     <Style Selector="Border#EnvBanner.test">
-      <Setter Property="Background" Value="#B26A00" />
+      <Setter Property="Background" Value="{DynamicResource FbsBannerTestBrush}" />
     </Style>
     <Style Selector="Border#EnvBanner.prod">
-      <Setter Property="Background" Value="#C62828" />
+      <Setter Property="Background" Value="{DynamicResource FbsBannerProdBrush}" />
+    </Style>
+    <!-- Las otras bases conectadas en la franja: con el color de su entorno y un borde blanco que las separa del fondo. -->
+    <Style Selector="Button.chip">
+      <Setter Property="Padding" Value="8,0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Height" Value="20" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderBrush" Value="White" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Background" Value="#5F6B7A" />
+    </Style>
+    <Style Selector="Button.chip.dev">
+      <Setter Property="Background" Value="{DynamicResource FbsBannerDevBrush}" />
+    </Style>
+    <Style Selector="Button.chip.test">
+      <Setter Property="Background" Value="{DynamicResource FbsBannerTestBrush}" />
+    </Style>
+    <Style Selector="Button.chip.prod">
+      <Setter Property="Background" Value="{DynamicResource FbsBannerProdBrush}" />
+    </Style>
+    <Style Selector="Border#TxBadge > TextBlock">
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Border#TxBadge.old">
+      <Setter Property="Background" Value="#FFB300" />
+    </Style>
+    <Style Selector="Border#TxBadge.old > TextBlock">
+      <Setter Property="Foreground" Value="#1C1F23" />
+    </Style>
+    <Style Selector="Border#TxBadge.veryold">
+      <Setter Property="Background" Value="White" />
+    </Style>
+    <Style Selector="Border#TxBadge.veryold > TextBlock">
+      <Setter Property="Foreground" Value="#B71C1C" />
     </Style>
     <Style Selector="ListBox#Tree ListBoxItem">
       <Setter Property="Padding" Value="4,1" />
@@ -184,6 +220,9 @@
         <MenuItem x:Name="MenuShortcuts" Header="{x:Static res:Strings.MenuShortcuts}">
           <MenuItem.Icon><mi:MaterialIcon Kind="KeyboardOutline" /></MenuItem.Icon>
         </MenuItem>
+        <MenuItem x:Name="MenuWhatsNew" Header="{x:Static res:Strings.MenuWhatsNew}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="BullhornOutline" /></MenuItem.Icon>
+        </MenuItem>
         <Separator />
         <MenuItem x:Name="MenuAbout" Header="{x:Static res:Strings.MenuAbout}">
           <MenuItem.Icon><mi:MaterialIcon Kind="InformationOutline" /></MenuItem.Icon>
@@ -217,6 +256,13 @@
         <Button Classes="tool" Command="{Binding SelectedTab.RollbackCommand}" ToolTip.Tip="{x:Static res:Strings.ToolRollbackTip}">
           <StackPanel><mi:MaterialIcon Kind="Undo" /><TextBlock Text="Rollback" /></StackPanel>
         </Button>
+        <!-- Autocommit y aislamiento (D-84): solo en Desarrollo y Prueba; en producción, Commit explícito y read committed. -->
+        <CheckBox x:Name="AutoCommitBox" Content="Autocommit" IsChecked="{Binding SelectedTab.AutoCommit, FallbackValue=False}"
+                  IsEnabled="{Binding SelectedTab.CanChooseTransactionMode, FallbackValue=False}" ToolTip.Tip="{Binding SelectedTab.TransactionModeTip}"
+                  Margin="8,0,4,0" VerticalAlignment="Center" />
+        <ComboBox x:Name="IsolationBox" ItemsSource="{Binding SelectedTab.Isolations}" SelectedIndex="{Binding SelectedTab.IsolationIndex, FallbackValue=0}"
+                  IsEnabled="{Binding SelectedTab.CanChooseTransactionMode, FallbackValue=False}" ToolTip.Tip="{Binding SelectedTab.TransactionModeTip}"
+                  MinWidth="150" VerticalAlignment="Center" />
         <Rectangle Width="1" Height="22" Fill="{DynamicResource SemiColorBorder}" Margin="6,0" />
         <Button x:Name="ExportButton" Classes="tool" IsEnabled="{Binding !SelectedTab.IsRunning}" ToolTip.Tip="{x:Static res:Strings.ToolExportTip}">
           <StackPanel><mi:MaterialIcon Kind="Export" /><TextBlock Text="{x:Static res:Strings.ToolExport}" /><mi:MaterialIcon Kind="MenuDown" Width="14" Height="14" /></StackPanel>
@@ -248,9 +294,29 @@
     <!-- Franja de la base activa + transacción -->
     <Border x:Name="EnvBanner" DockPanel.Dock="Top" Padding="10,4"
             Classes.prod="{Binding IsProduction}" Classes.test="{Binding IsTest}" Classes.dev="{Binding IsDevelopment}">
-      <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Text="{Binding Banner}" Foreground="White" FontWeight="SemiBold" ToolTip.Tip="{Binding BannerTip}" />
-        <TextBlock Grid.Column="1" Text="{Binding SelectedTab.TransactionText}" Foreground="White" FontWeight="Bold" />
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <TextBlock Text="{Binding Banner}" Foreground="White" FontWeight="SemiBold" ToolTip.Tip="{Binding BannerTip}" VerticalAlignment="Center" />
+        <!-- Las otras bases conectadas (F-21): un clic lleva a su pestaña. La de la pestaña sigue siendo la franja. -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="16,0,8,0" VerticalAlignment="Center" IsVisible="{Binding HasOtherConnections}">
+          <TextBlock Text="{x:Static res:Strings.BannerAlsoConnected}" Foreground="White" Opacity="0.85" FontSize="12" VerticalAlignment="Center" />
+          <ItemsControl ItemsSource="{Binding OtherConnections}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="6" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ConnectedChip">
+                <Button Classes="chip" Classes.dev="{Binding IsDev}" Classes.test="{Binding IsTest}" Classes.prod="{Binding IsProd}"
+                        Command="{Binding GoTo}" ToolTip.Tip="{Binding Tip}" Content="{Binding Name}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+        <!-- Hace cuánto está abierta la transacción: en ámbar y en rojo según Opciones (una olvidada traba la OAT). -->
+        <Border Grid.Column="2" x:Name="TxBadge" CornerRadius="3" Padding="6,0"
+                Classes.old="{Binding SelectedTab.IsTransactionOld, FallbackValue=False}" Classes.veryold="{Binding SelectedTab.IsTransactionVeryOld, FallbackValue=False}">
+          <!-- Sin Foreground acá: un valor puesto en el control le gana al estilo y en ámbar o rojo quedaba blanco sobre blanco. -->
+          <TextBlock Text="{Binding SelectedTab.TransactionText}" FontWeight="Bold" />
+        </Border>
       </Grid>
     </Border>
 
@@ -284,7 +350,9 @@
                             ToolTip.Tip="{Binding Tooltip}" Opacity="{Binding IsDimmed, Converter={x:Static views:Converters.InactiveOpacity}}">
                   <TextBlock Text="{Binding Glyph}" Width="12" FontSize="11" Opacity="0.7" VerticalAlignment="Center" />
                   <mi:MaterialIcon Kind="{Binding Icon}" Width="16" Height="16" Classes="tone"
-                                   Classes.success="{Binding IsSuccessTone}" Classes.warning="{Binding IsWarningTone}" Classes.danger="{Binding IsDangerTone}" />
+                                   Classes.success="{Binding IsSuccessTone}" Classes.warning="{Binding IsWarningTone}" Classes.danger="{Binding IsDangerTone}"
+                                   Classes.dev="{Binding IsDevTone}" Classes.test="{Binding IsTestTone}" Classes.prod="{Binding IsProdTone}"
+                                   Classes.custom="{Binding HasIconBrush}" />
                   <TextBlock Text="{Binding Text}" VerticalAlignment="Center"
                              FontWeight="{Binding IsActive, Converter={x:Static views:Converters.BoldIfTrue}}" />
                   <TextBlock Text="{Binding Alert}" IsVisible="{Binding HasAlert}" FontSize="11" FontWeight="SemiBold"
@@ -303,6 +371,9 @@
             <TextBlock Text="{x:Static res:Strings.WelcomeText}"
                        TextWrapping="Wrap" Opacity="0.75" />
             <Button x:Name="WelcomeRegister" Content="{x:Static res:Strings.WelcomeRegister}" Classes="Primary" Theme="{DynamicResource SolidButton}" HorizontalAlignment="Left" />
+            <!-- Para el equipo: el archivo de registros que les pasan trae las bases (y sus áreas) de una vez. -->
+            <TextBlock Text="{x:Static res:Strings.WelcomeImportText}" TextWrapping="Wrap" Opacity="0.75" Margin="0,8,0,0" />
+            <Button x:Name="WelcomeImport" Content="{x:Static res:Strings.WelcomeImport}" HorizontalAlignment="Left" />
           </StackPanel>
         </Panel>
       </DockPanel>
@@ -325,6 +396,7 @@
                 <DataTemplate x:DataType="vm:EditorTabViewModel">
                   <Border BorderThickness="0,0,0,3" Padding="8,3,2,3" Classes="tone"
                           Classes.success="{Binding IsSuccessTone}" Classes.warning="{Binding IsWarningTone}" Classes.danger="{Binding IsDangerTone}"
+                          Classes.dev="{Binding IsDevTone}" Classes.test="{Binding IsTestTone}" Classes.prod="{Binding IsProdTone}"
                           ToolTip.Tip="{Binding Profile.Display, FallbackValue={x:Static res:Strings.NoDatabase}}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <mi:MaterialIcon Kind="{Binding Icon}" Width="15" Height="15" />

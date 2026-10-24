@@ -92,6 +92,62 @@ public sealed class ColumnOrderTests(FirebirdFixture fb, HeadlessFixture ui) : I
     }, CancellationToken.None);
 
     [Fact]
+    public Task Ocultar_una_columna_es_solo_la_vista() => ui.Session.DispatchAsync(async () =>
+    {
+        var grid = new DrawnGrid();
+        var w = new Window { Content = grid, Width = 900, Height = 500 };
+        w.Show();
+        grid.SetData(Cols(), Data());
+        Pump();
+        var events = 0;
+        grid.ColumnLayoutChanged += () => events++;
+        var nombreWidth = grid.ColumnWidth(1);
+
+        grid.SetColumnHidden(1, true);                                         // NOMBRE
+        Assert.Equal(1, events);
+        Assert.Equal([1], grid.HiddenColumns);
+        Assert.Equal([0, 1, 2], grid.ColumnOrder);                             // sigue en su lugar
+        Assert.Equal(["ID", "IMPORTE"], grid.DisplayColumns.Select(c => c.Name));
+        Assert.StartsWith("ID\tIMPORTE" + Environment.NewLine, grid.ClipboardText([0]));
+        Assert.Equal(["ID", "NOMBRE", "IMPORTE"], grid.DisplayedRows([0]).Columns.Select(c => c.Name)); // un INSERT no pierde datos
+        Assert.Equal(nombreWidth, grid.ColumnWidth(1));                        // el ancho se conserva para cuando vuelva
+
+        // Filtrar y ordenar por ella siguen funcionando.
+        grid.SetFilter(1, "b");
+        await grid.PendingBuild;
+        Assert.Equal([2], grid.VisibleRowIndexes());
+        grid.SetFilter(1, null);
+        await grid.PendingBuild;
+
+        // El teclado la saltea: de ID a la derecha es IMPORTE.
+        grid.SelectCell(0, 0);
+        Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(grid).OfType<Control>().First(c => c.GetType().Name == "GridCanvas").Focus();
+        w.KeyPress(Key.Right, RawInputModifiers.None, PhysicalKey.ArrowRight, null);
+        Pump();
+        Assert.Equal(2, grid.SelectedColumn);
+        grid.SetColumnHidden(2, true);                                         // la elegida se oculta: la selección pasa a otra
+        Assert.Equal(0, grid.SelectedColumn);
+        Assert.Equal([1, 2], grid.HiddenColumns.Order());
+        grid.SetColumnHidden(0, true);                                         // la última que se ve: no se oculta
+        Assert.Equal(["ID"], grid.DisplayColumns.Select(c => c.Name));
+
+        // Se guarda por nombre y vuelve; «Restaurar» y «Mostrar todas» las muestran.
+        var layout = grid.ColumnLayout();
+        Assert.Equal(["NOMBRE", "IMPORTE"], layout.Hidden);
+        grid.ShowAllColumns();
+        Assert.Empty(grid.HiddenColumns);
+        grid.ApplyColumnLayout(layout with { Hidden = ["IMPORTE", "BORRADA"] });
+        Assert.Equal([2], grid.HiddenColumns);
+        grid.ApplyColumnLayout(layout with { Hidden = ["ID", "NOMBRE", "IMPORTE"] }); // todas ocultas: se ignora
+        Assert.Empty(grid.HiddenColumns);
+        grid.SetColumnHidden(2, false);                                        // ya se ve: nada
+        grid.SetColumnHidden(2, true);
+        grid.ResetColumnLayout();
+        Assert.Empty(grid.HiddenColumns);
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
     public Task La_pestana_Datos_recuerda_orden_y_anchos_por_tabla() => ui.Session.DispatchAsync(async () =>
     {
         var store = AppServices.CreateProfileStore(_folder);
@@ -117,6 +173,7 @@ public sealed class ColumnOrderTests(FirebirdFixture fb, HeadlessFixture ui) : I
         var (w1, vm1, grid1) = await OpenTurnos();
         Assert.Equal([0, 1, 2, 3, 4], grid1.ColumnOrder);
         grid1.MoveColumn(4, 0);                                                // IMPORTE adelante
+        grid1.SetColumnHidden(3, true);                                        // y OBS oculta
         var widths = Enumerable.Range(0, 5).Select(grid1.ColumnWidth).ToList();
         Assert.True(File.Exists(Path.Combine(_folder, "grid-layouts.json")));
         w1.Close();
@@ -124,6 +181,7 @@ public sealed class ColumnOrderTests(FirebirdFixture fb, HeadlessFixture ui) : I
 
         var (w2, vm2, grid2) = await OpenTurnos();                               // otra sesión de FbStudio
         Assert.Equal([4, 0, 1, 2, 3], grid2.ColumnOrder);
+        Assert.Equal([3], grid2.HiddenColumns);
         Assert.Equal(widths, Enumerable.Range(0, 5).Select(grid2.ColumnWidth));
         grid2.ResetColumnLayout();
         w2.Close();
@@ -131,6 +189,7 @@ public sealed class ColumnOrderTests(FirebirdFixture fb, HeadlessFixture ui) : I
 
         var (w3, vm3, grid3) = await OpenTurnos();
         Assert.Equal([0, 1, 2, 3, 4], grid3.ColumnOrder);
+        Assert.Empty(grid3.HiddenColumns);
         w3.Close();
         await vm3.DisposeAsync();
     }, CancellationToken.None);

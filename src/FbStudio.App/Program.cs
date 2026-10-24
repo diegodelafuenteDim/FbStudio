@@ -21,6 +21,8 @@ internal static class Program
             if (existing is not null) profile = profile with { Id = existing.Id };
             store.Upsert(profile, password);
             Console.WriteLine($"Perfil {(existing is null ? "creado" : "actualizado")}: {profile.Display} · {profile.Environment} · solo lectura: {profile.ReadOnly}");
+            if (!store.SavesPasswords)
+                Console.WriteLine("Aviso: este equipo no tiene llavero del sistema, así que la contraseña no quedó guardada: FbStudio la va a pedir al conectar.");
             return 0;
         }
 

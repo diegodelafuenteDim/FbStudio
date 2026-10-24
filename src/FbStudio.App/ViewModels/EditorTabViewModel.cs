@@ -184,7 +184,8 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
     public event Action<int, int>? GoToRequested;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Title), nameof(TitleText), nameof(EnvironmentTone), nameof(IsSuccessTone), nameof(IsWarningTone), nameof(IsDangerTone), nameof(CompileHint))]
+    [NotifyPropertyChangedFor(nameof(Title), nameof(TitleText), nameof(EnvironmentTone), nameof(IsSuccessTone), nameof(IsWarningTone), nameof(IsDangerTone),
+        nameof(IsDevTone), nameof(IsTestTone), nameof(IsProdTone), nameof(CompileHint), nameof(CanChooseTransactionMode), nameof(TransactionModeTip))]
     [NotifyCanExecuteChangedFor(nameof(CompileCommand))]
     private ConnectionProfile? _profile;
 
@@ -228,13 +229,60 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand), nameof(CommitCommand), nameof(RollbackCommand), nameof(CompileCommand))]
-    [NotifyPropertyChangedFor(nameof(CanChangeProfile))]
+    [NotifyPropertyChangedFor(nameof(CanChangeProfile), nameof(CanChooseTransactionMode))]
     private bool _isRunning;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CommitCommand), nameof(RollbackCommand))]
-    [NotifyPropertyChangedFor(nameof(CanChangeProfile), nameof(TransactionText), nameof(Title))]
+    [NotifyPropertyChangedFor(nameof(CanChangeProfile), nameof(TransactionText), nameof(Title), nameof(IsTransactionOld), nameof(IsTransactionVeryOld),
+        nameof(CanChooseTransactionMode), nameof(TransactionModeTip))]
     private bool _inTransaction;
+
+    /// <summary>
+    /// Con una transacción de escritura abierta, cada 30 s se vuelve a mirar hace cuánto: pasa a ámbar y a rojo según
+    /// Opciones, y al pasar a rojo se avisa una vez (una olvidada traba la OAT del servidor para todos).
+    /// </summary>
+    partial void OnInTransactionChanged(bool value)
+    {
+        _warnedOldTransaction = false;
+        if (value)
+        {
+            _transactionTimer ??= new DispatcherTimer(TimeSpan.FromSeconds(30), DispatcherPriority.Background, (_, _) => RefreshTransactionAge());
+            _transactionTimer.Start();
+        }
+        else _transactionTimer?.Stop();
+    }
+
+    private DispatcherTimer? _transactionTimer;
+    private bool _warnedOldTransaction;
+
+    /// <summary>La hora (UTC) para medir la transacción; las pruebas la adelantan.</summary>
+    internal Func<DateTime> Clock { get; set; } = () => DateTime.UtcNow;
+
+    /// <summary>Hace cuánto está abierta la transacción de escritura (null si no hay).</summary>
+    public TimeSpan? TransactionAge => InTransaction && _session?.TransactionStartedAt is { } started ? Clock() - started : null;
+
+    public bool IsTransactionOld => TransactionAge is { } age && age.TotalMinutes >= _owner.Options.TransactionWarnMinutes && !IsTransactionVeryOld;
+    public bool IsTransactionVeryOld => TransactionAge is { } age && age.TotalMinutes >= _owner.Options.TransactionDangerMinutes;
+
+    /// <summary>Vuelve a calcular hace cuánto está abierta (lo llama el temporizador) y avisa una vez al pasar a rojo.</summary>
+    public void RefreshTransactionAge()
+    {
+        OnPropertyChanged(nameof(TransactionText));
+        OnPropertyChanged(nameof(IsTransactionOld));
+        OnPropertyChanged(nameof(IsTransactionVeryOld));
+        if (IsTransactionVeryOld && !_warnedOldTransaction && TransactionAge is { } age)
+        {
+            _warnedOldTransaction = true;
+            _owner.Notify(string.Format(Strings.TransactionVeryOldNotice, BaseTitle, AgeText(age)));
+        }
+    }
+
+    /// <summary>«menos de 1 min», «12 min», «1 h 05 min».</summary>
+    internal static string AgeText(TimeSpan age) =>
+        age.TotalMinutes < 1 ? Strings.AgeUnderAMinute
+        : age.TotalHours < 1 ? string.Format(Strings.AgeMinutes, (int)age.TotalMinutes)
+        : string.Format(Strings.AgeHoursMinutes, (int)age.TotalHours, age.Minutes);
 
     [ObservableProperty] private string _status = Strings.Ready;
 
@@ -278,9 +326,14 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
     public bool IsSuccessTone => EnvironmentTone == Tone.Success;
     public bool IsWarningTone => EnvironmentTone == Tone.Warning;
     public bool IsDangerTone => EnvironmentTone == Tone.Danger;
+    public bool IsDevTone => EnvironmentTone == Tone.Development;
+    public bool IsTestTone => EnvironmentTone == Tone.Test;
+    public bool IsProdTone => EnvironmentTone == Tone.Production;
 
     public bool CanChangeProfile => !IsRunning && !InTransaction;
-    public string TransactionText => InTransaction ? Strings.TransactionOpenBanner : "";
+    public string TransactionText => !InTransaction ? ""
+        : TransactionAge is { } age ? string.Format(Strings.TransactionOpenBannerAge, AgeText(age))
+        : Strings.TransactionOpenBanner;
 
     /// <summary>Último texto de la consulta (para exportar todo o un script INSERT).</summary>
     public string? LastSql => _lastSql;
@@ -346,6 +399,11 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
 
     async partial void OnProfileChanged(ConnectionProfile? value)
     {
+        if (value is { IsProduction: true } or { ReadOnly: true })
+        {
+            AutoCommit = false;
+            IsolationIndex = 0;
+        }
         CanExportFull = false;
         if (_session is not null)
         {
@@ -1028,22 +1086,60 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         if (_session is not null && _session.Profile.Id == profile.Id)
         {
             _session.LockTimeout = _owner.LockTimeout; // la opción pudo cambiar desde la última ejecución
+            ApplyTransactionMode(_session);
             return _session;
         }
         var password = _owner.ProfileStore.GetPassword(profile.Id)
                        ?? throw new InvalidOperationException(string.Format(Strings.NoSavedPassword, profile.Name));
         var session = new QuerySession(profile, password) { LockTimeout = _owner.LockTimeout };
+        ApplyTransactionMode(session);
         await session.OpenAsync(ct);
         _session = session;
         _ = _owner.CatalogFor(profile); // si todavía no está, empieza a cargarse para autocompletar
         return session;
     }
 
+    // ---------- autocommit y aislamiento (D-84), solo en Desarrollo y Prueba ----------
+
+    /// <summary>Confirmar cada sentencia que escribe al terminar bien. En producción o solo lectura no se puede.</summary>
+    [ObservableProperty] private bool _autoCommit;
+
+    /// <summary>Aislamiento de la próxima transacción de escritura (índice de <see cref="Isolations"/>).</summary>
+    [ObservableProperty] private int _isolationIndex;
+
+    public IReadOnlyList<string> Isolations { get; } = [Strings.IsolationReadCommitted, Strings.IsolationSnapshot, Strings.IsolationTableStability];
+
+    /// <summary>Se elige en Desarrollo y Prueba, sin transacción abierta ni algo ejecutándose.</summary>
+    public bool CanChooseTransactionMode => Profile is { IsProduction: false, ReadOnly: false } && !InTransaction && !IsRunning;
+
+    public string TransactionModeTip => Profile is { IsProduction: true } or { ReadOnly: true } ? Strings.TransactionModeProductionTip
+        : InTransaction ? Strings.TransactionModeOpenTip
+        : Strings.TransactionModeTip;
+
+    private TransactionIsolation Isolation => (TransactionIsolation)Math.Clamp(IsolationIndex, 0, Isolations.Count - 1);
+
+    private void ApplyTransactionMode(QuerySession session)
+    {
+        var allowed = Profile is { IsProduction: false, ReadOnly: false };
+        session.AutoCommit = allowed && AutoCommit;
+        if (!session.InTransaction) session.Isolation = allowed ? Isolation : TransactionIsolation.ReadCommitted;
+    }
+
+    partial void OnAutoCommitChanged(bool value)
+    {
+        if (_session is not null) ApplyTransactionMode(_session);
+    }
+
+    partial void OnIsolationIndexChanged(int value)
+    {
+        if (_session is not null) ApplyTransactionMode(_session);
+    }
+
     private void ShowOutcome(StatementInfo statement, QueryOutcome o)
     {
         Plan = FormatPlan(o.Plan, o.PlanIsExplained);
         Stats = FormatStats(o);
-        var tx = o.TransactionOpen ? Strings.TransactionOpenSuffix : "";
+        var tx = o.TransactionOpen ? Strings.TransactionOpenSuffix : o.AutoCommitted ? Strings.AutoCommittedSuffix : "";
         if (o.Error is not null)
         {
             Status = string.Format(Strings.ErrorStatus, o.Error.Split('\n', 2)[0].Trim());

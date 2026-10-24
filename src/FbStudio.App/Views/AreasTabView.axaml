@@ -73,7 +73,8 @@
             <DataTemplate x:DataType="vm:AreaItem">
               <DockPanel Margin="0,1">
                 <TextBlock DockPanel.Dock="Right" Text="{Binding CountText}" Opacity="0.6" VerticalAlignment="Center" Margin="8,0,0,0" />
-                <mi:MaterialIcon DockPanel.Dock="Left" Kind="{Binding Icon}" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <mi:MaterialIcon DockPanel.Dock="Left" Kind="{Binding Icon}" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"
+                                 Classes.custom="{Binding HasIconBrush}" />
                 <StackPanel>
                   <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                   <TextBlock Text="{Binding Subtitle}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
@@ -108,10 +109,23 @@
               <TextBox Text="{Binding ExcludeText}" AcceptsReturn="True" Height="110" TextWrapping="NoWrap"
                        FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" VerticalContentAlignment="Top" />
             </StackPanel>
-            <CheckBox Grid.Row="4" Grid.ColumnSpan="3" IsChecked="{Binding IncludeDependents}"
+            <CheckBox Grid.Row="4" IsChecked="{Binding IncludeDependents}"
                       ToolTip.Tip="{x:Static res:Strings.AreasIncludeDependentsTip}">
               <TextBlock Text="{x:Static res:Strings.AreasIncludeDependents}" TextWrapping="Wrap" />
             </CheckBox>
+            <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBlock Text="{x:Static res:Strings.AreasColor}" VerticalAlignment="Center" />
+              <ComboBox x:Name="ColorBox" ItemsSource="{Binding AreaColors}" SelectedItem="{Binding AreaColor}" MinWidth="170">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ColorChoice">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Border Width="14" Height="14" CornerRadius="3" Background="{Binding Brush}" BorderBrush="{DynamicResource SemiColorBorder}" BorderThickness="1" />
+                      <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </StackPanel>
           </Grid>
           <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.AreasUnassignedHelp}" IsVisible="{Binding !HasEditableArea}"
                      Opacity="0.7" TextWrapping="Wrap" Margin="0,0,0,8" />

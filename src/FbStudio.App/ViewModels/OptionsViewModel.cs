@@ -2,6 +2,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FbStudio.App.Resources;
+using FbStudio.Core.Profiles;
 using FbStudio.Workspace;
 
 namespace FbStudio.App.ViewModels;
@@ -23,6 +24,7 @@ public sealed partial class OptionsViewModel : ObservableObject
 
     public OptionsViewModel(AppSettings current)
     {
+        _folderColors = current.FolderColors; // se cambian desde el árbol: acá solo pasan
         var installed = InstalledFonts();
         Fonts = MonospaceFonts.Where(f => installed is null || installed.Contains(f))
             .Append(current.EditorFontFamily).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
@@ -39,6 +41,16 @@ public sealed partial class OptionsViewModel : ObservableObject
     public IReadOnlyList<string> Fonts { get; }
 
     [ObservableProperty] private int _themeIndex;
+
+    private readonly Dictionary<string, string>? _folderColors;
+
+    /// <summary>Colores de los entornos (F-20): los rojos solo para producción.</summary>
+    public IReadOnlyList<ColorChoice> DevelopmentColors { get; } = ColorChoice.For(ProfileEnvironment.Desarrollo);
+    public IReadOnlyList<ColorChoice> TestColors { get; } = ColorChoice.For(ProfileEnvironment.Prueba);
+    public IReadOnlyList<ColorChoice> ProductionColors { get; } = ColorChoice.For(ProfileEnvironment.Produccion);
+    [ObservableProperty] private ColorChoice? _developmentColor;
+    [ObservableProperty] private ColorChoice? _testColor;
+    [ObservableProperty] private ColorChoice? _productionColor;
     [ObservableProperty] private decimal? _historyRetentionDays;
     [ObservableProperty] private int _defaultRowLimit;
     [ObservableProperty] private decimal? _lockTimeoutSeconds;
@@ -97,6 +109,8 @@ public sealed partial class OptionsViewModel : ObservableObject
         var list = Templates.Select(t => new FbStudio.Core.Sql.SqlTemplate(t.Abbreviation.Trim(), t.Name.Trim(), t.Text)).ToList();
         return list.SequenceEqual(FbStudio.Core.Sql.SqlTemplates.Defaults) ? null : list;
     }
+    [ObservableProperty] private decimal? _transactionWarnMinutes;
+    [ObservableProperty] private decimal? _transactionDangerMinutes;
     [ObservableProperty] private decimal? _oatWarnMinutes;
     [ObservableProperty] private decimal? _oatDangerMinutes;
     [ObservableProperty] private bool _oatIgnoreMaintenance;
@@ -126,6 +140,14 @@ public sealed partial class OptionsViewModel : ObservableObject
     private void Load(AppSettings s)
     {
         ThemeIndex = (int)s.Theme;
+        ColorChoice Pick(IReadOnlyList<ColorChoice> choices, ProfileEnvironment environment)
+        {
+            var hex = s.EnvironmentColors?.GetValueOrDefault(environment) ?? ColorPalette.Default(environment);
+            return choices.FirstOrDefault(c => string.Equals(c.Hex, hex, StringComparison.OrdinalIgnoreCase)) ?? choices[0];
+        }
+        DevelopmentColor = Pick(DevelopmentColors, ProfileEnvironment.Desarrollo);
+        TestColor = Pick(TestColors, ProfileEnvironment.Prueba);
+        ProductionColor = Pick(ProductionColors, ProfileEnvironment.Produccion);
         LanguageIndex = Math.Max(0, UiLanguage.Codes.ToList().IndexOf(s.Language));
         HistoryRetentionDays = s.HistoryRetentionDays;
         DefaultRowLimit = s.DefaultRowLimit;
@@ -142,6 +164,8 @@ public sealed partial class OptionsViewModel : ObservableObject
         LoadTemplates(s.EffectiveTemplates);
         PreviewDataChanges = s.PreviewDataChanges;
         ScriptStopOnError = s.ScriptStopOnError;
+        TransactionWarnMinutes = s.TransactionWarnMinutes;
+        TransactionDangerMinutes = s.TransactionDangerMinutes;
         OatWarnMinutes = s.OatWarnMinutes;
         OatDangerMinutes = s.OatDangerMinutes;
         OatIgnoreMaintenance = s.OatIgnoreMaintenance;
@@ -154,6 +178,13 @@ public sealed partial class OptionsViewModel : ObservableObject
         return new AppSettings
         {
             Theme = (AppTheme)Math.Clamp(ThemeIndex, 0, Themes.Count - 1),
+            EnvironmentColors = new Dictionary<ProfileEnvironment, string>
+            {
+                [ProfileEnvironment.Desarrollo] = DevelopmentColor?.Hex ?? ColorPalette.Default(ProfileEnvironment.Desarrollo),
+                [ProfileEnvironment.Prueba] = TestColor?.Hex ?? ColorPalette.Default(ProfileEnvironment.Prueba),
+                [ProfileEnvironment.Produccion] = ProductionColor?.Hex ?? ColorPalette.Default(ProfileEnvironment.Produccion),
+            },
+            FolderColors = _folderColors,
             Language = UiLanguage.Codes[Math.Clamp(LanguageIndex, 0, UiLanguage.Codes.Count - 1)],
             HistoryRetentionDays = (int?)HistoryRetentionDays ?? d.HistoryRetentionDays,
             DefaultRowLimit = DefaultRowLimit,
@@ -170,6 +201,8 @@ public sealed partial class OptionsViewModel : ObservableObject
             Templates = TemplatesToSave(),
             PreviewDataChanges = PreviewDataChanges,
             ScriptStopOnError = ScriptStopOnError,
+            TransactionWarnMinutes = (int?)TransactionWarnMinutes ?? d.TransactionWarnMinutes,
+            TransactionDangerMinutes = (int?)TransactionDangerMinutes ?? d.TransactionDangerMinutes,
             OatWarnMinutes = (int?)OatWarnMinutes ?? d.OatWarnMinutes,
             OatDangerMinutes = (int?)OatDangerMinutes ?? d.OatDangerMinutes,
             OatIgnoreMaintenance = OatIgnoreMaintenance,

@@ -49,6 +49,9 @@
       <Button x:Name="SaveLogButton" Margin="0,0,6,4">
         <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="ContentSaveOutline" /><TextBlock Text="{x:Static res:Strings.TraceSaveLog}" /></StackPanel>
       </Button>
+      <Button x:Name="ExportAnalysisButton" Margin="0,0,6,4">
+        <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="FileExcel" /><TextBlock Text="{x:Static res:Strings.TraceExportAnalysis}" /></StackPanel>
+      </Button>
       <Button Command="{Binding ClearCommand}" Margin="0,0,6,4">
         <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="Broom" /><TextBlock Text="{x:Static res:Strings.TraceClear}" /></StackPanel>
       </Button>

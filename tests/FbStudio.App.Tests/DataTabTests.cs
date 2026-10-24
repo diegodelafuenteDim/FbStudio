@@ -20,6 +20,7 @@ public sealed class DataTabTests(FirebirdFixture fb, HeadlessFixture ui) : IDisp
     /// <summary>Lo que muestra «Aplicar» antes de ejecutar (por defecto se muestran los comandos) y qué se elige.</summary>
     private List<ScriptPreview> Previews { get; } = [];
     private ScriptPreviewChoice PreviewChoice { get; set; } = ScriptPreviewChoice.Run;
+    private bool PreviewWithCommit { get; set; }
 
     private (MainWindow Window, MainWindowViewModel Vm) Open()
     {
@@ -29,7 +30,7 @@ public sealed class DataTabTests(FirebirdFixture fb, HeadlessFixture ui) : IDisp
         var window = new MainWindow { DataContext = vm, Width = 1400, Height = 900 };
         window.Show();
         vm.ConfirmAsync = _ => Task.FromResult(true); // los borrados piden confirmación: en la prueba se acepta
-        vm.PreviewScriptAsync = p => { Previews.Add(p); return Task.FromResult(PreviewChoice); };
+        vm.PreviewScriptAsync = p => { Previews.Add(p); return Task.FromResult(new ScriptPreviewResult(PreviewChoice, PreviewWithCommit)); };
         vm.NewQueryTab(vm.Profiles.Single());                               // como un doble clic en la base
         Pump();
         return (window, vm);
@@ -202,14 +203,34 @@ public sealed class DataTabTests(FirebirdFixture fb, HeadlessFixture ui) : IDisp
             Assert.Equal(0, data.PendingCount);
             Assert.Equal("Cambios en UI_DATOS", vm.SelectedTab!.BaseTitle);
             Assert.Contains("UPDATE UI_DATOS SET NOMBRE = 'tres'", w.Editor.Text);
+            Assert.DoesNotContain("COMMIT", w.Editor.Text);                                // de fábrica, para confirmarlo a mano
             Assert.NotEqual("tres", await ScalarAsync($"SELECT NOMBRE FROM UI_DATOS WHERE ID = {data.Rows[0][0]}")); // no se ejecutó
             vm.SelectedTab = tab;
 
-            // Con la opción «Ejecutarlos directamente» no se muestra nada antes.
+            // Con «Terminar con COMMIT», el script termina así, y se recuerda para la próxima.
+            PreviewWithCommit = true;
+            grid.SelectCell(0, 1);
+            Assert.True(grid.EditSelectedCell("tres bis"));
+            Assert.Equal("Aplicar (1)", data.ApplyText);
+            await data.ApplyAsync();
+            Assert.EndsWith("COMMIT;", w.Editor.Text.TrimEnd());
+            Assert.True(vm.Options.DataScriptWithCommit);
+            Assert.True(Previews[^1].WithCommit is false);                                 // esa vez la casilla arrancó sin marcar
+            vm.SelectedTab = tab;
+            PreviewWithCommit = false;
+
+            // Con la opción «Ejecutarlos directamente» no se muestra nada antes…
             vm.SaveSettings(vm.Options with { PreviewDataChanges = false });
             Previews.Clear();
             grid.SelectCell(0, 1);
             Assert.True(grid.EditSelectedCell("cuatro"));
+            PreviewChoice = ScriptPreviewChoice.Cancel;
+            await data.ScriptAsync();                                                      // …salvo con «Generar script…»
+            Assert.Single(Previews);
+            Assert.True(Previews[0].WithCommit);                                           // la casilla, como quedó la última vez
+            Assert.Equal(1, data.PendingCount);                                            // cancelado: sigue pendiente
+            Previews.Clear();
+            PreviewChoice = ScriptPreviewChoice.Run;
             await data.ApplyAsync();
             Assert.Empty(Previews);
             Assert.Equal("cuatro", await ScalarAsync($"SELECT NOMBRE FROM UI_DATOS WHERE ID = {data.Rows[0][0]}"));

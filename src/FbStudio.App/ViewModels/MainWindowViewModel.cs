@@ -35,11 +35,12 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         _history = history;
         _settings = settings;
         _rowLimit = Options.DefaultRowLimit;
-        Tree = new DatabaseTreeViewModel(profiles) { AreasFor = AreaStore.Areas };
+        Tree = new DatabaseTreeViewModel(profiles) { AreasFor = AreaStore.Areas, FolderColorFor = FolderColor };
         AreaStore.Changed += Tree.RefreshAreas;
         if (settings?.LoadError is { } problem) Tree.Status = problem;
         else if (!profiles.SavesPasswords) Tree.Status = Strings.PasswordsNotSaved; // Linux sin llavero del escritorio
         Tree.DatabaseActivated += Activate;
+        Tree.ConnectionsChanged += RefreshOtherConnections;
         Tree.ServerInfoLoaded += id =>
         {
             if (SelectedProfile?.Id != id) return;
@@ -47,6 +48,11 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
             OnPropertyChanged(nameof(BannerTip));
         };
         Tree.ObjectRequested += (profile, obj) => _ = OpenObjectAsync(profile, obj);
+        // Lo último que se tocó manda (D-88): elegir algo de una base en el árbol hace que la consulta nueva vaya a esa base.
+        Tree.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DatabaseTreeViewModel.SelectedNode) && Tree.SelectedNode?.DatabaseNode is not null) _treeIsNewer = true;
+        };
         // Sin pestañas hasta que se elige una base: una consulta sin base no sirve para nada.
         Tabs.CollectionChanged += (_, _) =>
         {
@@ -93,7 +99,7 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
     public MonitorQueryStore MonitorQueries { get; }
 
     /// <summary>La vista muestra los comandos de «Aplicar» (pestaña Datos) antes de ejecutarlos.</summary>
-    public Func<ScriptPreview, Task<ScriptPreviewChoice>> PreviewScriptAsync { get; set; } = _ => Task.FromResult(ScriptPreviewChoice.Cancel);
+    public Func<ScriptPreview, Task<ScriptPreviewResult>> PreviewScriptAsync { get; set; } = p => Task.FromResult(new ScriptPreviewResult(ScriptPreviewChoice.Cancel, p.WithCommit));
 
     /// <summary>La vista abre el editor de una consulta propia del monitoreo; true si se guardó.</summary>
     public Func<MonitorQueryEditorViewModel, Task<bool>> EditMonitorQueryAsync { get; set; } = _ => Task.FromResult(false);
@@ -454,11 +460,47 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         null => "",
     };
 
+    /// <summary>
+    /// Si al arrancar hay que mostrar las novedades (D-85): la primera vez que se abre una versión que tiene su sección en
+    /// el registro de cambios. En una instalación nueva (nada anotado y ninguna base registrada) no: no hay nada «nuevo».
+    /// Deja anotada la versión, así se muestra una sola vez.
+    /// </summary>
+    public bool ShouldShowWhatsNew(string version, IReadOnlyList<Core.ChangeLogVersion> changeLog)
+    {
+        var last = Options.LastSeenVersion;
+        if (last == version) return false;
+        var upgrade = last is not null || Profiles.Count > 0;
+        SaveSettings(Options with { LastSeenVersion = version });
+        return upgrade && changeLog.Any(v => v.Version == version && v.English.Count + v.Spanish.Count > 0);
+    }
+
+    /// <summary>Las otras bases conectadas, para la franja (F-21): la de la pestaña sigue siendo el aviso de dónde se ejecuta.</summary>
+    public ObservableCollection<ConnectedChip> OtherConnections { get; } = [];
+
+    public bool HasOtherConnections => OtherConnections.Count > 0;
+
+    private void RefreshOtherConnections()
+    {
+        var others = Profiles.Where(p => Tree.IsConnected(p.Id) && p.Id != SelectedProfile?.Id).OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+        if (others.Select(p => (p.Id, p.Name, p.Environment)).SequenceEqual(OtherConnections.Select(c => (c.Profile.Id, c.Profile.Name, c.Profile.Environment)))) return;
+        OtherConnections.Clear();
+        foreach (var p in others) OtherConnections.Add(new ConnectedChip(p, GoToConnection));
+        OnPropertyChanged(nameof(HasOtherConnections));
+    }
+
+    /// <summary>Lleva a la pestaña de esa base (la primera) o, si no tiene, abre una consulta en ella; la actual no cambia de base.</summary>
+    public void GoToConnection(ConnectionProfile profile)
+    {
+        if (Tabs.FirstOrDefault(t => t.Profile?.Id == profile.Id) is { } tab) SelectedTab = tab;
+        else NewQueryTab(profile).Status = string.Format(Strings.TabNewOnDatabase, profile.Name);
+    }
+
     /// <summary>Por qué importa y cómo exigir el cifrado, cuando la conexión va sin cifrar.</summary>
     public string? BannerTip => SelectedProfile is { } p && Tree.ServerFor(p.Id)?.WireEncrypted == false ? Strings.BannerNotEncryptedTip : null;
 
     partial void OnSelectedTabChanged(EditorTabViewModel? oldValue, EditorTabViewModel? newValue)
     {
+        _treeIsNewer = false;
         if (oldValue is not null)
         {
             oldValue.IsSelected = false;
@@ -470,6 +512,7 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
             newValue.PropertyChanged += OnTabPropertyChanged;
         }
         Tree.MarkActive(newValue?.Profile?.Id);
+        RefreshOtherConnections();
         if (HistoryOnlyThisProfile) RefreshHistory();
     }
 
@@ -486,6 +529,7 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         OnPropertyChanged(nameof(SelectedProfile));
         OnPropertyChanged(nameof(Banner));
         OnPropertyChanged(nameof(BannerTip));
+        RefreshOtherConnections();
         OnPropertyChanged(nameof(IsProduction));
         OnPropertyChanged(nameof(IsTest));
         OnPropertyChanged(nameof(IsDevelopment));
@@ -508,15 +552,27 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         return copy;
     }
 
-    /// <summary>«Exportar registros…» (F-22): los elegidos, con o sin usuario y, con frase, con sus contraseñas cifradas.</summary>
-    public void ExportProfiles(string path, IReadOnlyList<Guid> ids, bool includeUser, string? passphrase)
+    /// <summary>
+    /// «Exportar registros…» (F-22): los elegidos, con o sin usuario, con frase con sus contraseñas cifradas y, si se
+    /// pide, con las áreas de cada base.
+    /// </summary>
+    public void ExportProfiles(string path, IReadOnlyList<Guid> ids, bool includeUser, string? passphrase, bool includeAreas = false)
     {
         var chosen = _profiles.Load().Where(p => ids.Contains(p.Id)).ToList();
-        ProfileBackup.Export(path, chosen, includeUser, _profiles.GetPassword, passphrase);
+        var withAreas = 0;
+        ProfileBackup.Export(path, chosen, includeUser, _profiles.GetPassword, passphrase, includeAreas
+            ? p =>
+            {
+                var file = AreaStore.Load(p).File;
+                if (file.Areas.Count > 0) withAreas++;
+                return file;
+            }
+            : null);
         var withPassword = passphrase is not null && includeUser ? chosen.Count(p => _profiles.GetPassword(p.Id) is not null) : 0;
-        Notify(withPassword > 0
-            ? string.Format(Strings.BackupExportedWithPasswords, chosen.Count, withPassword, path)
-            : string.Format(Strings.BackupExported, chosen.Count, path));
+        Notify((withPassword > 0
+                   ? string.Format(Strings.BackupExportedWithPasswords, chosen.Count, withPassword, path)
+                   : string.Format(Strings.BackupExported, chosen.Count, path))
+               + (withAreas > 0 ? " " + string.Format(Strings.BackupExportedAreas, withAreas) : ""));
     }
 
     /// <summary>Qué pasaría al importar: nuevos y ya registrados.</summary>
@@ -525,12 +581,15 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
     /// <summary>«Importar registros…»: guarda los del plan (contraseñas al llavero de este equipo) y rearma el árbol.</summary>
     public ProfileImportResult ImportProfiles(IReadOnlyList<ProfileImportItem> plan, bool updateExisting, string? user, string? password)
     {
-        var result = ProfileBackup.Apply(_profiles, plan, updateExisting, user, password);
+        var result = ProfileBackup.Apply(_profiles, plan, updateExisting, user, password, AreaStore);
         ReloadProfiles();
         Notify(string.Format(Strings.BackupImported, result.Added, result.Updated, result.Skipped)
                + (result.Invalid > 0 ? " " + string.Format(Strings.BackupInvalid, result.Invalid) : "")
                + (result.PasswordsForgotten > 0 ? " " + string.Format(Strings.BackupPasswordsForgotten, result.PasswordsForgotten) : "")
-               + (result.KeptProtection > 0 ? " " + string.Format(Strings.BackupKeptProtection, result.KeptProtection) : ""));
+               + (result.KeptProtection > 0 ? " " + string.Format(Strings.BackupKeptProtection, result.KeptProtection) : "")
+               + (result.AreasImported > 0 ? " " + string.Format(Strings.BackupAreasImported, result.AreasImported) : "")
+               + (result.AreasKept > 0 ? " " + string.Format(Strings.BackupAreasKept, result.AreasKept) : "")
+               + (result.AreasFailed > 0 ? " " + string.Format(Strings.BackupAreasFailed, result.AreasFailed) : ""));
         return result;
     }
 
@@ -586,9 +645,34 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         _profiles.Save(all.Select(p => ProfileFolders.IsInside(p.Folder, folder)
             ? p with { Folder = newName is null ? null : newName + ProfileFolders.Clean(p.Folder)![cleanOld.Length..] }
             : p));
+        // Los colores de la carpeta y de las que tiene adentro la acompañan (sin carpeta, se van).
+        if (Options.FolderColors is { } folderColors && folderColors.Keys.Any(k => ProfileFolders.IsInside(k, folder)))
+        {
+            var colors = folderColors.Where(kv => !ProfileFolders.IsInside(kv.Key, folder)).ToDictionary(kv => kv.Key, kv => kv.Value);
+            if (newName is not null)
+                foreach (var (key, hex) in folderColors.Where(kv => ProfileFolders.IsInside(kv.Key, folder)))
+                    colors[newName + ProfileFolders.Clean(key)![cleanOld.Length..]] = hex;
+            SaveSettings(Options with { FolderColors = colors });
+        }
         ReloadProfiles();
         Tree.Status = newName is null ? string.Format(Strings.FolderRemoved, folder) : string.Format(Strings.FolderRenamed, folder, newName);
         return true;
+    }
+
+    /// <summary>El color propio de una carpeta (F-20); null: sin color propio.</summary>
+    public string? FolderColor(string folder) =>
+        ProfileFolders.Clean(folder) is { } key && (Options.FolderColors ?? []).FirstOrDefault(kv => string.Equals(kv.Key, key, StringComparison.OrdinalIgnoreCase)) is { Value: { } hex }
+            ? hex
+            : null;
+
+    /// <summary>Pone (o saca, con null) el color propio de una carpeta: solo uno de la paleta de las carpetas, sin rojos.</summary>
+    public void SetFolderColor(string folder, string? hex)
+    {
+        if (ProfileFolders.Clean(folder) is not { } key || (hex is not null && !ColorPalette.IsAllowed(null, hex))) return;
+        var colors = (Options.FolderColors ?? []).Where(kv => !string.Equals(kv.Key, key, StringComparison.OrdinalIgnoreCase)).ToDictionary(kv => kv.Key, kv => kv.Value);
+        if (hex is not null) colors[key] = hex;
+        SaveSettings(Options with { FolderColors = colors });
+        ReloadProfiles();
     }
 
     /// <summary>¿Se puede soltar lo arrastrado ahí? (para el cursor mientras se arrastra en el árbol).</summary>
@@ -701,9 +785,18 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
+    /// <summary>Se eligió algo en el árbol después de pasar por la pestaña: la consulta nueva va a esa base (D-88).</summary>
+    private bool _treeIsNewer;
+
+    /// <summary>Se volvió a la pestaña (clic o foco en su editor): la consulta nueva va a la base de la pestaña.</summary>
+    public void TabTouched() => _treeIsNewer = false;
+
+    /// <summary>Clic en el árbol, aunque sea en la fila que ya estaba elegida: la consulta nueva va a la base de esa fila.</summary>
+    public void TreeTouched() => _treeIsNewer = true;
+
     /// <summary>
-    /// Ctrl+T o «+»: consulta nueva en la base de la pestaña elegida o, si no hay, en la elegida en el árbol. Sin
-    /// ninguna de las dos no abre nada y lo dice.
+    /// Ctrl+T o «+»: consulta nueva en la base de lo último que se tocó (D-88): la elegida en el árbol si se la eligió
+    /// después de la pestaña; si no, la de la pestaña elegida y, sin pestañas, la del árbol. Sin ninguna no abre nada y lo dice.
     /// </summary>
     public EditorTabViewModel? NewQueryTabFor(ConnectionProfile? treeSelection)
     {
@@ -711,7 +804,7 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         return NewQueryTab(profile);
     }
 
-    /// <summary>Ctrl+Shift+F: búsqueda en la base de la pestaña elegida o en la elegida en el árbol.</summary>
+    /// <summary>Ctrl+Shift+F: búsqueda en la base de lo último que se tocó, igual que la consulta nueva.</summary>
     public SearchTabViewModel? NewSearchTabFor(ConnectionProfile? treeSelection)
     {
         if (PickProfile(treeSelection) is not { } profile) return null;
@@ -720,7 +813,8 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
 
     private ConnectionProfile? PickProfile(ConnectionProfile? treeSelection)
     {
-        if ((SelectedProfile ?? treeSelection) is { } profile) return Profiles.FirstOrDefault(p => p.Id == profile.Id) ?? profile;
+        var picked = _treeIsNewer ? treeSelection ?? SelectedProfile : SelectedProfile ?? treeSelection;
+        if (picked is { } profile) return Profiles.FirstOrDefault(p => p.Id == profile.Id) ?? profile;
         Notify(Tree.IsEmpty ? Strings.RegisterFirst : Strings.PickDatabaseInTree);
         return null;
     }
@@ -1017,8 +1111,14 @@ public enum ScriptPreviewChoice
     OpenInTab,
 }
 
-/// <summary>Comandos para ver antes de ejecutar, con los avisos (producción, borrados).</summary>
-public sealed record ScriptPreview(string Title, string Script, IReadOnlyList<string> Warnings);
+/// <summary>
+/// Comandos para ver antes de ejecutar, con los avisos (producción, borrados). <paramref name="WithCommit"/>: cómo arranca
+/// la casilla «Terminar con COMMIT» (vale para copiarlo o llevarlo a una consulta; «Ejecutar» siempre confirma).
+/// </summary>
+public sealed record ScriptPreview(string Title, string Script, IReadOnlyList<string> Warnings, bool WithCommit = false);
+
+/// <summary>Qué se eligió en la ventana de los comandos y si el script va con COMMIT al final.</summary>
+public sealed record ScriptPreviewResult(ScriptPreviewChoice Choice, bool WithCommit);
 
 /// <summary>Un parámetro de una consulta: su nombre («desde», o «#1» si es un «?» sin nombre), lo escrito y si va NULL.</summary>
 public sealed record ParameterEntry(string Name, string Text, bool IsNull);

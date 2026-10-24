@@ -7,6 +7,7 @@ namespace FbStudio.App.Views;
 
 public static class Converters
 {
+
     /// <summary>Lista de registros: «Clinica · Producción» si tiene carpeta propia, si no solo el ambiente.</summary>
     public static readonly IValueConverter ProfileGroup = new FuncValueConverter<ConnectionProfile?, string>(p =>
         p is null ? "" : string.IsNullOrWhiteSpace(p.Folder)

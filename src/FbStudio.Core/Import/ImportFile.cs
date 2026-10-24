@@ -135,9 +135,14 @@ public sealed class ImportFile
         return SheetEntries(zip).Select(s => s.Name).ToList();
     }
 
-    public static ImportFile Excel(string path, int sheet = 0, bool hasHeader = true)
+    /// <summary>Caracteres de texto que puede traer un Excel (unos 100 MB en memoria): más es un archivo enorme o armado.</summary>
+    public const long MaxTextChars = 50_000_000;
+
+    public static ImportFile Excel(string path, int sheet = 0, bool hasHeader = true) => Excel(path, sheet, hasHeader, MaxTextChars);
+
+    internal static ImportFile Excel(string path, int sheet, bool hasHeader, long maxTextChars)
     {
-        IEnumerable<object?[]> Read() => XlsxRows(path, sheet);
+        IEnumerable<object?[]> Read() => XlsxRows(path, sheet, maxTextChars);
         var first = Read().FirstOrDefault() ?? [];
         var headers = hasHeader
             ? first.Select((h, i) => h is null || string.IsNullOrWhiteSpace(Convert.ToString(h, CultureInfo.InvariantCulture)) ? Unnamed(i) : Convert.ToString(h, CultureInfo.InvariantCulture)!.Trim()).ToList()
@@ -178,12 +183,12 @@ public sealed class ImportFile
         return sheets;
     }
 
-    private static IEnumerable<object?[]> XlsxRows(string path, int sheetIndex)
+    private static IEnumerable<object?[]> XlsxRows(string path, int sheetIndex, long maxTextChars)
     {
         using var zip = ZipFile.OpenRead(path);
         var sheets = SheetEntries(zip);
         if (sheetIndex < 0 || sheetIndex >= sheets.Count || zip.GetEntry(sheets[sheetIndex].Entry) is not { } entry) yield break;
-        var shared = SharedStrings(zip);
+        var shared = SharedStrings(zip, maxTextChars);
         var dateStyles = DateStyles(zip);
 
         using var r = XmlReader.Create(entry.Open());
@@ -261,9 +266,10 @@ public sealed class ImportFile
         return Math.Max(0, n - 1);
     }
 
-    private static List<string> SharedStrings(ZipArchive zip)
+    private static List<string> SharedStrings(ZipArchive zip, long maxTextChars)
     {
         var list = new List<string>();
+        long chars = 0;
         if (zip.GetEntry("xl/sharedStrings.xml") is not { } entry) return list;
         using var r = XmlReader.Create(entry.Open());
         var current = new StringBuilder();
@@ -272,7 +278,10 @@ public sealed class ImportFile
         {
             if (r.NodeType == XmlNodeType.Element && r.LocalName == "t")
             {
-                current.Append(r.ReadElementContentAsString()); // ya avanzó: no se llama a Read
+                var text = r.ReadElementContentAsString(); // ya avanzó: no se llama a Read
+                if ((chars += text.Length) > maxTextChars)
+                    throw new InvalidDataException(string.Format(Resources.CoreStrings.ImportTooMuchText, maxTextChars));
+                current.Append(text);
                 continue;
             }
             if (r.NodeType == XmlNodeType.Element && r.LocalName == "si" && !r.IsEmptyElement) current.Clear();

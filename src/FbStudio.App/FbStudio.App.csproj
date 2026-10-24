@@ -16,6 +16,10 @@
     <AvaloniaResource Include="Assets\**" Exclude="Assets\*.icns" /> <!-- el .icns es solo para el paquete de macOS -->
   </ItemGroup>
   <ItemGroup>
+    <!-- El registro de cambios va adentro de la app, para Ayuda → Novedades (D-81). -->
+    <EmbeddedResource Include="..\..\CHANGELOG.md" LogicalName="FbStudio.CHANGELOG.md" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Textos de la interfaz (F-6): la clase Strings se genera al compilar desde el .resx (español, neutral). -->
     <EmbeddedResource Update="Resources\Strings.resx">
       <StronglyTypedFileName>$(IntermediateOutputPath)Strings.Designer.cs</StronglyTypedFileName>

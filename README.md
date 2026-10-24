@@ -28,7 +28,7 @@
   <a href="#en-español">Español</a>
 </p>
 
-![The grid with a column filter](docs/screenshots/grid-column-filter.png)
+![The grid with a column filter](docs/screenshots/en/grid-column-filter.png)
 
 ## Why
 
@@ -85,7 +85,7 @@ familiar to people coming from commercial tools, without licenses or subscriptio
 
 | | |
 |---|---|
-| ![Data tab with a date filter](docs/screenshots/data-date-filter.png) | ![Number filter between two values](docs/screenshots/data-number-filter.png) |
+| ![Data tab with a date filter](docs/screenshots/en/data-date-filter.png) | ![Number filter between two values](docs/screenshots/en/data-number-filter.png) |
 
 ## Status
 
@@ -106,7 +106,7 @@ Nothing else to install: no .NET and no Firebird client (FbStudio talks to the s
 | macOS, Intel | `FbStudio-<version>-osx-x64.zip` | The same as above. |
 
 `https://github.com/diegodelafuenteDim/FbStudio/releases/latest/download/fbstudio_amd64.deb` is always the latest
-`.deb`. To check a download, compare it with `SHA256SUMS.txt` from the same release
+`.deb`. What changed in each version: [CHANGELOG.md](CHANGELOG.md) (also in FbStudio, Help → What's new). To check a download, compare it with `SHA256SUMS.txt` from the same release
 (`sha256sum -c SHA256SUMS.txt --ignore-missing`).
 
 ## Build from source
@@ -215,6 +215,12 @@ named for reference only.
 - usuarios, roles y permisos (con el SQL a la vista antes de aplicarlo);
 - exportación a CSV, Excel y script INSERT, e importación de un CSV o un Excel a una tabla.
 
+![La grilla con un filtro por columna](docs/screenshots/es/grid-column-filter.png)
+
+| | |
+|---|---|
+| ![La pestaña Datos con un filtro de fecha](docs/screenshots/es/data-date-filter.png) | ![Filtro de número entre dos valores](docs/screenshots/es/data-number-filter.png) |
+
 Además:
 
 - **Estado:** versión preliminar. Se usa todos los días contra Firebird 3.0 en Windows y se probó en Linux (Ubuntu); en
@@ -228,6 +234,7 @@ Además:
     para que recuerde las contraseñas).
   - **macOS:** el `.zip` de tu Mac (`osx-arm64` para Apple Silicon, `osx-x64` para Intel). La primera vez:
     Configuración del Sistema → Privacidad y seguridad → **Abrir igualmente**.
+- **Qué cambió en cada versión:** [CHANGELOG.md](CHANGELOG.md), también en FbStudio, en Ayuda → Novedades.
 - **Compilarlo:** con el SDK de .NET 10, `dotnet run --project src/FbStudio.App`. Los tests necesitan Docker.
 - **Contraseñas:** van al llavero de cada sistema: DPAPI en Windows, `secret-tool` en Linux y el Llavero en macOS.
 - **Errores y pedidos:** en los formularios de *Issues* (en español o en inglés). Para dudas e ideas, *Discussions*.

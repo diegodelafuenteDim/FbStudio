@@ -81,10 +81,12 @@ public sealed class ProfileBackupDialogTests(FirebirdFixture fb, HeadlessFixture
         dialog.IncludeUser.IsChecked = true;
         dialog.IncludePasswords.IsChecked = true;
         dialog.Repeat.Text = Phrase;
+        Assert.True(dialog.IncludeAreas.IsChecked);                            // las áreas van por defecto
+        dialog.IncludeAreas.IsChecked = false;
         Click(dialog, "Exportar…");
         var choice = await result;
         Assert.NotNull(choice);
-        Assert.Equal((2, true, Phrase), (choice.ProfileIds.Count, choice.IncludeUser, choice.Passphrase));
+        Assert.Equal((2, true, Phrase, false), (choice.ProfileIds.Count, choice.IncludeUser, choice.Passphrase, choice.IncludeAreas));
         owner.Close();
     }, CancellationToken.None);
 

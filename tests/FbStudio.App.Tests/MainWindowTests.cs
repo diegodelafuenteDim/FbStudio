@@ -271,8 +271,8 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
             Assert.True(w.ResultsGrid.CellsDrawnLastFrame > 0);
             Assert.False(w.ResultsGrid.LastFrameDark);
             var db = Assert.Single(vm.Tree.Rows, n => n.Kind == TreeNodeKind.Database);
-            Assert.True(db.IsSuccessTone);                                   // Desarrollo: verde
-            Assert.True(vm.SelectedTab!.IsSuccessTone);                      // y el borde de la pestaña también
+            Assert.True(db.IsDevTone);                                   // Desarrollo: verde
+            Assert.True(vm.SelectedTab!.IsDevTone);                      // y el borde de la pestaña también
             Assert.Equal("LightPlus", w.CurrentEditorView!.EditorTheme);
 
             vm.SaveSettings(vm.Options with { Theme = AppTheme.Dark });
@@ -374,6 +374,95 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
 
         await vm.SelectedTab!.RollbackCommand.ExecuteAsync(null);
         Assert.False(vm.SelectedTab!.InTransaction);
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Sin_bases_registradas_ofrece_registrar_una_o_importar_las_del_equipo() => ui.Session.DispatchAsync(() =>
+    {
+        var vm = new MainWindowViewModel(AppServices.CreateProfileStore(Path.Combine(_folder, "vacio")));
+        var w = new MainWindow { DataContext = vm, Width = 1200, Height = 800 };
+        w.Show();
+        Pump();
+        Assert.True(vm.Tree.IsEmpty);
+        Assert.Equal("Sin bases registradas: tocá «Registrar» para cargar la primera", vm.Banner);
+        Assert.True(w.Welcome.IsVisible);
+        var import = w.WelcomeImport;
+        Assert.Equal("Importar registros…", import.Content);
+        Assert.True(import.IsEffectivelyVisible);
+        w.Close();
+        return Task.CompletedTask;
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Autocommit_y_aislamiento_solo_en_desarrollo_y_prueba() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        var tab = vm.SelectedTab!;
+        Assert.True(tab.CanChooseTransactionMode);
+        Assert.Equal(["Read committed", "Snapshot", "Snapshot table stability"], tab.Isolations);
+        tab.AutoCommit = true;
+        w.Editor.Text = "UPDATE TURNOS SET OBS = OBS WHERE ID = 28";
+        await w.RunAsync();
+        Assert.False(tab.InTransaction);
+        Assert.Contains("confirmado (autocommit)", tab.Status);
+
+        tab.AutoCommit = false;
+        await w.RunAsync();
+        Assert.True(tab.InTransaction);
+        Assert.False(tab.CanChooseTransactionMode);                            // con una abierta no se cambia
+        Assert.StartsWith("Con una transacción abierta", tab.TransactionModeTip);
+        await tab.RollbackCommand.ExecuteAsync(null);
+
+        tab.AutoCommit = true;
+        tab.IsolationIndex = 1;
+        tab.Profile = tab.Profile! with { Environment = ProfileEnvironment.Produccion };
+        Assert.False(tab.AutoCommit);                                          // en producción se apagan
+        Assert.Equal(0, tab.IsolationIndex);
+        Assert.False(tab.CanChooseTransactionMode);
+        Assert.StartsWith("En producción", tab.TransactionModeTip);
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Una_transaccion_abierta_hace_rato_pasa_a_ambar_y_a_rojo() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        w.Editor.Text = "UPDATE TURNOS SET OBS = OBS WHERE ID = 27";
+        await w.RunAsync();
+        var tab = vm.SelectedTab!;
+        Assert.True(tab.InTransaction);
+        Assert.StartsWith("Transacción de escritura ABIERTA hace menos de 1 min", tab.TransactionText);
+        Assert.False(tab.IsTransactionOld);
+
+        var start = DateTime.UtcNow;
+        var badge = w.TxBadge;
+        Avalonia.Media.Color TextColor() => ((Avalonia.Media.ISolidColorBrush)((Avalonia.Controls.TextBlock)badge.Child!).Foreground!).Color;
+        Pump();
+        Assert.Equal(Avalonia.Media.Colors.White, TextColor());                // sobre el color del entorno
+
+        tab.Clock = () => start.AddMinutes(6);                                 // de fábrica: ámbar a los 5, rojo a los 15
+        tab.RefreshTransactionAge();
+        Assert.True(tab.IsTransactionOld);
+        Assert.Contains("hace 6 min", tab.TransactionText);
+        Pump();
+        Assert.Equal(Avalonia.Media.Color.Parse("#1C1F23"), TextColor());      // letra oscura sobre ámbar
+
+        tab.Clock = () => start.AddMinutes(75);
+        tab.RefreshTransactionAge();
+        Assert.False(tab.IsTransactionOld);
+        Assert.True(tab.IsTransactionVeryOld);
+        Assert.Contains("hace 1 h 15 min", tab.TransactionText);
+        Pump();
+        Assert.Equal(Avalonia.Media.Color.Parse("#B71C1C"), TextColor());      // letra roja sobre blanco (antes quedaba blanca)
+        Assert.StartsWith("La pestaña", tab.Status);                          // el aviso, una vez
+        tab.Status = "";
+        tab.RefreshTransactionAge();
+        Assert.Equal("", tab.Status);
+
+        await tab.RollbackCommand.ExecuteAsync(null);
+        Assert.False(tab.IsTransactionVeryOld);
+        Assert.Equal("", tab.TransactionText);
         w.Close();
     }, CancellationToken.None);
 
@@ -542,6 +631,17 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         Assert.Equal(5, cols.Count);
         Assert.Equal("INTEGER PK NOT NULL", cols[0].Detail);
 
+        // Arrastrar la tabla y una columna al editor: escriben su nombre donde se sueltan.
+        Assert.Equal("TURNOS", DatabaseTreeViewModel.EditorText(turnos));
+        Assert.Equal("IMPORTE", DatabaseTreeViewModel.EditorText(cols.Single(c => c.Column!.Name == "IMPORTE")));
+        Assert.Null(DatabaseTreeViewModel.EditorText(db));                      // la base se mueve entre carpetas, no va al editor
+        Assert.True(w.Editor.Options.EnableTextDragDrop);
+        w.Editor.Text = "SELECT  FROM ";
+        Pump();
+        DropText(w, "TURNOS", w.Editor.Text.Length);
+        DropText(w, "IMPORTE", "SELECT ".Length);
+        Assert.Equal("SELECT IMPORTE FROM TURNOS", w.Editor.Text);
+
         tree.RequestSelectFirst100(turnos); // clic derecho → SELECT FIRST 100 *, en su propia pestaña
         await WaitFor(() => vm.SelectedTab!.BaseTitle == "TURNOS" && !vm.SelectedTab.IsRunning && vm.SelectedTab.Rows.Count == 100);
         Assert.Equal(2, vm.Tabs.Count);
@@ -551,6 +651,19 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         Assert.False(tree.IsConnected(db.Profile.Id));
         w.Close();
     }, CancellationToken.None);
+
+    /// <summary>Suelta un texto arrastrado sobre el editor de la pestaña elegida, en el lugar de esa posición del texto.</summary>
+    private static void DropText(MainWindow w, string text, int offset)
+    {
+        var view = w.Editor.TextArea.TextView;
+        var at = view.GetVisualPosition(new AvaloniaEdit.TextViewPosition(w.Editor.Document.GetLocation(offset)), AvaloniaEdit.Rendering.VisualYPosition.LineMiddle);
+        var point = view.TranslatePoint(at - view.ScrollOffset, w)!.Value;
+        var data = new Avalonia.Input.DataTransfer();
+        data.Add(Avalonia.Input.DataTransferItem.CreateText(text));
+        foreach (var type in new[] { Avalonia.Input.Raw.RawDragEventType.DragEnter, Avalonia.Input.Raw.RawDragEventType.DragOver, Avalonia.Input.Raw.RawDragEventType.Drop })
+            w.DragDrop(point, type, data, Avalonia.Input.DragDropEffects.Copy, Avalonia.Input.RawInputModifiers.None);
+        Pump();
+    }
 
     [Fact]
     public Task F9_ejecuta_la_seleccion_o_todo_el_editor() => ui.Session.DispatchAsync(async () =>
@@ -717,6 +830,37 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         await w.RunAsync();
         Assert.Equal(0.12m, Convert.ToDecimal(remaining.Rows[0][0]));   // el UPDATE se deshizo
         w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task La_consulta_nueva_va_a_la_base_de_lo_ultimo_que_se_toco() => ui.Session.DispatchAsync(() =>
+    {
+        var store = AppServices.CreateProfileStore(_folder);
+        store.Upsert(fb.Profile, fb.Password);
+        var vm = new MainWindowViewModel(store, AppServices.CreateHistoryStore(_folder), AppServices.CreateSettingsStore(_folder));
+        var first = vm.Profiles.Single();
+        var second = vm.CloneProfile(first);
+        var secondNode = vm.Tree.Rows.Single(n => n.Kind == TreeNodeKind.Database && n.Profile!.Id == second.Id);
+        var firstTab = vm.NewQueryTab(first);
+
+        // En la pestaña de la primera, eligiendo la segunda en el árbol: la consulta nueva va a la segunda (la de la foto).
+        vm.Tree.SelectedNode = secondNode;
+        Assert.Equal(second.Id, vm.NewQueryTabFor(second)!.Profile!.Id);
+
+        // De vuelta en la pestaña de la primera, con la segunda todavía elegida en el árbol: va a la de la pestaña.
+        vm.SelectedTab = firstTab;
+        Assert.Equal(first.Id, vm.NewQueryTabFor(second)!.Profile!.Id);
+
+        // Un clic en la fila que ya estaba elegida también cuenta, y volver al editor de la pestaña lo deshace.
+        vm.TreeTouched();
+        Assert.Equal(second.Id, vm.NewQueryTabFor(second)!.Profile!.Id);
+        vm.SelectedTab = firstTab;
+        vm.TreeTouched();
+        vm.TabTouched();
+        Assert.Equal(first.Id, vm.NewQueryTabFor(second)!.Profile!.Id);
+        vm.TreeTouched();
+        Assert.Equal(first.Id, vm.NewQueryTabFor(null)!.Profile!.Id);          // una carpeta elegida: la de la pestaña
+        return Task.CompletedTask;
     }, CancellationToken.None);
 
     [Fact]

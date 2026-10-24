@@ -18,6 +18,9 @@ public sealed class QueryOutcome
     /// <summary>Filas afectadas por INSERT/UPDATE/DELETE/MERGE (-1 si no aplica).</summary>
     public int RecordsAffected { get; set; } = -1;
     public bool Cancelled { get; set; }
+
+    /// <summary>Se confirmó sola al terminar (autocommit, D-84).</summary>
+    public bool AutoCommitted { get; set; }
     public bool LimitReached { get; set; }
     public TimeSpan PrepareTime { get; set; }
     public TimeSpan? FirstRowTime { get; set; }
