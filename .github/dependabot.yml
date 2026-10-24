@@ -1,0 +1,16 @@
+# Avisos de versiones nuevas: paquetes NuGet y acciones de GitHub, una vez por semana.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    ignore:
+      # La 3 en adelante es para xunit v3: con la v2 de las pruebas cambia el paralelismo y chocan sobre la misma base de Docker.
+      - dependency-name: xunit.runner.visualstudio
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

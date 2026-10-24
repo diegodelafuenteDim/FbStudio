@@ -1,0 +1,80 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="using:FbStudio.App.Resources"
+        xmlns:p="using:FbStudio.Core.Profiles"
+        xmlns:views="using:FbStudio.App.Views"
+        x:Class="FbStudio.App.Views.ProfilesWindow"
+        Title="{x:Static res:Strings.ProfilesTitle}"
+        Width="820" Height="680" MinHeight="520"
+        WindowStartupLocation="CenterOwner">
+  <Grid ColumnDefinitions="240,*" Margin="12">
+    <!-- Lista -->
+    <DockPanel Grid.Column="0" Margin="0,0,12,0">
+      <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+        <Button x:Name="NewButton" Content="{x:Static res:Strings.ProfilesNew}" />
+        <Button x:Name="DeleteButton" Content="{x:Static res:Strings.ProfilesDelete}" />
+      </StackPanel>
+      <ListBox x:Name="List">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="p:ConnectionProfile">
+            <StackPanel>
+              <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding Converter={x:Static views:Converters.ProfileGroup}}" Opacity="0.7" FontSize="12" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </DockPanel>
+
+    <!-- Formulario -->
+    <DockPanel Grid.Column="1">
+      <!-- Botones separados del formulario (antes el último check quedaba pegado y se tocaba en lugar de «Guardar»). -->
+      <Border DockPanel.Dock="Bottom" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource SemiColorBorder}" Margin="0,12,0,0" Padding="0,12,0,0">
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+          <Button x:Name="TestButton" Content="{x:Static res:Strings.ProfilesTest}" />
+          <Button x:Name="SaveButton" Content="{x:Static res:Strings.ProfilesSave}" Classes="accent" />
+          <Button x:Name="CloseButton" Content="{x:Static res:Strings.Close}" IsCancel="True" />
+        </StackPanel>
+      </Border>
+      <TextBlock x:Name="TestResult" DockPanel.Dock="Bottom" TextWrapping="Wrap" Margin="0,8,0,0" />
+      <ScrollViewer>
+      <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+            x:Name="Form">
+        <Grid.Styles>
+          <Style Selector="TextBlock.label">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,4,8,4" />
+          </Style>
+          <Style Selector="TextBox, ComboBox, NumericUpDown, CheckBox">
+            <Setter Property="Margin" Value="0,4" />
+          </Style>
+        </Grid.Styles>
+        <TextBlock Grid.Row="0" Classes="label" Text="{x:Static res:Strings.ProfileName}" />
+        <TextBox Grid.Row="0" Grid.Column="1" x:Name="NameBox" />
+        <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.ProfileServer}" />
+        <TextBox Grid.Row="1" Grid.Column="1" x:Name="HostBox" PlaceholderText="firebird.miempresa.local" />
+        <TextBlock Grid.Row="2" Classes="label" Text="{x:Static res:Strings.ProfilePort}" />
+        <NumericUpDown Grid.Row="2" Grid.Column="1" x:Name="PortBox" Minimum="1" Maximum="65535" Value="3050" FormatString="0" HorizontalAlignment="Left" Width="140" />
+        <TextBlock Grid.Row="3" Classes="label" Text="{x:Static res:Strings.ProfileDatabase}" />
+        <TextBox Grid.Row="3" Grid.Column="1" x:Name="DatabaseBox" />
+        <TextBlock Grid.Row="4" Classes="label" Text="{x:Static res:Strings.ProfileUser}" />
+        <TextBox Grid.Row="4" Grid.Column="1" x:Name="UserBox" />
+        <TextBlock Grid.Row="5" Classes="label" Text="{x:Static res:Strings.ProfilePassword}" />
+        <TextBox Grid.Row="5" Grid.Column="1" x:Name="PasswordBox" PasswordChar="●" PlaceholderText="{x:Static res:Strings.ProfilePasswordUnchanged}" />
+        <TextBlock Grid.Row="6" Classes="label" Text="{x:Static res:Strings.ProfileRole}" />
+        <TextBox Grid.Row="6" Grid.Column="1" x:Name="RoleBox" />
+        <TextBlock Grid.Row="7" Classes="label" Text="Charset" />
+        <ComboBox Grid.Row="7" Grid.Column="1" x:Name="CharsetBox" Width="200" />
+        <TextBlock Grid.Row="8" Classes="label" Text="{x:Static res:Strings.ProfileEnvironment}" />
+        <ComboBox Grid.Row="8" Grid.Column="1" x:Name="EnvironmentBox" Width="200" />
+        <TextBlock Grid.Row="9" Classes="label" Text="{x:Static res:Strings.ProfileFolder}" />
+        <TextBox Grid.Row="9" Grid.Column="1" x:Name="FolderBox" PlaceholderText="{x:Static res:Strings.ProfileFolderPlaceholder}" />
+        <TextBlock Grid.Row="10" Classes="label" Text="{x:Static res:Strings.ProfileWireCrypt}" />
+        <ComboBox Grid.Row="10" Grid.Column="1" x:Name="WireCryptBox" Width="200" />
+        <CheckBox Grid.Row="11" Grid.Column="1" x:Name="ReadOnlyBox" Content="{x:Static res:Strings.ProfileReadOnly}" />
+        <CheckBox Grid.Row="12" Grid.Column="1" x:Name="SaveHistoryBox" Content="{x:Static res:Strings.ProfileSaveHistory}" />
+      </Grid>
+      </ScrollViewer>
+    </DockPanel>
+  </Grid>
+</Window>

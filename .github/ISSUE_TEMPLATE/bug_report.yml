@@ -1,0 +1,48 @@
+name: Bug report / Reportar un error
+description: Something does not work as it should. / Algo no funciona como debería.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting it. English or Spanish are both fine. **Do not paste real data** (customers, patients, passwords, internal servers): replace it with sample data.
+        Gracias por reportarlo. **No pegues datos reales**: cambialos por datos de ejemplo.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened? / ¿Qué pasó?
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Pasos para que vuelva a pasar
+      placeholder: |
+        1. Open the Data tab of a table with…
+        2. …
+  - type: input
+    id: version
+    attributes:
+      label: FbStudio version / Versión de FbStudio
+      description: Help → About FbStudio.
+    validations:
+      required: true
+  - type: input
+    id: firebird
+    attributes:
+      label: Firebird version and server type / Versión y tipo de Firebird
+      placeholder: Firebird 3.0.11, SuperServer
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system / Sistema operativo
+      options:
+        - Windows
+        - Linux
+        - macOS
+  - type: textarea
+    id: extra
+    attributes:
+      label: Error message, screenshots or anything else / Mensaje de error, capturas o algo más
+      description: If there is an error message, paste it as text.

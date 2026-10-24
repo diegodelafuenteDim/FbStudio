@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key>
+  <string>FbStudio</string>
+  <key>CFBundleDisplayName</key>
+  <string>FbStudio</string>
+  <key>CFBundleIdentifier</key>
+  <string>io.github.diegodelafuentedim.fbstudio</string>
+  <key>CFBundleVersion</key>
+  <string>@VERSION@</string>
+  <key>CFBundleShortVersionString</key>
+  <string>@VERSION@</string>
+  <key>CFBundleExecutable</key>
+  <string>FbStudio</string>
+  <key>CFBundleIconFile</key>
+  <string>fbstudio.icns</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>13.0</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.developer-tools</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+</dict>
+</plist>

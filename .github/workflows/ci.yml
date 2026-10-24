@@ -1,0 +1,185 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+# Las acciones van fijadas por commit (no por etiqueta, que se puede mover); Dependabot propone las nuevas.
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux (all tests, Firebird in Docker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30              # usually ~5; without a limit a hung test holds the job for 6 hours
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Desktop keyring and fonts (to test like a real Linux desktop)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gnome-keyring libsecret-tools dbus-x11 fontconfig fonts-dejavu-core
+      - run: dotnet build FbStudio.sln -c Release
+      - name: Tests
+        run: |
+          dbus-run-session -- bash -c '
+            printf "fbstudio" | gnome-keyring-daemon --unlock --components=secrets > /dev/null
+            # A test that does not finish in 10 minutes is stopped and named (blame-hang); every test goes to the log.
+            dotnet test FbStudio.sln -c Release --no-build --blame-hang-timeout 10m --blame-hang-dump-type none \
+              --results-directory TestResults --logger "console;verbosity=normal"
+          '
+      - name: Test results (when the tests failed or were cancelled)
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results-linux
+          path: TestResults
+          if-no-files-found: ignore
+          retention-days: 7
+
+  windows:
+    name: Windows (core and workspace)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      # Firebird and UI tests need Linux containers: they run in the Linux job.
+      - run: dotnet test tests/FbStudio.Core.Tests -c Release
+      - run: dotnet test tests/FbStudio.Workspace.Tests -c Release
+
+  macos:
+    name: macOS (core and workspace)
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: dotnet test tests/FbStudio.Core.Tests -c Release
+      - run: dotnet test tests/FbStudio.Workspace.Tests -c Release
+
+  # Packages only on request (Actions → CI → Run workflow) or for a version tag (v0.2.0): each set is ~210 MB of storage.
+  packages:
+    name: Packages for Windows and Linux
+    needs: [linux, windows]          # not macOS: when GitHub has no Mac free, these still come out
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: tools/publish/publish.sh
+        env:
+          TARGETS: win linux
+      - name: The .deb installs, puts the command and the menu entry, and uninstalls
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ./artifacts/fbstudio_*_amd64.deb
+          dpkg -s fbstudio | grep -E '^(Package|Version|Status):'
+          test -x /opt/fbstudio/FbStudio
+          test "$(readlink -f /usr/bin/fbstudio)" = /opt/fbstudio/FbStudio
+          desktop-file-validate /usr/share/applications/fbstudio.desktop 2>/dev/null || grep -q '^Exec=fbstudio' /usr/share/applications/fbstudio.desktop
+          sudo apt-get remove -y fbstudio
+          test ! -e /usr/bin/fbstudio
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: FbStudio-packages-windows-linux
+          path: |
+            artifacts/*.zip
+            artifacts/*.tar.gz
+            artifacts/*.deb
+            artifacts/SHA256SUMS*
+          retention-days: 7
+
+  # On a Mac, because Apple Silicon only runs signed code and only a Mac can sign it (ad hoc, no Apple account).
+  packages-mac:
+    name: Packages for macOS (signed on a Mac)
+    needs: [linux, windows]          # asks for one Mac, not two (the macOS tests run on their own)
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: tools/publish/publish.sh
+        env:
+          TARGETS: mac
+      - name: Smoke test (the Apple Silicon package, unzipped and opened as a user would, keeps running)
+        run: |
+          tmp="$(mktemp -d)"
+          ditto -x -k artifacts/FbStudio-*-osx-arm64.zip "$tmp"
+          exe="$tmp/FbStudio.app/Contents/MacOS/FbStudio"
+          file -b "$exe"
+          open "$tmp/FbStudio.app"                     # like a double click (through LaunchServices)
+          sleep 20
+          # By name, not by path: macOS may show /var/folders/… as /private/var/folders/….
+          if pgrep -f "FbStudio.app/Contents/MacOS/FbStudio" > /dev/null; then
+            echo "FbStudio is still running after 20 s"
+            pkill -f "FbStudio.app/Contents/MacOS/FbStudio"
+          else
+            echo "FbStudio did not stay open; running it directly to see why:"
+            "$exe" > "$tmp/run.log" 2>&1 & pid=$!
+            sleep 10; kill "$pid" 2>/dev/null || true
+            cat "$tmp/run.log"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: FbStudio-packages-macos
+          path: |
+            artifacts/*.zip
+            artifacts/SHA256SUMS*
+          retention-days: 7
+
+  # For a version tag (v0.2.0): a GitHub Release with the packages, the .deb also as fbstudio_amd64.deb (for
+  # .../releases/latest/download/fbstudio_amd64.deb) and SHA256SUMS.txt. Run by hand, it only prepares and shows them.
+  release:
+    name: Release on GitHub
+    needs: [macos, packages, packages-mac]
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write                # only this job: it creates the release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: FbStudio-packages-*
+          path: dist
+          merge-multiple: true
+      - name: Publish the release (tag) or only prepare it (run by hand)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            bash tools/publish/release.sh "$GITHUB_REF_NAME" dist
+          else
+            version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props)"
+            DRY_RUN=1 bash tools/publish/release.sh "v$version" dist
+          fi

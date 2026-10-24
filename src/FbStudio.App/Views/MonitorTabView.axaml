@@ -1,0 +1,197 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:mon="using:FbStudio.Core.Monitoring"
+             xmlns:rg="using:FbStudio.App.ResultGrid"
+             xmlns:views="using:FbStudio.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.MonitorTabView"
+             x:DataType="vm:MonitorTabViewModel"
+             IsVisible="{Binding IsSelected}">
+
+  <UserControl.Styles>
+    <Style Selector="Border.card">
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="Margin" Value="0,0,8,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
+      <Setter Property="Background" Value="{DynamicResource SemiColorFill0}" />
+      <Setter Property="MinWidth" Value="120" />
+    </Style>
+    <Style Selector="Border.card TextBlock.caption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Opacity" Value="0.65" />
+    </Style>
+    <Style Selector="Border.card TextBlock.value">
+      <Setter Property="FontSize" Value="18" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.warn">
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsWarningBrush}" />
+    </Style>
+    <!-- OAT vieja: ámbar pasados 10 minutos, rojo pasada la hora (tarjetas de OAT, brecha y antigüedad, y el aviso). -->
+    <Style Selector="Border.card.clickable">
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Border.card TextBlock.holder">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Opacity" Value="0.75" />
+      <Setter Property="MaxWidth" Value="260" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="Border.card.oatwarn, Border.warn.oatwarn">
+      <Setter Property="Background" Value="{DynamicResource FbsWarningBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsWarningBrush}" />
+    </Style>
+    <Style Selector="Border.card.oatwarn TextBlock.value, Border.warn.oatwarn TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource FbsWarningBrush}" />
+    </Style>
+    <Style Selector="Border.card.oatdanger, Border.warn.oatdanger">
+      <Setter Property="Background" Value="{DynamicResource FbsDangerBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsDangerBrush}" />
+      <Setter Property="BorderThickness" Value="1.5" />
+    </Style>
+    <Style Selector="Border.card.oatdanger TextBlock.value, Border.warn.oatdanger TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource FbsDangerBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="10,8">
+    <!-- Contadores de transacciones -->
+    <WrapPanel DockPanel.Dock="Top">
+      <Border Classes="card" ToolTip.Tip="{x:Static res:Strings.MonNextTip}">
+        <StackPanel><TextBlock Classes="caption" Text="{x:Static res:Strings.MonNext}" /><TextBlock Classes="value" Text="{Binding NextText}" /></StackPanel>
+      </Border>
+      <Border x:Name="OatCard" Classes="card clickable" Classes.oatwarn="{Binding IsOatWarn}" Classes.oatdanger="{Binding IsOatDanger}" ToolTip.Tip="{x:Static res:Strings.MonOatTip}">
+        <StackPanel>
+          <TextBlock Classes="caption" Text="{x:Static res:Strings.MonOat}" />
+          <TextBlock Classes="value" Text="{Binding OatText}" />
+          <TextBlock Classes="holder" Text="{Binding OatHolderText}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="card" Classes.oatwarn="{Binding IsOatWarn}" Classes.oatdanger="{Binding IsOatDanger}" ToolTip.Tip="{x:Static res:Strings.MonGapTip}">
+        <StackPanel><TextBlock Classes="caption" Text="{x:Static res:Strings.MonGap}" /><TextBlock Classes="value" Text="{Binding GapText}" /></StackPanel>
+      </Border>
+      <Border Classes="card" Classes.oatwarn="{Binding IsOatWarn}" Classes.oatdanger="{Binding IsOatDanger}" ToolTip.Tip="{x:Static res:Strings.MonOatAgeTip}">
+        <StackPanel><TextBlock Classes="caption" Text="{x:Static res:Strings.MonOatAge}" /><TextBlock Classes="value" Text="{Binding OatAgeText}" /></StackPanel>
+      </Border>
+      <Border Classes="card" ToolTip.Tip="{x:Static res:Strings.MonOitTip}">
+        <StackPanel><TextBlock Classes="caption" Text="OIT" /><TextBlock Classes="value" Text="{Binding OitText}" /></StackPanel>
+      </Border>
+      <Border Classes="card" ToolTip.Tip="{x:Static res:Strings.MonOstTip}">
+        <StackPanel><TextBlock Classes="caption" Text="OST" /><TextBlock Classes="value" Text="{Binding OstText}" /></StackPanel>
+      </Border>
+      <Border x:Name="LocksCard" Classes="card clickable" Classes.oatwarn="{Binding IsLockWarn}" Classes.oatdanger="{Binding IsLockDanger}" ToolTip.Tip="{x:Static res:Strings.MonWaitingTip}">
+        <StackPanel><TextBlock Classes="caption" Text="{x:Static res:Strings.MonWaiting}" /><TextBlock Classes="value" Text="{Binding WaitingText}" /></StackPanel>
+      </Border>
+      <Border Classes="card">
+        <StackPanel><TextBlock Classes="caption" Text="{x:Static res:Strings.MonNow}" /><TextBlock Classes="value" FontSize="14" Text="{Binding CountsText}" /></StackPanel>
+      </Border>
+      <Border Classes="card" ToolTip.Tip="{Binding ServerModeTip}">
+        <StackPanel><TextBlock Classes="caption" Text="{x:Static res:Strings.MonServer}" /><TextBlock Classes="value" FontSize="14" Text="{Binding ServerModeText}" /></StackPanel>
+      </Border>
+    </WrapPanel>
+
+    <Border DockPanel.Dock="Top" Classes="warn" Classes.oatwarn="{Binding IsOatWarn}" Classes.oatdanger="{Binding IsOatDanger}" IsVisible="{Binding HasOatWarning}">
+      <TextBlock Text="{Binding OatWarning}" TextWrapping="Wrap" FontWeight="SemiBold" />
+    </Border>
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding HasBackupWarning}">
+      <TextBlock Text="{Binding BackupWarning}" TextWrapping="Wrap" FontWeight="SemiBold" />
+    </Border>
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding HasOatInfo}" BorderBrush="{DynamicResource SemiColorBorder}">
+      <TextBlock Text="{Binding OatInfo}" TextWrapping="Wrap" />
+    </Border>
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding HasVisibilityWarning}">
+      <TextBlock Text="{Binding VisibilityWarning}" TextWrapping="Wrap" />
+    </Border>
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding HasClassicNote}" BorderBrush="{DynamicResource SemiColorBorder}">
+      <TextBlock Text="{Binding ClassicNote}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- Consulta, refresco y acciones -->
+    <Grid DockPanel.Dock="Top" Margin="0,0,0,6" ColumnDefinitions="Auto,Auto,Auto,*,Auto">
+      <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6">
+        <Button x:Name="CancelStatementButton" Command="{Binding CancelStatementCommand}" ToolTip.Tip="{x:Static res:Strings.MonCancelTip}">
+          <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="StopCircleOutline" /><TextBlock Text="{x:Static res:Strings.MonCancelStatement}" /></StackPanel>
+        </Button>
+        <Button x:Name="KillButton" Command="{Binding KillCommand}" ToolTip.Tip="{x:Static res:Strings.MonKillTip}">
+          <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="LanDisconnect" Foreground="{DynamicResource FbsDangerBrush}" /><TextBlock Text="{x:Static res:Strings.MonKill}" /></StackPanel>
+        </Button>
+      </StackPanel>
+        <TextBlock Grid.Column="0" Text="{Binding SelectedPreset.Name}" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Margin="12,0,0,0" Command="{Binding RefreshCommand}" ToolTip.Tip="{x:Static res:Strings.MonRefreshTip}">
+          <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="Refresh" /><TextBlock Text="{x:Static res:Strings.MonRefresh}" /></StackPanel>
+        </Button>
+        <ComboBox Grid.Column="2" Margin="8,0,0,0" ItemsSource="{Binding Intervals}" SelectedItem="{Binding Interval}" MinWidth="130" ToolTip.Tip="{x:Static res:Strings.MonIntervalTip}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="x:Int32">
+              <TextBlock Text="{Binding Converter={x:Static vm:MonitorIntervals.Label}}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBlock Grid.Column="3" Text="{Binding LastRefresh}" Opacity="0.6" VerticalAlignment="Center" Margin="8,0" TextTrimming="CharacterEllipsis" />
+    </Grid>
+
+    <!-- SQL de la sentencia elegida -->
+    <Border DockPanel.Dock="Bottom" IsVisible="{Binding HasSelectedSql}" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource SemiColorBorder}"
+            Padding="0,6,0,0" MaxHeight="160">
+      <ScrollViewer HorizontalScrollBarVisibility="Auto">
+        <SelectableTextBlock Text="{Binding SelectedSql}" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" />
+      </ScrollViewer>
+    </Border>
+
+    <Grid ColumnDefinitions="230,5,*">
+      <!-- Consultas: las de FbStudio y las propias -->
+      <DockPanel Grid.Column="0">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="0,6,0,0">
+          <Button x:Name="NewQueryButton" Command="{Binding NewQueryCommand}" CommandParameter="{x:False}" ToolTip.Tip="{x:Static res:Strings.MonNewQueryTip}">
+            <mi:MaterialIcon Kind="Plus" />
+          </Button>
+          <Button Command="{Binding NewQueryCommand}" CommandParameter="{x:True}" ToolTip.Tip="{x:Static res:Strings.MonCopyQueryTip}">
+            <mi:MaterialIcon Kind="ContentCopy" />
+          </Button>
+          <Button Command="{Binding EditQueryCommand}" ToolTip.Tip="{x:Static res:Strings.MonEditQueryTip}">
+            <mi:MaterialIcon Kind="Pencil" />
+          </Button>
+          <Button Command="{Binding DeleteQueryCommand}" ToolTip.Tip="{x:Static res:Strings.MonDeleteQueryTip}">
+            <mi:MaterialIcon Kind="Delete" />
+          </Button>
+          <Button x:Name="ShareButton" ToolTip.Tip="{x:Static res:Strings.MonShareTip}">
+            <mi:MaterialIcon Kind="ShareVariant" />
+            <Button.Flyout>
+              <MenuFlyout>
+                <MenuItem x:Name="ExportQueries" Header="{x:Static res:Strings.MonExportQueries}" />
+                <MenuItem x:Name="ImportQueries" Header="{x:Static res:Strings.MonImportQueries}" />
+              </MenuFlyout>
+            </Button.Flyout>
+          </Button>
+        </StackPanel>
+        <ListBox x:Name="QueryList" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+          <ListBox.Styles>
+            <Style Selector="ListBoxItem">
+              <Setter Property="Padding" Value="6,3" />
+              <Setter Property="MinHeight" Value="0" />
+            </Style>
+          </ListBox.Styles>
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:MonitorQueryItem">
+              <StackPanel Orientation="Horizontal" Spacing="6" Margin="{Binding Indent, Converter={x:Static views:Converters.IndentMargin}}"
+                          ToolTip.Tip="{Binding Preset.Sql, FallbackValue={x:Null}}">
+                <mi:MaterialIcon Kind="{Binding Icon}" Width="15" Height="15" Opacity="0.75" />
+                <TextBlock Text="{Binding Caption}" FontWeight="{Binding Weight}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" />
+      <rg:DrawnGrid Grid.Column="2" x:Name="MonitorGrid" />
+    </Grid>
+  </DockPanel>
+</UserControl>

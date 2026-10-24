@@ -1,0 +1,107 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:views="using:FbStudio.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.DiagramTabView"
+             x:DataType="vm:DiagramTabViewModel"
+             IsVisible="{Binding IsSelected}">
+
+  <UserControl.Styles>
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+    <Style Selector="Button.tool > StackPanel">
+      <Setter Property="Orientation" Value="Horizontal" />
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,0,6,0" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="8,8,8,4">
+    <!-- Qué se dibuja y cómo -->
+    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+      <StackPanel Orientation="Horizontal" IsVisible="{Binding IsTable}" Margin="0,0,14,4">
+        <TextBlock Classes="label" Text="{x:Static res:Strings.DiagramNeighbors}" />
+        <ComboBox ItemsSource="{Binding HopChoices}" SelectedIndex="{Binding HopIndex}" MinWidth="110" />
+      </StackPanel>
+      <CheckBox IsChecked="{Binding ShowOutside}" IsVisible="{Binding IsArea}" Content="{x:Static res:Strings.DiagramShowOutside}" Margin="0,0,14,4" />
+      <CheckBox IsChecked="{Binding HideHubs}" Content="{x:Static res:Strings.DiagramHideHubs}" ToolTip.Tip="{x:Static res:Strings.DiagramHideHubsTip}" Margin="0,0,14,4" />
+      <CheckBox IsChecked="{Binding ShowLogical}" Content="{x:Static res:Strings.DiagramShowLogical}" ToolTip.Tip="{x:Static res:Strings.DiagramShowLogicalTip}" Margin="0,0,14,4" />
+      <StackPanel Orientation="Horizontal" Margin="0,0,14,4">
+        <TextBlock Classes="label" Text="{x:Static res:Strings.DiagramColumns}" />
+        <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedIndex="{Binding ColumnsIndex}" MinWidth="120" />
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" Margin="0,0,10,4">
+        <TextBlock Classes="label" Text="{x:Static res:Strings.DiagramLayout}" />
+        <ComboBox ItemsSource="{Binding LayoutChoices}" SelectedIndex="{Binding LayoutIndex}" MinWidth="130" />
+      </StackPanel>
+      <Button Classes="tool" Command="{Binding RelayoutCommand}" Margin="0,0,6,4">
+        <StackPanel><mi:MaterialIcon Kind="AutoFix" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DiagramRelayout}" /></StackPanel>
+      </Button>
+      <Button x:Name="FitButton" Classes="tool" Margin="0,0,6,4">
+        <StackPanel><mi:MaterialIcon Kind="FitToScreenOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DiagramFit}" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding RereadCommand}" ToolTip.Tip="{x:Static res:Strings.DiagramRereadTip}" Margin="0,0,6,4">
+        <StackPanel><mi:MaterialIcon Kind="Refresh" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DiagramReread}" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding AddTableCommand}" Margin="0,0,6,4">
+        <StackPanel><mi:MaterialIcon Kind="TablePlus" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DiagramAddTable}" /></StackPanel>
+      </Button>
+      <Button x:Name="ExportButton" Classes="tool" ToolTip.Tip="{x:Static res:Strings.DiagramExportTip}" Margin="0,0,6,4">
+        <StackPanel><mi:MaterialIcon Kind="ImageOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DiagramExport}" /></StackPanel>
+      </Button>
+    </WrapPanel>
+
+    <TextBlock DockPanel.Dock="Bottom" Text="{x:Static res:Strings.DiagramHelp}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" />
+
+    <Grid ColumnDefinitions="*,6,270">
+      <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4" ClipToBounds="True">
+        <views:DiagramCanvas x:Name="Canvas" />
+      </Border>
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+
+      <!-- La tabla elegida y las escondidas -->
+      <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="6">
+          <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Opacity="0.75" />
+          <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4" Padding="10,8" Margin="0,4,0,0">
+            <Panel>
+              <TextBlock Text="{x:Static res:Strings.DiagramPickTable}" IsVisible="{Binding !HasSelection}" Opacity="0.65" TextWrapping="Wrap" />
+              <StackPanel Spacing="6" IsVisible="{Binding HasSelection}">
+                <TextBlock Text="{Binding SelectedTitle}" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SelectedInfo}" FontSize="12" Opacity="0.8" TextWrapping="Wrap" />
+                <WrapPanel>
+                  <Button Classes="tool" Command="{Binding OpenSelectedCommand}" Content="{x:Static res:Strings.DiagramOpen}" Margin="0,0,6,6" />
+                  <Button Classes="tool" Command="{Binding ExpandSelectedCommand}" Content="{x:Static res:Strings.DiagramExpand}" Margin="0,0,6,6" />
+                  <Button Classes="tool" Command="{Binding RemoveSelectedCommand}" Content="{x:Static res:Strings.DiagramRemove}" Margin="0,0,6,6" />
+                </WrapPanel>
+              </StackPanel>
+            </Panel>
+          </Border>
+          <StackPanel IsVisible="{Binding HasHiddenHubs}" Spacing="4" Margin="0,6,0,0">
+            <TextBlock Text="{x:Static res:Strings.DiagramHiddenHubs}" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <TextBlock Text="{x:Static res:Strings.DiagramHiddenHubsNote}" FontSize="12" Opacity="0.65" TextWrapping="Wrap" />
+            <ItemsControl x:Name="HubList" ItemsSource="{Binding HiddenHubs}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:HiddenHubRow">
+                  <DockPanel Margin="0,2">
+                    <Button DockPanel.Dock="Right" Classes="tool" Content="{x:Static res:Strings.DiagramShowHub}" Tag="{Binding}" Click="ShowHub_Click" Padding="6,2" />
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Caption}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Detail}" FontSize="11" Opacity="0.6" />
+                    </StackPanel>
+                  </DockPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+  </DockPanel>
+</UserControl>

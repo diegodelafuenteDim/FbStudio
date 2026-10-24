@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Datos locales del usuario: perfiles (JSON, sin secretos) y secretos cifrados por el SO. -->
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="FbStudio.Workspace.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FbStudio.Core\FbStudio.Core.csproj" />
+  </ItemGroup>
+</Project>

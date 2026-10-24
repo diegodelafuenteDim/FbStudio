@@ -1,0 +1,668 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textos de la interfaz. Este archivo es el español (idioma neutral); la traducción va en el .en.resx. -->
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="BackupMerge" xml:space="preserve">
+    <value>La base está fusionando el archivo delta (el final de un nbackup).</value>
+  </data>
+  <data name="BackupNewer" xml:space="preserve">
+    <value>El archivo es de una versión más nueva de FbStudio (formato {0}): actualizá FbStudio para importarlo.</value>
+  </data>
+  <data name="BackupNotOurs" xml:space="preserve">
+    <value>El archivo no es un backup de registros de FbStudio.</value>
+  </data>
+  <data name="BackupShort" xml:space="preserve">
+    <value>⚠ modo backup</value>
+  </data>
+  <data name="BackupShortPhrase" xml:space="preserve">
+    <value>La frase tiene que tener al menos {0} caracteres.</value>
+  </data>
+  <data name="BackupStalled" xml:space="preserve">
+    <value>La base está en MODO BACKUP (nbackup): lo que se escribe va al archivo delta hasta que el backup termine. Si no hay un nbackup corriendo, quedó trabada: el delta crece sin parar hasta terminarlo (nbackup -N o ALTER DATABASE END BACKUP) y conviene mirar el disco del servidor.</value>
+  </data>
+  <data name="BackupWrongPhrase" xml:space="preserve">
+    <value>La frase no es correcta, o el archivo fue modificado.</value>
+  </data>
+  <data name="CancelledFromOutside" xml:space="preserve">
+    <value>La sentencia la canceló otra conexión (por ejemplo, desde el monitoreo): {0}</value>
+  </data>
+  <data name="CompareCollationManual" xml:space="preserve">
+    <value>La collation del dominio {0} es distinta: Firebird no la cambia con ALTER DOMAIN (hay que recrearlo).</value>
+  </data>
+  <data name="CompareColumnAdded" xml:space="preserve">
+    <value>columna nueva {0}: {1}</value>
+  </data>
+  <data name="CompareColumnComment" xml:space="preserve">
+    <value>columna {0}: comentario distinto</value>
+  </data>
+  <data name="CompareColumnComputed" xml:space="preserve">
+    <value>columna {0}: cálculo distinto</value>
+  </data>
+  <data name="CompareColumnDefault" xml:space="preserve">
+    <value>columna {0}: valor por defecto {1} → {2}</value>
+  </data>
+  <data name="CompareColumnIdentity" xml:space="preserve">
+    <value>columna {0}: identity distinta</value>
+  </data>
+  <data name="CompareColumnNowNotNull" xml:space="preserve">
+    <value>columna {0}: pasa a NOT NULL</value>
+  </data>
+  <data name="CompareColumnNowNullable" xml:space="preserve">
+    <value>columna {0}: pasa a admitir NULL</value>
+  </data>
+  <data name="CompareColumnOrder" xml:space="preserve">
+    <value>orden de las columnas</value>
+  </data>
+  <data name="CompareColumnRemoved" xml:space="preserve">
+    <value>columna {0}: sobra en el destino</value>
+  </data>
+  <data name="CompareColumnType" xml:space="preserve">
+    <value>columna {0}: {1} → {2}</value>
+  </data>
+  <data name="CompareComputedManual" xml:space="preserve">
+    <value>La columna {0}.{1} pasa de calculada a común o al revés: hay que borrarla y volver a crearla (se pierden sus datos).</value>
+  </data>
+  <data name="CompareConstraintAdded" xml:space="preserve">
+    <value>restricción nueva {0}</value>
+  </data>
+  <data name="CompareConstraintRemoved" xml:space="preserve">
+    <value>restricción {0}: distinta o sobra en el destino</value>
+  </data>
+  <data name="CompareDefinition" xml:space="preserve">
+    <value>definición distinta</value>
+  </data>
+  <data name="CompareDescription" xml:space="preserve">
+    <value>comentario distinto</value>
+  </data>
+  <data name="CompareHeader" xml:space="preserve">
+    <value>Script para que {1} quede igual a {0}, generado por FbStudio el {2:dd/MM/yyyy HH:mm}.
+   Ejecutarlo sobre {1}. Cada etapa termina con COMMIT; revisarlo antes, sobre todo si es producción.</value>
+  </data>
+  <data name="CompareIdentityManual" xml:space="preserve">
+    <value>La identity de {0}.{1} es distinta: revisarla a mano.</value>
+  </data>
+  <data name="CompareIndexNowActive" xml:space="preserve">
+    <value>pasa a activo</value>
+  </data>
+  <data name="CompareIndexNowInactive" xml:space="preserve">
+    <value>pasa a inactivo</value>
+  </data>
+  <data name="CompareIndexOn" xml:space="preserve">
+    <value>nuevo, sobre {0}</value>
+  </data>
+  <data name="CompareNew" xml:space="preserve">
+    <value>nuevo: no está en el destino</value>
+  </data>
+  <data name="ComparePhaseColumns" xml:space="preserve">
+    <value>Columnas nuevas o modificadas</value>
+  </data>
+  <data name="ComparePhaseComputed" xml:space="preserve">
+    <value>Columnas calculadas y orden de las columnas</value>
+  </data>
+  <data name="ComparePhaseConstraints" xml:space="preserve">
+    <value>Claves y restricciones</value>
+  </data>
+  <data name="ComparePhaseDropColumns" xml:space="preserve">
+    <value>Columnas que sobran</value>
+  </data>
+  <data name="ComparePhaseDropConstraints" xml:space="preserve">
+    <value>Restricciones que cambian o sobran</value>
+  </data>
+  <data name="ComparePhaseDropIndices" xml:space="preserve">
+    <value>Índices que cambian o sobran</value>
+  </data>
+  <data name="ComparePhaseDropOthers" xml:space="preserve">
+    <value>Dominios, generadores, excepciones y roles que sobran</value>
+  </data>
+  <data name="ComparePhaseDropPsql" xml:space="preserve">
+    <value>Procedimientos, funciones y paquetes que sobran</value>
+  </data>
+  <data name="ComparePhaseDropTables" xml:space="preserve">
+    <value>Tablas que sobran</value>
+  </data>
+  <data name="ComparePhaseDropTriggers" xml:space="preserve">
+    <value>Triggers que sobran</value>
+  </data>
+  <data name="ComparePhaseDropViews" xml:space="preserve">
+    <value>Vistas que sobran</value>
+  </data>
+  <data name="ComparePhaseNewTables" xml:space="preserve">
+    <value>Tablas nuevas</value>
+  </data>
+  <data name="CompareRemoved" xml:space="preserve">
+    <value>sobra: está solo en el destino</value>
+  </data>
+  <data name="DataScriptCheck" xml:space="preserve">
+    <value>Cada sentencia tiene que afectar 1 fila. Si alguna afecta 0, otro cambió o borró esa fila desde que se leyó: ROLLBACK y recargar.</value>
+  </data>
+  <data name="DataScriptHeader" xml:space="preserve">
+    <value>Cambios de datos en {0} (FbStudio): {1} UPDATE, {2} DELETE, {3} INSERT</value>
+  </data>
+  <data name="DdlCheckSourceMissing" xml:space="preserve">
+    <value>fuente no disponible</value>
+  </data>
+  <data name="DdlGeneratorNoPermission" xml:space="preserve">
+    <value>Valor actual: sin permiso para leerlo (hace falta USAGE sobre el generador)</value>
+  </data>
+  <data name="DdlGeneratorValue" xml:space="preserve">
+    <value>Valor actual: {0} (para fijarlo: {1})</value>
+  </data>
+  <data name="DdlIndexOfConstraint" xml:space="preserve">
+    <value>El índice {0} respalda la constraint {1} de {2}: se crea (y se borra) con ella.</value>
+  </data>
+  <data name="DdlOwner" xml:space="preserve">
+    <value>Dueño: {0}</value>
+  </data>
+  <data name="DdlSourceNotStored" xml:space="preserve">
+    <value>la fuente no está guardada en la base</value>
+  </data>
+  <data name="DdlViewSourceNotStored" xml:space="preserve">
+    <value>la fuente de la vista no está guardada en la base</value>
+  </data>
+  <data name="DependencyComputedColumn" xml:space="preserve">
+    <value>columna calculada {0}</value>
+  </data>
+  <data name="DependencyDomainCheck" xml:space="preserve">
+    <value>CHECK del dominio</value>
+  </data>
+  <data name="EditNewRow" xml:space="preserve">
+    <value>la fila nueva {0}</value>
+  </data>
+  <data name="EditNoPrimaryKey" xml:space="preserve">
+    <value>La tabla no tiene clave primaria: no hay cómo identificar la fila que se cambia.</value>
+  </data>
+  <data name="EditNotABoolean" xml:space="preserve">
+    <value>"{0}" no es verdadero o falso (usá true/false, sí/no o 1/0).</value>
+  </data>
+  <data name="EditNotADate" xml:space="preserve">
+    <value>"{0}" no es una fecha (usá 2026-07-01 o 01/07/2026).</value>
+  </data>
+  <data name="EditNotAnInteger" xml:space="preserve">
+    <value>"{0}" no es un número entero.</value>
+  </data>
+  <data name="EditNotANumber" xml:space="preserve">
+    <value>"{0}" no es un número (la coma o el punto decimal valen; los miles no se escriben).</value>
+  </data>
+  <data name="EditNotATime" xml:space="preserve">
+    <value>"{0}" no es una hora (usá 14:30 o 14:30:00).</value>
+  </data>
+  <data name="EditNotATimestamp" xml:space="preserve">
+    <value>"{0}" no es una fecha y hora (usá 2026-07-01 14:30 o 01/07/2026 14:30).</value>
+  </data>
+  <data name="EditNotEditable" xml:space="preserve">
+    <value>Las columnas de tipo {0} no se editan desde la grilla.</value>
+  </data>
+  <data name="EmptyCopyAddedTables" xml:space="preserve">
+    <value>Se copian también, porque las referencian las FK de las elegidas: {0}</value>
+  </data>
+  <data name="EmptyCopyCreating" xml:space="preserve">
+    <value>Creando {0} (página de {1} bytes, charset {2})…</value>
+  </data>
+  <data name="EmptyCopyProgress" xml:space="preserve">
+    <value>{0} de {1} sentencias…</value>
+  </data>
+  <data name="EmptyCopyReading" xml:space="preserve">
+    <value>Leyendo la estructura de la base de origen…</value>
+  </data>
+  <data name="EmptyCopyStatementFailed" xml:space="preserve">
+    <value>ERROR: {0}  →  en: {1}</value>
+  </data>
+  <data name="EmptyCopyTableDone" xml:space="preserve">
+    <value>{0}: {1:N0} filas copiadas</value>
+  </data>
+  <data name="EmptyCopyTableFailed" xml:space="preserve">
+    <value>{0}: NO se copió ({1}); la tabla queda vacía</value>
+  </data>
+  <data name="EmptyCopyTableProgress" xml:space="preserve">
+    <value>{0}: {1:N0} filas…</value>
+  </data>
+  <data name="EnvDevelopment" xml:space="preserve">
+    <value>Desarrollo</value>
+  </data>
+  <data name="EnvProduction" xml:space="preserve">
+    <value>Producción</value>
+  </data>
+  <data name="EnvTest" xml:space="preserve">
+    <value>Prueba</value>
+  </data>
+  <data name="FilterNotABoolean" xml:space="preserve">
+    <value>«{0}» no es sí ni no</value>
+  </data>
+  <data name="FilterNotADate" xml:space="preserve">
+    <value>"{0}" no es una fecha (usá 2026-07-01 o 01/07/2026).</value>
+  </data>
+  <data name="FilterNotANumber" xml:space="preserve">
+    <value>"{0}" no es un número.</value>
+  </data>
+  <data name="FilterNotATime" xml:space="preserve">
+    <value>«{0}» no es una hora (p. ej. 08:30)</value>
+  </data>
+  <data name="ImportColumnN" xml:space="preserve">
+    <value>Columna {0}</value>
+  </data>
+  <data name="ImportNoColumns" xml:space="preserve">
+    <value>No hay ninguna columna del archivo elegida para importar.</value>
+  </data>
+  <data name="InsertScriptHeader" xml:space="preserve">
+    <value>Script INSERT generado por FbStudio el {0:yyyy-MM-dd HH:mm}</value>
+  </data>
+  <data name="InsertScriptName" xml:space="preserve">
+    <value>Script INSERT</value>
+  </data>
+  <data name="InsertScriptTarget" xml:space="preserve">
+    <value>Tabla destino: {0} · {1} columnas · COMMIT cada {2:N0} filas</value>
+  </data>
+  <data name="KeyringFailed" xml:space="preserve">
+    <value>El llavero del sistema no guardó el secreto: {0}</value>
+  </data>
+  <data name="KindDomain" xml:space="preserve">
+    <value>Dominio</value>
+  </data>
+  <data name="KindDomainPlural" xml:space="preserve">
+    <value>Dominios</value>
+  </data>
+  <data name="KindException" xml:space="preserve">
+    <value>Excepción</value>
+  </data>
+  <data name="KindExceptionPlural" xml:space="preserve">
+    <value>Excepciones</value>
+  </data>
+  <data name="KindFunction" xml:space="preserve">
+    <value>Función</value>
+  </data>
+  <data name="KindFunctionPlural" xml:space="preserve">
+    <value>Funciones</value>
+  </data>
+  <data name="KindGenerator" xml:space="preserve">
+    <value>Generador</value>
+  </data>
+  <data name="KindGeneratorPlural" xml:space="preserve">
+    <value>Generadores</value>
+  </data>
+  <data name="KindIndex" xml:space="preserve">
+    <value>Índice</value>
+  </data>
+  <data name="KindIndexPlural" xml:space="preserve">
+    <value>Índices</value>
+  </data>
+  <data name="KindPackage" xml:space="preserve">
+    <value>Paquete</value>
+  </data>
+  <data name="KindPackagePlural" xml:space="preserve">
+    <value>Paquetes</value>
+  </data>
+  <data name="KindProcedure" xml:space="preserve">
+    <value>Procedimiento</value>
+  </data>
+  <data name="KindProcedurePlural" xml:space="preserve">
+    <value>Procedimientos</value>
+  </data>
+  <data name="KindRole" xml:space="preserve">
+    <value>Rol</value>
+  </data>
+  <data name="KindRolePlural" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="KindTable" xml:space="preserve">
+    <value>Tabla</value>
+  </data>
+  <data name="KindTablePlural" xml:space="preserve">
+    <value>Tablas</value>
+  </data>
+  <data name="KindTrigger" xml:space="preserve">
+    <value>Trigger</value>
+  </data>
+  <data name="KindTriggerPlural" xml:space="preserve">
+    <value>Triggers</value>
+  </data>
+  <data name="KindView" xml:space="preserve">
+    <value>Vista</value>
+  </data>
+  <data name="KindViewPlural" xml:space="preserve">
+    <value>Vistas</value>
+  </data>
+  <data name="McpMissingFlag" xml:space="preserve">
+    <value>Falta {0} en la configuración de {1}.</value>
+  </data>
+  <data name="MonActive" xml:space="preserve">
+    <value>activa</value>
+  </data>
+  <data name="MonAttachments" xml:space="preserve">
+    <value>Conexiones</value>
+  </data>
+  <data name="MonCannotKillSelf" xml:space="preserve">
+    <value>El monitoreo no puede cortar su propia conexión.</value>
+  </data>
+  <data name="MonColAddress" xml:space="preserve">
+    <value>Dirección</value>
+  </data>
+  <data name="MonColAttachment" xml:space="preserve">
+    <value>Conexión</value>
+  </data>
+  <data name="MonColChanges" xml:space="preserve">
+    <value>Cambios</value>
+  </data>
+  <data name="MonColHost" xml:space="preserve">
+    <value>Equipo</value>
+  </data>
+  <data name="MonColId" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="MonColIdxReads" xml:space="preserve">
+    <value>Lecturas por índice</value>
+  </data>
+  <data name="MonColIp" xml:space="preserve">
+    <value>IP</value>
+  </data>
+  <data name="MonColIsolation" xml:space="preserve">
+    <value>Aislamiento</value>
+  </data>
+  <data name="MonColKind" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="MonColLocks" xml:space="preserve">
+    <value>Bloqueos</value>
+  </data>
+  <data name="MonColNote" xml:space="preserve">
+    <value>Nota</value>
+  </data>
+  <data name="MonColOat" xml:space="preserve">
+    <value>OAT</value>
+  </data>
+  <data name="MonColOit" xml:space="preserve">
+    <value>OIT</value>
+  </data>
+  <data name="MonColOldestTx" xml:space="preserve">
+    <value>Tx más vieja</value>
+  </data>
+  <data name="MonColOsUser" xml:space="preserve">
+    <value>Usuario de Windows</value>
+  </data>
+  <data name="MonColProcess" xml:space="preserve">
+    <value>Programa</value>
+  </data>
+  <data name="MonColRemotePid" xml:space="preserve">
+    <value>PID remoto</value>
+  </data>
+  <data name="MonColRole" xml:space="preserve">
+    <value>Rol</value>
+  </data>
+  <data name="MonColSeconds" xml:space="preserve">
+    <value>Segundos</value>
+  </data>
+  <data name="MonColSeqReads" xml:space="preserve">
+    <value>Lecturas sin índice</value>
+  </data>
+  <data name="MonColServerPid" xml:space="preserve">
+    <value>PID del servidor</value>
+  </data>
+  <data name="MonColSince" xml:space="preserve">
+    <value>Desde</value>
+  </data>
+  <data name="MonColSql" xml:space="preserve">
+    <value>SQL</value>
+  </data>
+  <data name="MonColState" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="MonColStatement" xml:space="preserve">
+    <value>Sentencia</value>
+  </data>
+  <data name="MonColTop" xml:space="preserve">
+    <value>Top</value>
+  </data>
+  <data name="MonColTransactions" xml:space="preserve">
+    <value>Transacciones</value>
+  </data>
+  <data name="MonColTx" xml:space="preserve">
+    <value>Tx</value>
+  </data>
+  <data name="MonColUser" xml:space="preserve">
+    <value>Usuario</value>
+  </data>
+  <data name="MonFetching" xml:space="preserve">
+    <value>esperando el fetch</value>
+  </data>
+  <data name="MonHasOat" xml:space="preserve">
+    <value>tiene la OAT</value>
+  </data>
+  <data name="MonIdle" xml:space="preserve">
+    <value>inactiva</value>
+  </data>
+  <data name="MonIsOat" xml:space="preserve">
+    <value>es la OAT</value>
+  </data>
+  <data name="MonLocks" xml:space="preserve">
+    <value>Bloqueos</value>
+  </data>
+  <data name="MonNoWait" xml:space="preserve">
+    <value>no espera</value>
+  </data>
+  <data name="MonPossibleHolder" xml:space="preserve">
+    <value>posible responsable</value>
+  </data>
+  <data name="MonReadOnly" xml:space="preserve">
+    <value>lectura</value>
+  </data>
+  <data name="MonReadWrite" xml:space="preserve">
+    <value>escritura</value>
+  </data>
+  <data name="MonRunning" xml:space="preserve">
+    <value>ejecutando</value>
+  </data>
+  <data name="MonStatements" xml:space="preserve">
+    <value>Sentencias en curso</value>
+  </data>
+  <data name="MonThisMonitor" xml:space="preserve">
+    <value>este monitoreo</value>
+  </data>
+  <data name="MonTransactions" xml:space="preserve">
+    <value>Transacciones</value>
+  </data>
+  <data name="MonWaiting" xml:space="preserve">
+    <value>espera un registro</value>
+  </data>
+  <data name="MonWaits" xml:space="preserve">
+    <value>espera</value>
+  </data>
+  <data name="NBackupLevelFull" xml:space="preserve">
+    <value>Nivel {0} (completo)</value>
+  </data>
+  <data name="NBackupLevelIncremental" xml:space="preserve">
+    <value>Nivel {0} (incremental)</value>
+  </data>
+  <data name="ObjectNotFound" xml:space="preserve">
+    <value>No se encontró: {0} {1}. ¿Se borró? Recargá los metadatos.</value>
+  </data>
+  <data name="ProfileIsReadOnly" xml:space="preserve">
+    <value>El perfil "{0}" es de solo lectura.</value>
+  </data>
+  <data name="SafetyNothingToRun" xml:space="preserve">
+    <value>No hay ninguna sentencia para ejecutar.</value>
+  </data>
+  <data name="SafetyNotSupported" xml:space="preserve">
+    <value>{0} todavía no está soportado: usá los botones Commit/Rollback.</value>
+  </data>
+  <data name="SafetyNoWhere" xml:space="preserve">
+    <value>{0} sin WHERE: afecta TODAS las filas de la tabla.</value>
+  </data>
+  <data name="SafetyProduction" xml:space="preserve">
+    <value>Vas a ejecutar {0} en PRODUCCIÓN ({1}).</value>
+  </data>
+  <data name="SafetyReadOnly" xml:space="preserve">
+    <value>El perfil "{0}" es de solo lectura: no se permite {1}.</value>
+  </data>
+  <data name="SafetyReadOnlySequence" xml:space="preserve">
+    <value>«{0}» es de solo lectura: NEXT VALUE FOR y GEN_ID con un paso distinto de 0 mueven un generador, y eso no se deshace. Para leer el valor, GEN_ID(generador, 0).</value>
+  </data>
+  <data name="SafetyRoutineInTransaction" xml:space="preserve">
+    <value>Usa {0} y va a correr dentro de la transacción de escritura abierta en PRODUCCIÓN ({1}): si modifica datos, esos cambios quedan en la transacción y se graban con el Commit.</value>
+  </data>
+  <data name="ScriptBodies" xml:space="preserve">
+    <value>Cuerpos de procedimientos, funciones y paquetes</value>
+  </data>
+  <data name="ScriptChecks" xml:space="preserve">
+    <value>Restricciones CHECK</value>
+  </data>
+  <data name="ScriptComments" xml:space="preserve">
+    <value>Comentarios</value>
+  </data>
+  <data name="ScriptComputedColumns" xml:space="preserve">
+    <value>Columnas calculadas (en su lugar)</value>
+  </data>
+  <data name="ScriptDomains" xml:space="preserve">
+    <value>Dominios</value>
+  </data>
+  <data name="ScriptExceptions" xml:space="preserve">
+    <value>Excepciones</value>
+  </data>
+  <data name="ScriptExternalFunctions" xml:space="preserve">
+    <value>Funciones externas (UDF)</value>
+  </data>
+  <data name="ScriptForeignKeys" xml:space="preserve">
+    <value>Claves foráneas</value>
+  </data>
+  <data name="ScriptGenerators" xml:space="preserve">
+    <value>Generadores</value>
+  </data>
+  <data name="ScriptHeader" xml:space="preserve">
+    <value>Script de la base {0} ({1}), generado por FbStudio el {2:dd/MM/yyyy HH:mm}.
+   Ejecutarlo sobre una base vacía con dialecto 3 y charset por defecto {3}.
+   Cada sección termina con COMMIT.</value>
+  </data>
+  <data name="ScriptIdentityValues" xml:space="preserve">
+    <value>Valor actual de las columnas identity (con GEN_ID: da lo mismo en Firebird 3 que en 4 o 5)</value>
+  </data>
+  <data name="ScriptIndices" xml:space="preserve">
+    <value>Índices</value>
+  </data>
+  <data name="ScriptOrphanPrivileges" xml:space="preserve">
+    <value>{0} permiso(s) dados a procedimientos, triggers, vistas o funciones que ya no existen: no se escriben (quedaron huérfanos al borrar esos objetos).</value>
+  </data>
+  <data name="ScriptPrivileges" xml:space="preserve">
+    <value>Permisos</value>
+  </data>
+  <data name="ScriptPrivilegesSkipped" xml:space="preserve">
+    <value>{0} permiso(s) de DDL o de otro tipo no se incluyen: revisarlos a mano.</value>
+  </data>
+  <data name="ScriptRoles" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="ScriptSignatures" xml:space="preserve">
+    <value>Procedimientos, funciones y paquetes: primero solo la firma (los cuerpos van más abajo)</value>
+  </data>
+  <data name="ScriptTables" xml:space="preserve">
+    <value>Tablas (con su clave primaria; las columnas calculadas van después)</value>
+  </data>
+  <data name="ScriptTriggers" xml:space="preserve">
+    <value>Triggers</value>
+  </data>
+  <data name="ScriptViews" xml:space="preserve">
+    <value>Vistas (cada una después de las que usa)</value>
+  </data>
+  <data name="SearchMatchesInSource" xml:space="preserve">
+    <value>(coincide en la fuente)</value>
+  </data>
+  <data name="ServerCache" xml:space="preserve">
+    <value>{0:N0} páginas ({1})</value>
+  </data>
+  <data name="ServerCachePerConnection" xml:space="preserve">
+    <value>{0:N0} páginas ({1}) por conexión</value>
+  </data>
+  <data name="ServerCacheShared" xml:space="preserve">
+    <value>{0:N0} páginas ({1}), compartida por todas las conexiones</value>
+  </data>
+  <data name="ServerDatabaseLine" xml:space="preserve">
+    <value>ODS {0} · dialecto {1} · página de {2:N0} bytes · charset {3}</value>
+  </data>
+  <data name="ServerModeClassic" xml:space="preserve">
+    <value>Un proceso del servidor por cada conexión, cada uno con su propia caché. Si un proceso se cae, las demás conexiones siguen. El monitoreo (MON$) es más caro: cada consulta le pide los datos a todos los procesos.</value>
+  </data>
+  <data name="ServerModeShared" xml:space="preserve">
+    <value>Un solo proceso del servidor. Para saber si la caché es compartida (SuperServer) o una por conexión (SuperClassic) hay que ver las conexiones internas del servidor, y eso necesita SYSDBA, el rol RDB$ADMIN o ser el dueño de la base.</value>
+  </data>
+  <data name="ServerModeSuperClassic" xml:space="preserve">
+    <value>Un solo proceso del servidor, con una caché propia para cada conexión.</value>
+  </data>
+  <data name="ServerModeSuperServer" xml:space="preserve">
+    <value>Un solo proceso del servidor, con una caché compartida por todas las conexiones.</value>
+  </data>
+  <data name="ServerModeUnknown" xml:space="preserve">
+    <value>tipo sin detectar</value>
+  </data>
+  <data name="ServerModeWhyClassic" xml:space="preserve">
+    <value>Las {0} conexiones remotas que se ven corren en {1} procesos distintos.</value>
+  </data>
+  <data name="ServerModeWhyShared" xml:space="preserve">
+    <value>Las {0} conexiones remotas comparten el proceso {1}.</value>
+  </data>
+  <data name="ServerModeWhySuperClassic" xml:space="preserve">
+    <value>Las {0} conexiones remotas comparten el proceso {1} y no está la conexión interna «Cache Writer» de SuperServer.</value>
+  </data>
+  <data name="ServerModeWhySuperServer" xml:space="preserve">
+    <value>Las {0} conexiones remotas comparten el proceso {1} y está la conexión interna «Cache Writer», que solo tiene SuperServer.</value>
+  </data>
+  <data name="ServerModeWhyUnknown" xml:space="preserve">
+    <value>No se pudo comparar con una segunda conexión, así que no se sabe el tipo.</value>
+  </data>
+  <data name="ServerRowAddress" xml:space="preserve">
+    <value>Servidor</value>
+  </data>
+  <data name="ServerRowCache" xml:space="preserve">
+    <value>Caché</value>
+  </data>
+  <data name="ServerRowDatabase" xml:space="preserve">
+    <value>Base</value>
+  </data>
+  <data name="ServerRowEvidence" xml:space="preserve">
+    <value>Cómo se supo</value>
+  </data>
+  <data name="ServerRowMeaning" xml:space="preserve">
+    <value>Qué significa</value>
+  </data>
+  <data name="ServerRowMode" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="ServerRowPlatform" xml:space="preserve">
+    <value>Sistema</value>
+  </data>
+  <data name="ServerRowVersion" xml:space="preserve">
+    <value>Versión</value>
+  </data>
+  <data name="ServerSummary" xml:space="preserve">
+    <value>{0} · ODS {1} · dialecto {2} · página de {3:N0} bytes · charset {4}</value>
+  </data>
+  <data name="ServerUntested" xml:space="preserve">
+    <value>Es {0}: FbStudio está probado con Firebird 3.x y algunas lecturas de metadatos pueden fallar.</value>
+  </data>
+  <data name="ServerWireEncrypted" xml:space="preserve">
+    <value>Conexión cifrada</value>
+  </data>
+  <data name="ServerWireNotEncrypted" xml:space="preserve">
+    <value>Conexión sin cifrar</value>
+  </data>
+  <data name="ServicesTargetExists" xml:space="preserve">
+    <value>Ya hay una base en {0}. Elegí otro archivo, o marcá «reemplazar si existe».</value>
+  </data>
+  <data name="ServicesTargetIsCurrent" xml:space="preserve">
+    <value>La base de destino es la misma base del perfil: nunca se pisa la base en uso. Elegí otro archivo.</value>
+  </data>
+  <data name="SettingsLoadFailed" xml:space="preserve">
+    <value>No se pudieron leer las opciones ({0}): se usan los valores por defecto.</value>
+  </data>
+  <data name="StatsTablesUnsupported" xml:space="preserve">
+    <value>Esta versión de la biblioteca de Firebird no permite pedir las estadísticas de algunas tablas: leé la estadística completa.</value>
+  </data>
+  <data name="TraceNotStarted" xml:space="preserve">
+    <value>El servidor no confirmó la sesión de traza.</value>
+  </data>
+  <data name="XlsxBinary" xml:space="preserve">
+    <value>&lt;binario {0} bytes&gt;</value>
+  </data>
+  <data name="XlsxSheet" xml:space="preserve">
+    <value>Resultado</value>
+  </data>
+</root>

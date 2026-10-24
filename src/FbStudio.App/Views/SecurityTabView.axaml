@@ -1,0 +1,177 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.SecurityTabView"
+             x:DataType="vm:SecurityTabViewModel"
+             IsVisible="{Binding IsSelected}">
+
+  <UserControl.Styles>
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+    <Style Selector="Button.tool > StackPanel">
+      <Setter Property="Orientation" Value="Horizontal" />
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+    <Style Selector="Border.warn">
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsWarningBrush}" />
+      <Setter Property="Background" Value="{DynamicResource FbsWarningBackgroundBrush}" />
+    </Style>
+    <Style Selector="TextBlock.head">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Opacity" Value="0.7" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="CheckBox.cell">
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="8,8,8,4">
+    <!-- Acciones -->
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+      <Button Classes="tool" Command="{Binding RefreshCommand}">
+        <StackPanel><mi:MaterialIcon Kind="Refresh" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.SecRefresh}" /><TextBlock Text="F9" Opacity="0.55" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding NewUserCommand}">
+        <StackPanel><mi:MaterialIcon Kind="AccountPlusOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.SecNewUser}" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding NewRoleCommand}">
+        <StackPanel><mi:MaterialIcon Kind="AccountGroupOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.SecNewRole}" /></StackPanel>
+      </Button>
+      <TextBlock Text="{x:Static res:Strings.SecScopeNote}" Opacity="0.6" VerticalAlignment="Center" Margin="10,0,0,0" TextWrapping="Wrap" />
+    </StackPanel>
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding IsReadOnlyProfile}">
+      <TextBlock Text="{x:Static res:Strings.SecReadOnly}" TextWrapping="Wrap" />
+    </Border>
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding ShowAdminNote}">
+      <TextBlock Text="{x:Static res:Strings.SecAdminNote}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- Lo que se ejecutó o se va a ejecutar -->
+    <Border DockPanel.Dock="Bottom" BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4" Height="110" Margin="0,8,0,0">
+      <ae:TextEditor x:Name="SqlView" IsReadOnly="True" ShowLineNumbers="False"
+                     FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" Padding="6,4"
+                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+    </Border>
+
+    <Grid ColumnDefinitions="320,6,*">
+      <!-- Usuarios y roles (o los objetos PSQL) -->
+      <DockPanel>
+        <ComboBox DockPanel.Dock="Top" ItemsSource="{Binding GranteeScopes}" SelectedIndex="{Binding GranteeScope}" HorizontalAlignment="Stretch" Margin="0,0,0,6" />
+        <TextBox DockPanel.Dock="Top" Text="{Binding GranteeFilter}" PlaceholderText="{x:Static res:Strings.SecFilter}" Margin="0,0,0,6" />
+        <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+          <ListBox x:Name="GranteeList" ItemsSource="{Binding Grantees}" SelectedItem="{Binding SelectedGrantee}" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:GranteeItem">
+                <StackPanel Margin="0,1">
+                  <TextBlock Text="{Binding Name}" />
+                  <TextBlock Text="{Binding Subtitle}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Border>
+      </DockPanel>
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+
+      <!-- Roles y permisos del elegido -->
+      <Panel Grid.Column="2">
+        <TextBlock Text="{x:Static res:Strings.SecPickGrantee}" IsVisible="{Binding !HasGrantee}" Opacity="0.7" Margin="12" TextWrapping="Wrap" />
+        <DockPanel IsVisible="{Binding HasGrantee}">
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <Button Classes="tool" Command="{Binding EditUserCommand}" IsVisible="{Binding IsUserSelected}" Content="{x:Static res:Strings.SecEditUser}" />
+              <Button Classes="tool" Command="{Binding DeleteUserCommand}" IsVisible="{Binding IsUserSelected}" Content="{x:Static res:Strings.SecDeleteUser}" Foreground="{DynamicResource FbsDangerBrush}" />
+              <Button Classes="tool" Command="{Binding DeleteRoleCommand}" IsVisible="{Binding IsRoleSelected}" Content="{x:Static res:Strings.SecDeleteRole}" Foreground="{DynamicResource FbsDangerBrush}" />
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Text="{Binding GranteeTitle}" FontSize="16" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding GranteeDetail}" Opacity="0.65" FontSize="12" />
+            </StackPanel>
+          </DockPanel>
+
+          <StackPanel DockPanel.Dock="Top" IsVisible="{Binding HasRoles}" Margin="0,0,0,8">
+            <TextBlock Text="{x:Static res:Strings.SecRoles}" FontWeight="SemiBold" Margin="0,0,0,2" />
+            <ItemsControl ItemsSource="{Binding Roles}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RoleMembership">
+                  <CheckBox IsChecked="{Binding IsMember}" IsEnabled="{Binding IsEditable}" Margin="0,0,14,0"><TextBlock Text="{Binding Label}" /></CheckBox>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <TextBlock DockPanel.Dock="Left" Text="{x:Static res:Strings.SecPermissions}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0" />
+            <ComboBox DockPanel.Dock="Left" ItemsSource="{Binding ObjectKinds}" SelectedIndex="{Binding ObjectKindIndex}" MinWidth="160" Margin="0,0,6,0" />
+            <CheckBox DockPanel.Dock="Right" Content="{x:Static res:Strings.SecOnlyGranted}" IsChecked="{Binding OnlyGranted}" Margin="8,0,0,0" />
+            <TextBox Text="{Binding ObjectFilter}" PlaceholderText="{x:Static res:Strings.SecFilter}" />
+          </DockPanel>
+
+          <!-- Aplicar -->
+          <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+            <TextBlock Text="{Binding PendingText}" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <Button Classes="tool" Command="{Binding ShowSqlCommand}" Content="{x:Static res:Strings.SecShowSql}" />
+            <Button Classes="accent" Command="{Binding ApplyCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="Check" /><TextBlock Text="{x:Static res:Strings.SecApply}" /></StackPanel>
+            </Button>
+            <Button Classes="tool" Command="{Binding DiscardCommand}" Content="{x:Static res:Strings.SecDiscard}" />
+          </StackPanel>
+
+          <!-- Encabezado de las columnas y un renglón por objeto -->
+          <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+            <DockPanel>
+              <Grid DockPanel.Dock="Top" ColumnDefinitions="14,*,110,64,64,64,64,92,74,64,92" Margin="8,4,24,4">
+                <TextBlock Grid.Column="1" Classes="head" Text="{x:Static res:Strings.SecColObject}" HorizontalAlignment="Left" />
+                <TextBlock Grid.Column="2" Classes="head" Text="{x:Static res:Strings.SecColKind}" HorizontalAlignment="Left" />
+                <TextBlock Grid.Column="3" Classes="head" Text="SELECT" />
+                <TextBlock Grid.Column="4" Classes="head" Text="INSERT" />
+                <TextBlock Grid.Column="5" Classes="head" Text="UPDATE" />
+                <TextBlock Grid.Column="6" Classes="head" Text="DELETE" />
+                <TextBlock Grid.Column="7" Classes="head" Text="REFERENCES" />
+                <TextBlock Grid.Column="8" Classes="head" Text="EXECUTE" />
+                <TextBlock Grid.Column="9" Classes="head" Text="USAGE" />
+                <TextBlock Grid.Column="10" Classes="head" Text="{x:Static res:Strings.SecColGrantOption}" ToolTip.Tip="{x:Static res:Strings.SecColGrantOptionTip}" />
+              </Grid>
+              <ListBox x:Name="PermissionList" ItemsSource="{Binding Rows}" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:PermissionRow">
+                    <Grid ColumnDefinitions="14,*,110,64,64,64,64,92,74,64,92">
+                      <TextBlock Text="●" Foreground="{DynamicResource FbsAccentBrush}" IsVisible="{Binding IsChanged}" VerticalAlignment="Center" FontSize="10" />
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0" ToolTip.Tip="{Binding Name}">
+                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding ColumnsNote}" IsVisible="{Binding HasColumns}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Text="{Binding KindLabel}" Opacity="0.65" VerticalAlignment="Center" />
+                      <CheckBox Grid.Column="3" Classes="cell" IsChecked="{Binding Select}" IsVisible="{Binding CanSelect}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="4" Classes="cell" IsChecked="{Binding Insert}" IsVisible="{Binding CanInsert}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="5" Classes="cell" IsChecked="{Binding Update}" IsVisible="{Binding CanUpdate}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="6" Classes="cell" IsChecked="{Binding Delete}" IsVisible="{Binding CanDelete}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="7" Classes="cell" IsChecked="{Binding References}" IsVisible="{Binding CanReferences}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="8" Classes="cell" IsChecked="{Binding Execute}" IsVisible="{Binding CanExecute}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="9" Classes="cell" IsChecked="{Binding Usage}" IsVisible="{Binding CanUsage}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="10" Classes="cell" IsChecked="{Binding GrantOption}" IsEnabled="{Binding IsEditable}" />
+                    </Grid>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </DockPanel>
+          </Border>
+        </DockPanel>
+      </Panel>
+    </Grid>
+  </DockPanel>
+</UserControl>

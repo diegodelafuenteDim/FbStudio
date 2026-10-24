@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:rg="using:FbStudio.App.ResultGrid"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.TraceTabView"
+             x:DataType="vm:TraceTabViewModel"
+             IsVisible="{Binding IsSelected}">
+
+  <UserControl.Styles>
+    <Style Selector="Border.warn">
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsWarningBrush}" />
+      <Setter Property="Background" Value="{DynamicResource FbsWarningBackgroundBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="8,8,8,4">
+    <!-- Iniciar / detener y opciones -->
+    <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+      <Button Command="{Binding StartCommand}" Margin="0,0,6,4" Classes="accent">
+        <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="Play" /><TextBlock Text="{x:Static res:Strings.TraceStart}" /></StackPanel>
+      </Button>
+      <Button Command="{Binding StopCommand}" Margin="0,0,12,4">
+        <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="Stop" Foreground="{DynamicResource FbsDangerBrush}" /><TextBlock Text="{x:Static res:Strings.TraceStop}" /></StackPanel>
+      </Button>
+      <ComboBox ItemsSource="{Binding Thresholds}" SelectedItem="{Binding ThresholdMs}" IsEnabled="{Binding !IsTracing}" MinWidth="170" Margin="0,0,6,4"
+                ToolTip.Tip="{x:Static res:Strings.TraceThresholdTip}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="x:Int32"><TextBlock Text="{Binding Converter={x:Static vm:TraceLabels.Threshold}}" /></DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <ComboBox ItemsSource="{Binding AutoStops}" SelectedItem="{Binding AutoStopMinutes}" IsEnabled="{Binding !IsTracing}" MinWidth="190" Margin="0,0,12,4">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="x:Int32"><TextBlock Text="{Binding Converter={x:Static vm:TraceLabels.AutoStop}}" /></DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <CheckBox Content="{x:Static res:Strings.TraceProcedures}" IsChecked="{Binding Procedures}" IsEnabled="{Binding !IsTracing}" Margin="0,0,10,4" />
+      <CheckBox Content="{x:Static res:Strings.TraceTriggers}" IsChecked="{Binding Triggers}" IsEnabled="{Binding !IsTracing}" Margin="0,0,10,4" />
+      <CheckBox Content="{x:Static res:Strings.TraceErrors}" IsChecked="{Binding Errors}" IsEnabled="{Binding !IsTracing}" Margin="0,0,10,4" />
+      <TextBox Text="{Binding Filter}" PlaceholderText="{x:Static res:Strings.TraceFilter}" IsEnabled="{Binding !IsTracing}" Width="380" Margin="0,0,12,4" />
+      <Button x:Name="OpenLogButton" IsEnabled="{Binding !IsTracing}" Margin="0,0,6,4">
+        <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="FolderOpenOutline" /><TextBlock Text="{x:Static res:Strings.TraceOpenLog}" /></StackPanel>
+      </Button>
+      <Button x:Name="SaveLogButton" Margin="0,0,6,4">
+        <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="ContentSaveOutline" /><TextBlock Text="{x:Static res:Strings.TraceSaveLog}" /></StackPanel>
+      </Button>
+      <Button Command="{Binding ClearCommand}" Margin="0,0,6,4">
+        <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="Broom" /><TextBlock Text="{x:Static res:Strings.TraceClear}" /></StackPanel>
+      </Button>
+    </WrapPanel>
+
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding SeesOnlyOwn}">
+      <TextBlock Text="{x:Static res:Strings.TraceOnlyYours}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- Detalle de lo elegido -->
+    <Border DockPanel.Dock="Bottom" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource SemiColorBorder}" Padding="0,6,0,0" MaxHeight="220"
+            IsVisible="{Binding Detail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <ScrollViewer HorizontalScrollBarVisibility="Auto">
+        <SelectableTextBlock x:Name="DetailText" Text="{Binding Detail}" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" />
+      </ScrollViewer>
+    </Border>
+
+    <TabControl x:Name="Pages" Padding="0,4,0,0">
+      <TabItem Header="{x:Static res:Strings.TraceAnalysisTab}">
+        <DockPanel>
+          <CheckBox DockPanel.Dock="Top" Content="{x:Static res:Strings.TraceUnify}" IsChecked="{Binding UnifyValues}" Margin="0,0,0,4" />
+          <rg:DrawnGrid x:Name="AnalysisGrid" />
+        </DockPanel>
+      </TabItem>
+      <TabItem Header="{x:Static res:Strings.TraceEventsTab}">
+        <rg:DrawnGrid x:Name="EventsGrid" />
+      </TabItem>
+    </TabControl>
+  </DockPanel>
+</UserControl>

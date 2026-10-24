@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Adaptadores sobre FirebirdSql.Data.FirebirdClient: sesiones, ejecución, metadatos, estadísticas. -->
+  <ItemGroup>
+    <PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FbStudio.Core\FbStudio.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Testcontainers.FirebirdSql" />
+    <PackageReference Include="Avalonia.Headless" />
+    <PackageReference Include="Avalonia.Skia" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <!-- Mismo Firebird 3.0 en Docker que los tests de la capa Firebird. -->
+    <Compile Include="..\FbStudio.Firebird.Tests\FirebirdFixture.cs" Link="FirebirdFixture.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FbStudio.App\FbStudio.App.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\docs\examples\monitor-queries.json" Link="monitor-queries.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

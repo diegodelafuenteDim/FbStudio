@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <Version>0.1.0</Version>
+    <Product>FbStudio</Product>
+    <Authors>Diego de la Fuente</Authors>
+    <Copyright>Copyright 2026 Diego de la Fuente. Apache-2.0 + Commons Clause.</Copyright>
+  </PropertyGroup>
+</Project>

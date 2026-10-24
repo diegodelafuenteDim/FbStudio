@@ -1,0 +1,4417 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textos de la interfaz. Este archivo es el español (idioma neutral); la traducción va en el .en.resx. -->
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AboutDiscussions" xml:space="preserve">
+    <value>Questions and ideas</value>
+  </data>
+  <data name="AboutHelp" xml:space="preserve">
+    <value>Bugs and feature requests go to GitHub issues; questions and ideas, to Discussions.</value>
+  </data>
+  <data name="AboutHelpTitle" xml:space="preserve">
+    <value>Bugs, requests and questions</value>
+  </data>
+  <data name="AboutLicense" xml:space="preserve">
+    <value>Apache 2.0 with the Commons Clause: free to use (also at work), modify and share, but not to sell.</value>
+  </data>
+  <data name="AboutLicenseFull" xml:space="preserve">
+    <value>Read the full license</value>
+  </data>
+  <data name="AboutLicenseTitle" xml:space="preserve">
+    <value>License</value>
+  </data>
+  <data name="AboutReport" xml:space="preserve">
+    <value>Report a bug or request a feature</value>
+  </data>
+  <data name="AboutRepository" xml:space="preserve">
+    <value>Repository</value>
+  </data>
+  <data name="AboutTagline" xml:space="preserve">
+    <value>A free IDE and administration tool for Firebird databases.</value>
+  </data>
+  <data name="AboutThirdParty" xml:space="preserve">
+    <value>Third-party components</value>
+  </data>
+  <data name="AboutThirdPartyDetail" xml:space="preserve">
+    <value>See each license in detail</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>About {0}</value>
+  </data>
+  <data name="AboutTrademarks" xml:space="preserve">
+    <value>FbStudio is not affiliated with the Firebird Foundation. "Firebird" is a trademark of the Firebird Foundation, named for reference only.</value>
+  </data>
+  <data name="AboutVersion" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="AreasAddTo" xml:space="preserve">
+    <value>Add to</value>
+  </data>
+  <data name="AreasAllKinds" xml:space="preserve">
+    <value>All types</value>
+  </data>
+  <data name="AreasAlsoIn" xml:space="preserve">
+    <value>also in {0}</value>
+  </data>
+  <data name="AreasByUse" xml:space="preserve">
+    <value>by what it uses</value>
+  </data>
+  <data name="AreasByUseCount" xml:space="preserve">
+    <value>{0:N0} by what they use</value>
+  </data>
+  <data name="AreasConflict" xml:space="preserve">
+    <value>The areas file changed since you opened it (did someone else save it?). Replacing it loses those changes; use “Reload” to see them first.</value>
+  </data>
+  <data name="AreasConflictReplace" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="AreasConflictTitle" xml:space="preserve">
+    <value>Areas file changed</value>
+  </data>
+  <data name="AreasDelete" xml:space="preserve">
+    <value>Remove area</value>
+  </data>
+  <data name="AreasDescription" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="AreasDiagram" xml:space="preserve">
+    <value>Diagram</value>
+  </data>
+  <data name="AreasDiagramTip" xml:space="preserve">
+    <value>The diagram of the area tables, as the area is written now (even if not saved).</value>
+  </data>
+  <data name="AreasDiscardAndSwitch" xml:space="preserve">
+    <value>Discard and switch</value>
+  </data>
+  <data name="AreasDiscardChanges" xml:space="preserve">
+    <value>The areas have unsaved changes.</value>
+  </data>
+  <data name="AreasDuplicateName" xml:space="preserve">
+    <value>Two areas are called “{0}”: rename one of them.</value>
+  </data>
+  <data name="AreasEmptyName" xml:space="preserve">
+    <value>An area has no name: give it one before saving.</value>
+  </data>
+  <data name="AreasExclude" xml:space="preserve">
+    <value>Exceptions: left out even if a rule matches</value>
+  </data>
+  <data name="AreasFileMemory" xml:space="preserve">
+    <value>in memory (no file)</value>
+  </data>
+  <data name="AreasFileOwn" xml:space="preserve">
+    <value>This PC's file:</value>
+  </data>
+  <data name="AreasFileOwnShort" xml:space="preserve">
+    <value>this PC's file</value>
+  </data>
+  <data name="AreasFileShared" xml:space="preserve">
+    <value>Shared file:</value>
+  </data>
+  <data name="AreasFileTypes" xml:space="preserve">
+    <value>FbStudio areas</value>
+  </data>
+  <data name="AreasFilter" xml:space="preserve">
+    <value>Filter by name</value>
+  </data>
+  <data name="AreasHelp" xml:space="preserve">
+    <value>An object can be in several areas. Triggers and indexes go with their table.</value>
+  </data>
+  <data name="AreasIncludeDependents" xml:space="preserve">
+    <value>Add what uses only its tables (procedures, views and triggers)</value>
+  </data>
+  <data name="AreasIncludeDependentsTip" xml:space="preserve">
+    <value>A procedure, view or trigger comes in if every table it uses is in the area, according to the database dependencies (system tables do not count). Useful when procedures do not follow the table prefixes. Exceptions still win.</value>
+  </data>
+  <data name="AreasLoaded" xml:space="preserve">
+    <value>{0} areas · {1:N0} objects in the database.</value>
+  </data>
+  <data name="AreasLoadFailed" xml:space="preserve">
+    <value>Could not read the areas file: {0}</value>
+  </data>
+  <data name="AreasName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="AreasNew" xml:space="preserve">
+    <value>New area</value>
+  </data>
+  <data name="AreasNewName" xml:space="preserve">
+    <value>New area</value>
+  </data>
+  <data name="AreasNewNameN" xml:space="preserve">
+    <value>New area {0}</value>
+  </data>
+  <data name="AreasNoSuggestions" xml:space="preserve">
+    <value>No prefix is shared by {0} or more tables with no area.</value>
+  </data>
+  <data name="AreasObjectCount" xml:space="preserve">
+    <value>{0:N0} objects</value>
+  </data>
+  <data name="AreasObjectsFailed" xml:space="preserve">
+    <value>Could not read the database objects: {0}</value>
+  </data>
+  <data name="AreasOpenObject" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="AreasPickArea" xml:space="preserve">
+    <value>Pick an area from the list, or create one with “New area”.</value>
+  </data>
+  <data name="AreasPickDatabase" xml:space="preserve">
+    <value>Pick a database in the tree to see its areas.</value>
+  </data>
+  <data name="AreasReload" xml:space="preserve">
+    <value>Reload</value>
+  </data>
+  <data name="AreasRemoveFrom" xml:space="preserve">
+    <value>Remove from “{0}”</value>
+  </data>
+  <data name="AreasRules" xml:space="preserve">
+    <value>Rules: one per line (names or patterns with * and ?)</value>
+  </data>
+  <data name="AreasSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="AreasSaveAs" xml:space="preserve">
+    <value>Save as…</value>
+  </data>
+  <data name="AreasSaved" xml:space="preserve">
+    <value>{0} areas saved to {1}.</value>
+  </data>
+  <data name="AreasSaveFailed" xml:space="preserve">
+    <value>Could not save the areas file: {0}</value>
+  </data>
+  <data name="AreasStillExcluded" xml:space="preserve">
+    <value>{0} is still out of “{1}” because of a pattern exception: change the exceptions.</value>
+  </data>
+  <data name="AreasSubtitleByUse" xml:space="preserve">
+    <value>+ what uses its tables</value>
+  </data>
+  <data name="AreasSuggest" xml:space="preserve">
+    <value>Suggest by prefix</value>
+  </data>
+  <data name="AreasSuggested" xml:space="preserve">
+    <value>{0} areas added by prefix: review them and save.</value>
+  </data>
+  <data name="AreasSuggestedDescription" xml:space="preserve">
+    <value>Suggested: {0} tables starting with {1}</value>
+  </data>
+  <data name="AreasSuggestedFileName" xml:space="preserve">
+    <value>areas-{0}.json</value>
+  </data>
+  <data name="AreasSuggestTip" xml:space="preserve">
+    <value>One area for each prefix family (what comes before the first _; CLI_ and CLIENTES_ go together) with 3 or more tables with no area, adding what uses only its tables. They stay for review: nothing is saved until “Save”.</value>
+  </data>
+  <data name="AreasTitle" xml:space="preserve">
+    <value>Areas</value>
+  </data>
+  <data name="AreasUnassigned" xml:space="preserve">
+    <value>No area</value>
+  </data>
+  <data name="AreasUnassignedHelp" xml:space="preserve">
+    <value>Objects that are in no area. Pick one or more and right-click to add them to an area.</value>
+  </data>
+  <data name="AreasUnassignedNote" xml:space="preserve">
+    <value>Objects that are in no area</value>
+  </data>
+  <data name="AreasUseFile" xml:space="preserve">
+    <value>Use another file…</value>
+  </data>
+  <data name="AreasUseOwnFile" xml:space="preserve">
+    <value>Back to this PC's file</value>
+  </data>
+  <data name="BackupAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="BackupChooseLabel" xml:space="preserve">
+    <value>Registrations to export:</value>
+  </data>
+  <data name="BackupExistingList" xml:space="preserve">
+    <value>Already registered: {0}.</value>
+  </data>
+  <data name="BackupExistingSkip" xml:space="preserve">
+    <value>Leave the ones already registered as they are</value>
+  </data>
+  <data name="BackupExistingUpdate" xml:space="preserve">
+    <value>Update them with the data in the file</value>
+  </data>
+  <data name="BackupExportButton" xml:space="preserve">
+    <value>Export…</value>
+  </data>
+  <data name="BackupExported" xml:space="preserve">
+    <value>Registrations exported: {0}, to {1}.</value>
+  </data>
+  <data name="BackupExportedWithPasswords" xml:space="preserve">
+    <value>Registrations exported: {0} ({1} with a password, encrypted), to {2}.</value>
+  </data>
+  <data name="BackupExportNote" xml:space="preserve">
+    <value>Without your user name, the file is for sharing the registrations with your team: whoever imports it enters their own user name and password. It has servers and databases: keep it somewhere safe. With passwords, everything is encrypted with the passphrase, which is not stored anywhere: without it the file cannot be imported.</value>
+  </data>
+  <data name="BackupExportTitle" xml:space="preserve">
+    <value>Export registrations</value>
+  </data>
+  <data name="BackupFailed" xml:space="preserve">
+    <value>It could not be done: {0}</value>
+  </data>
+  <data name="BackupFileType" xml:space="preserve">
+    <value>FbStudio registrations</value>
+  </data>
+  <data name="BackupImportButton" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="BackupImported" xml:space="preserve">
+    <value>Registrations imported · new: {0} · updated: {1} · left as they were: {2}.</value>
+  </data>
+  <data name="BackupImportSummary" xml:space="preserve">
+    <value>{0} registrations in the file · new: {1} · already registered: {2}.</value>
+  </data>
+  <data name="BackupImportTitle" xml:space="preserve">
+    <value>Import registrations</value>
+  </data>
+  <data name="BackupIncludePasswords" xml:space="preserve">
+    <value>Also include my password for each connection (the file is encrypted with a passphrase)</value>
+  </data>
+  <data name="BackupIncludeUser" xml:space="preserve">
+    <value>Include my user name for each connection (otherwise whoever imports enters their own)</value>
+  </data>
+  <data name="BackupInvalid" xml:space="preserve">
+    <value>Not imported because they lack a name, server or database: {0}.</value>
+  </data>
+  <data name="BackupKeptProtection" xml:space="preserve">
+    <value>{0} kept their protection (read-only, production or encryption): change it by hand in the registration.</value>
+  </data>
+  <data name="BackupMissingUser" xml:space="preserve">
+    <value>Without a user name: {0}. User and password for them (they can be left empty and filled in later in each registration):</value>
+  </data>
+  <data name="BackupNoKeyring" xml:space="preserve">
+    <value>This computer has no keyring: imported passwords are remembered only until FbStudio is closed.</value>
+  </data>
+  <data name="BackupNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="BackupNoneChosen" xml:space="preserve">
+    <value>Choose at least one registration.</value>
+  </data>
+  <data name="BackupNothing" xml:space="preserve">
+    <value>There are no registrations to export.</value>
+  </data>
+  <data name="BackupPassword" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="BackupPasswordsForgotten" xml:space="preserve">
+    <value>{0} changed server, database or user: their password has to be typed again.</value>
+  </data>
+  <data name="BackupPhrase" xml:space="preserve">
+    <value>Passphrase to encrypt the file (not your Firebird password; at least {0} characters, several words are best):</value>
+  </data>
+  <data name="BackupPhraseMismatch" xml:space="preserve">
+    <value>The two passphrases do not match.</value>
+  </data>
+  <data name="BackupPhrasePrompt" xml:space="preserve">
+    <value>Registrations in the file: {0}, with their passwords, all encrypted. Type the passphrase it was exported with:</value>
+  </data>
+  <data name="BackupPhraseRepeat" xml:space="preserve">
+    <value>Repeat it:</value>
+  </data>
+  <data name="BackupUser" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="BackupWithPasswords" xml:space="preserve">
+    <value>With a password: {0} (kept in this computer's keyring).</value>
+  </data>
+  <data name="BannerEncrypted" xml:space="preserve">
+    <value> · encrypted connection</value>
+  </data>
+  <data name="BannerNoDatabaseInTab" xml:space="preserve">
+    <value>Tab without a database: double-click a database in the tree to connect it</value>
+  </data>
+  <data name="BannerNoDatabases" xml:space="preserve">
+    <value>No registered databases: click “Register” to add the first one</value>
+  </data>
+  <data name="BannerNoTabs" xml:space="preserve">
+    <value>Double-click a database in the tree to connect</value>
+  </data>
+  <data name="BannerNotEncrypted" xml:space="preserve">
+    <value> · ⚠ not encrypted</value>
+  </data>
+  <data name="BannerNotEncryptedTip" xml:space="preserve">
+    <value>The connection to the server is not encrypted: queries and data travel readable over the network. To require encryption, choose «Required» in «Connection encryption» in the registration (the server has to accept it).</value>
+  </data>
+  <data name="BannerProduction" xml:space="preserve">
+    <value>PRODUCTION</value>
+  </data>
+  <data name="BannerReadOnly" xml:space="preserve">
+    <value> · read-only</value>
+  </data>
+  <data name="Blocked" xml:space="preserve">
+    <value>Blocked: {0}</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CancelledAfter" xml:space="preserve">
+    <value>Cancelled: {0:N0} rows in {1:N1} s (cancelling took {2:N0} ms)</value>
+  </data>
+  <data name="Cancelling" xml:space="preserve">
+    <value>Cancelling…</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="CloseAll" xml:space="preserve">
+    <value>Close all</value>
+  </data>
+  <data name="CloseAndUndo" xml:space="preserve">
+    <value>Close and undo</value>
+  </data>
+  <data name="CloseDiscardChanges" xml:space="preserve">
+    <value>“{0}” has uncompiled changes. If you close the tab, they are lost.</value>
+  </data>
+  <data name="CloseManyPending" xml:space="preserve">
+    <value>You are about to close {0} tabs. They have unconfirmed work: {1}. If you close them, the transactions are undone (rollback) and uncompiled changes are lost.</value>
+  </data>
+  <data name="CloseManyRunning" xml:space="preserve">
+    <value>{0} tab(s) still executing were not closed: cancel them (Esc) first.</value>
+  </data>
+  <data name="CloseOpenTransaction" xml:space="preserve">
+    <value>The tab “{0}” has an open write transaction. If you close it, the changes are undone (rollback).</value>
+  </data>
+  <data name="CloseOthers" xml:space="preserve">
+    <value>Close all but this one</value>
+  </data>
+  <data name="CloseToTheRight" xml:space="preserve">
+    <value>Close the ones to the right</value>
+  </data>
+  <data name="CloseWhileRunning" xml:space="preserve">
+    <value>An execution is in progress: cancel it (Esc) before closing the tab.</value>
+  </data>
+  <data name="CommitDone" xml:space="preserve">
+    <value>Commit done.</value>
+  </data>
+  <data name="CompareAdded" xml:space="preserve">
+    <value>new</value>
+  </data>
+  <data name="CompareAgain" xml:space="preserve">
+    <value>Compare again</value>
+  </data>
+  <data name="CompareBuildScript" xml:space="preserve">
+    <value>Sync script</value>
+  </data>
+  <data name="CompareBuildScriptTip" xml:space="preserve">
+    <value>Builds, from what is ticked, the script that makes the target equal to the source.</value>
+  </data>
+  <data name="CompareCancelled" xml:space="preserve">
+    <value>Comparison cancelled.</value>
+  </data>
+  <data name="CompareChanged" xml:space="preserve">
+    <value>different</value>
+  </data>
+  <data name="CompareCheckAll" xml:space="preserve">
+    <value>Tick all</value>
+  </data>
+  <data name="CompareCheckNone" xml:space="preserve">
+    <value>Untick all</value>
+  </data>
+  <data name="CompareDialogNote" xml:space="preserve">
+    <value>Reads both databases at once in read-only transactions: it changes nothing. The sync script is built afterwards, from what you tick, and run by hand.</value>
+  </data>
+  <data name="CompareDialogTitle" xml:space="preserve">
+    <value>Compare databases</value>
+  </data>
+  <data name="CompareDifferenceTab" xml:space="preserve">
+    <value>Difference</value>
+  </data>
+  <data name="CompareDirection" xml:space="preserve">
+    <value>{0} → {1}</value>
+  </data>
+  <data name="CompareDone" xml:space="preserve">
+    <value>{0} → {1} compared in {2:0.0} s</value>
+  </data>
+  <data name="CompareDropExtra" xml:space="preserve">
+    <value>Drop in the target what is not in the source (objects, columns, indexes)</value>
+  </data>
+  <data name="CompareExtra" xml:space="preserve">
+    <value>extra</value>
+  </data>
+  <data name="CompareFailed" xml:space="preserve">
+    <value>Could not compare: {0}</value>
+  </data>
+  <data name="CompareIntro" xml:space="preserve">
+    <value>Comparing {0} (source) with {1} (target)…</value>
+  </data>
+  <data name="CompareKindDomain" xml:space="preserve">
+    <value>Domain</value>
+  </data>
+  <data name="CompareKindException" xml:space="preserve">
+    <value>Exception</value>
+  </data>
+  <data name="CompareKindFunction" xml:space="preserve">
+    <value>Function</value>
+  </data>
+  <data name="CompareKindGenerator" xml:space="preserve">
+    <value>Generator</value>
+  </data>
+  <data name="CompareKindIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="CompareKindPackage" xml:space="preserve">
+    <value>Package</value>
+  </data>
+  <data name="CompareKindPrivilege" xml:space="preserve">
+    <value>Privilege</value>
+  </data>
+  <data name="CompareKindProcedure" xml:space="preserve">
+    <value>Procedure</value>
+  </data>
+  <data name="CompareKindRole" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="CompareKindTable" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="CompareKindTrigger" xml:space="preserve">
+    <value>Trigger</value>
+  </data>
+  <data name="CompareKindView" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="CompareNeedsTwo" xml:space="preserve">
+    <value>Comparing needs two registered databases.</value>
+  </data>
+  <data name="CompareNoDifferences" xml:space="preserve">
+    <value>No differences: the target equals the source.</value>
+  </data>
+  <data name="CompareNothingChecked" xml:space="preserve">
+    <value>Nothing is ticked for the script.</value>
+  </data>
+  <data name="CompareNotThere" xml:space="preserve">
+    <value>(not there)</value>
+  </data>
+  <data name="CompareOpenInTarget" xml:space="preserve">
+    <value>Open in a target tab</value>
+  </data>
+  <data name="CompareOpenInTargetTip" xml:space="preserve">
+    <value>Takes the script to a query tab of the target to review and run it (F9). On production it asks for confirmation.</value>
+  </data>
+  <data name="ComparePositions" xml:space="preserve">
+    <value>Keep columns in the same order as in the source</value>
+  </data>
+  <data name="ComparePrivileges" xml:space="preserve">
+    <value>Also compare privileges (GRANT)</value>
+  </data>
+  <data name="CompareReading" xml:space="preserve">
+    <value>Reading {0} {1} · {2} {3}</value>
+  </data>
+  <data name="CompareRun" xml:space="preserve">
+    <value>Compare</value>
+  </data>
+  <data name="CompareSameDatabase" xml:space="preserve">
+    <value>Pick two different databases.</value>
+  </data>
+  <data name="CompareSaveTitle" xml:space="preserve">
+    <value>Save the sync script</value>
+  </data>
+  <data name="CompareScriptHint" xml:space="preserve">
+    <value>Tick what you want to take to the target and press «Sync script».</value>
+  </data>
+  <data name="CompareScriptOpened" xml:space="preserve">
+    <value>Script to sync {0}: review it and run it with F9 (each stage ends with COMMIT).</value>
+  </data>
+  <data name="CompareScriptReady" xml:space="preserve">
+    <value>Sync script ready: {0} differences. Review it and open it in a tab of {1} to run it.</value>
+  </data>
+  <data name="CompareScriptTab" xml:space="preserve">
+    <value>Sync script</value>
+  </data>
+  <data name="CompareScriptTabTitle" xml:space="preserve">
+    <value>Sync {0}</value>
+  </data>
+  <data name="CompareSourceDdl" xml:space="preserve">
+    <value>In the source</value>
+  </data>
+  <data name="CompareSourceLabel" xml:space="preserve">
+    <value>Source (the model, e.g. development):</value>
+  </data>
+  <data name="CompareSummary" xml:space="preserve">
+    <value>{0} differences: {1} new, {2} different, {3} extra</value>
+  </data>
+  <data name="CompareTabTitle" xml:space="preserve">
+    <value>Compare</value>
+  </data>
+  <data name="CompareTargetDdl" xml:space="preserve">
+    <value>In the target</value>
+  </data>
+  <data name="CompareTargetLabel" xml:space="preserve">
+    <value>Target (the one to make equal, e.g. production):</value>
+  </data>
+  <data name="Compiled" xml:space="preserve">
+    <value>{0} {1} compiled and committed in {2:N0} ms.</value>
+  </data>
+  <data name="CompileFailed" xml:space="preserve">
+    <value>Did not compile: {0}</value>
+  </data>
+  <data name="CompileFailedAt" xml:space="preserve">
+    <value>Did not compile (line {0}, column {1}): {2}</value>
+  </data>
+  <data name="CompileHint" xml:space="preserve">
+    <value>Compile: CREATE OR ALTER and commit (F9 without a selection or Ctrl+F9)</value>
+  </data>
+  <data name="CompileNotCreateOrAlter" xml:space="preserve">
+    <value>To compile, the text must be a CREATE OR ALTER (or ALTER / RECREATE) of the object.</value>
+  </data>
+  <data name="CompileOneStatement" xml:space="preserve">
+    <value>To compile, the tab must contain a single CREATE OR ALTER statement (there are {0}).</value>
+  </data>
+  <data name="CompileOpenTransaction" xml:space="preserve">
+    <value>This tab has an open transaction: Commit or Rollback before compiling.</value>
+  </data>
+  <data name="CompileOtherObject" xml:space="preserve">
+    <value>The DDL is for {0} but the tab is for {1}: use a query tab to create another object.</value>
+  </data>
+  <data name="CompileReadOnly" xml:space="preserve">
+    <value>Read-only profile: compiling is not allowed</value>
+  </data>
+  <data name="CompletionException" xml:space="preserve">
+    <value>exception</value>
+  </data>
+  <data name="CompletionFunction" xml:space="preserve">
+    <value>function</value>
+  </data>
+  <data name="CompletionGenerator" xml:space="preserve">
+    <value>generator</value>
+  </data>
+  <data name="CompletionInPackage" xml:space="preserve">
+    <value>in {0}</value>
+  </data>
+  <data name="CompletionPackage" xml:space="preserve">
+    <value>package</value>
+  </data>
+  <data name="CompletionProcedure" xml:space="preserve">
+    <value>procedure</value>
+  </data>
+  <data name="CompletionTable" xml:space="preserve">
+    <value>table, {0}</value>
+  </data>
+  <data name="CompletionWith" xml:space="preserve">
+    <value>WITH query</value>
+  </data>
+  <data name="ConfirmRunTitle" xml:space="preserve">
+    <value>Confirm execution</value>
+  </data>
+  <data name="Connecting" xml:space="preserve">
+    <value>Connecting…</value>
+  </data>
+  <data name="CopyLog" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="CopyName" xml:space="preserve">
+    <value>{0} (copy)</value>
+  </data>
+  <data name="CopyNameN" xml:space="preserve">
+    <value>{0} (copy {1})</value>
+  </data>
+  <data name="DataApplied" xml:space="preserve">
+    <value>Saved and committed: {0} row(s) changed, {1} deleted and {3} new in {2:N0} ms.</value>
+  </data>
+  <data name="DataApply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="DataApplyConflict" xml:space="preserve">
+    <value>Nothing was saved: row {0} was changed or deleted by someone else since it was read. Reload and make the change again.</value>
+  </data>
+  <data name="DataApplyDeletes" xml:space="preserve">
+    <value>You are about to delete {0} row(s) from {1}.</value>
+  </data>
+  <data name="DataApplyFailed" xml:space="preserve">
+    <value>Nothing was saved (everything was undone). Row {0} failed: {1}</value>
+  </data>
+  <data name="DataApplying" xml:space="preserve">
+    <value>Applying…</value>
+  </data>
+  <data name="DataApplyNotUnique" xml:space="preserve">
+    <value>Nothing was saved: the key of row {0} is not unique ({1} rows).</value>
+  </data>
+  <data name="DataApplyProduction" xml:space="preserve">
+    <value>You are about to apply {0} change(s) to table {1} on PRODUCTION ({2}).</value>
+  </data>
+  <data name="DataApplyTip" xml:space="preserve">
+    <value>Saves all changes in a short transaction and commits it (or saves none)</value>
+  </data>
+  <data name="DataCloseDiscard" xml:space="preserve">
+    <value>“{0}” has {1} unapplied data change(s). If you close the tab, they are lost.</value>
+  </data>
+  <data name="DataColumnReadOnly" xml:space="preserve">
+    <value>This column cannot be edited (computed or binary blob).</value>
+  </data>
+  <data name="DataComputedRefresh" xml:space="preserve">
+    <value> Computed columns show updated values after reloading.</value>
+  </data>
+  <data name="DataCount" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="DataCounted" xml:space="preserve">
+    <value>The table has {0:N0} rows with the current filter.</value>
+  </data>
+  <data name="DataCounting" xml:space="preserve">
+    <value>Counting…</value>
+  </data>
+  <data name="DataCountTip" xml:space="preserve">
+    <value>SELECT COUNT(*) with the current filter (it may take a while on large tables)</value>
+  </data>
+  <data name="DataDiscard" xml:space="preserve">
+    <value>Discard</value>
+  </data>
+  <data name="DataDiscarded" xml:space="preserve">
+    <value>Changes discarded.</value>
+  </data>
+  <data name="DataEditHint" xml:space="preserve">
+    <value> · double-click, F2 or typing edits; Del marks for deletion; Insert adds a row; nothing is saved until “Apply”</value>
+  </data>
+  <data name="DataFooterLoaded" xml:space="preserve">
+    <value>{0:N0} rows loaded</value>
+  </data>
+  <data name="DataFooterMore" xml:space="preserve">
+    <value> · scroll down to fetch more</value>
+  </data>
+  <data name="DataFooterOf" xml:space="preserve">
+    <value>{0:N0} of {1:N0} rows loaded</value>
+  </data>
+  <data name="DataLoaded" xml:space="preserve">
+    <value>{0:N0} rows in {1:N1} s (500 at a time, with sorting and filters resolved on the server)</value>
+  </data>
+  <data name="DataLoadedMore" xml:space="preserve">
+    <value>{0:N0} rows loaded</value>
+  </data>
+  <data name="DataMovedToTab" xml:space="preserve">
+    <value>{0} change(s) moved to a query tab: run them there (F9) and confirm with Commit; then “Reload”.</value>
+  </data>
+  <data name="DataNewRow" xml:space="preserve">
+    <value>New row</value>
+  </data>
+  <data name="DataNewRowHint" xml:space="preserve">
+    <value>New row: fill what you need (empty cells are left to the server) and «Apply».</value>
+  </data>
+  <data name="DataNewRowTip" xml:space="preserve">
+    <value>Adds a row at the top (Insert). What you leave empty is not sent: the default, the trigger or the identity applies.</value>
+  </data>
+  <data name="DataNoKey" xml:space="preserve">
+    <value>The table has no primary key: it can be viewed but not edited.</value>
+  </data>
+  <data name="DataPending" xml:space="preserve">
+    <value>{0} row(s) changed · {1} to delete · {2} new</value>
+  </data>
+  <data name="DataPendingHint" xml:space="preserve">
+    <value>Pending changes: they are not saved (and lock nothing) until “Apply”.</value>
+  </data>
+  <data name="DataPreviewCopied" xml:space="preserve">
+    <value>Copied ✓</value>
+  </data>
+  <data name="DataPreviewCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="DataPreviewNote" xml:space="preserve">
+    <value>This is what will run, in a short transaction: if a statement does not find its row (someone changed or deleted it), everything is undone and nothing is saved. You can change this in Options → Queries so that “Apply” runs directly.</value>
+  </data>
+  <data name="DataPreviewOpenTab" xml:space="preserve">
+    <value>Open in a query tab</value>
+  </data>
+  <data name="DataPreviewRun" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="DataPreviewTitle" xml:space="preserve">
+    <value>Commands to apply to {0}</value>
+  </data>
+  <data name="DataProfileReadOnly" xml:space="preserve">
+    <value>Read-only profile: data cannot be edited.</value>
+  </data>
+  <data name="DataReadFailed" xml:space="preserve">
+    <value>Could not read the data: {0}</value>
+  </data>
+  <data name="DataRowChanged" xml:space="preserve">
+    <value>The row changed or no longer exists.</value>
+  </data>
+  <data name="DataScriptTabTitle" xml:space="preserve">
+    <value>Changes to {0}</value>
+  </data>
+  <data name="DataTab" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="DataViewEditsTable" xml:space="preserve">
+    <value> · view over {0}: changes go to {0} through the view</value>
+  </data>
+  <data name="DataViewNoKey" xml:space="preserve">
+    <value>This view is read-only: it does not come from a single table or does not show its whole primary key.</value>
+  </data>
+  <data name="DataViewReadOnly" xml:space="preserve">
+    <value>This view is read-only: it does not come from a single table or does not show its primary key.</value>
+  </data>
+  <data name="DataWherePlaceholder" xml:space="preserve">
+    <value>Additional WHERE (SQL), e.g.: FECHA &gt;= '2026-10-01' AND ESTADO = 1 · Enter applies</value>
+  </data>
+  <data name="Days" xml:space="preserve">
+    <value>days</value>
+  </data>
+  <data name="DdlReadFailed" xml:space="preserve">
+    <value>Could not read the DDL of {0}: {1}</value>
+  </data>
+  <data name="DdlReloaded" xml:space="preserve">
+    <value>DDL of {0} reloaded from the database.</value>
+  </data>
+  <data name="DdlReloadFailed" xml:space="preserve">
+    <value>Could not reload the DDL: {0}</value>
+  </data>
+  <data name="DependenciesFailed" xml:space="preserve">
+    <value>Could not read the dependencies: {0}</value>
+  </data>
+  <data name="DependenciesFilterPlaceholder" xml:space="preserve">
+    <value>Filter by name or column</value>
+  </data>
+  <data name="DependenciesHint" xml:space="preserve">
+    <value>Double-click: open the object. Note: dynamic SQL (EXECUTE STATEMENT, applications) is not listed in RDB$DEPENDENCIES.</value>
+  </data>
+  <data name="DependenciesNone" xml:space="preserve">
+    <value>No object uses it (according to RDB$DEPENDENCIES; dynamic SQL from applications is not listed). Double-click: open.</value>
+  </data>
+  <data name="DependenciesReading" xml:space="preserve">
+    <value>Reading dependencies…</value>
+  </data>
+  <data name="DependenciesTab" xml:space="preserve">
+    <value>Dependencies</value>
+  </data>
+  <data name="DependenciesUsedBy" xml:space="preserve">
+    <value>Used by</value>
+  </data>
+  <data name="DependenciesUses" xml:space="preserve">
+    <value>Uses</value>
+  </data>
+  <data name="DiagramAddTable" xml:space="preserve">
+    <value>Add table…</value>
+  </data>
+  <data name="DiagramAddTablePrompt" xml:space="preserve">
+    <value>Table or view name:</value>
+  </data>
+  <data name="DiagramAddTableTitle" xml:space="preserve">
+    <value>Add table</value>
+  </data>
+  <data name="DiagramAndMore" xml:space="preserve">
+    <value> and {0} more</value>
+  </data>
+  <data name="DiagramColumnCount" xml:space="preserve">
+    <value>{0} columns</value>
+  </data>
+  <data name="DiagramColumnOne" xml:space="preserve">
+    <value>1 column</value>
+  </data>
+  <data name="DiagramColumns" xml:space="preserve">
+    <value>Columns:</value>
+  </data>
+  <data name="DiagramColumnsAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="DiagramColumnsKeys" xml:space="preserve">
+    <value>Keys only</value>
+  </data>
+  <data name="DiagramColumnsNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="DiagramExpand" xml:space="preserve">
+    <value>Add its neighbors</value>
+  </data>
+  <data name="DiagramExport" xml:space="preserve">
+    <value>Export…</value>
+  </data>
+  <data name="DiagramExported" xml:space="preserve">
+    <value>{0} saved.</value>
+  </data>
+  <data name="DiagramExportFailed" xml:space="preserve">
+    <value>Could not save the diagram: {0}</value>
+  </data>
+  <data name="DiagramExportTip" xml:space="preserve">
+    <value>PNG or SVG for documents; .drawio to keep editing it in draw.io (tables and lines can be moved).</value>
+  </data>
+  <data name="DiagramFileDrawio" xml:space="preserve">
+    <value>draw.io diagram (editable)</value>
+  </data>
+  <data name="DiagramFileName" xml:space="preserve">
+    <value>diagram-{0}</value>
+  </data>
+  <data name="DiagramFilePng" xml:space="preserve">
+    <value>PNG image</value>
+  </data>
+  <data name="DiagramFileSvg" xml:space="preserve">
+    <value>SVG drawing</value>
+  </data>
+  <data name="DiagramFit" xml:space="preserve">
+    <value>Fit</value>
+  </data>
+  <data name="DiagramHelp" xml:space="preserve">
+    <value>Drag a table to move it and the background to pan; the wheel zooms; double-click opens the table. The arrow points to the referenced table; dashed, a logical FK.</value>
+  </data>
+  <data name="DiagramHiddenHubs" xml:space="preserve">
+    <value>Hidden as heavily referenced</value>
+  </data>
+  <data name="DiagramHiddenHubsNote" xml:space="preserve">
+    <value>They relate to the diagram, but also to almost everything else.</value>
+  </data>
+  <data name="DiagramHiddenOne" xml:space="preserve">
+    <value>1 hidden</value>
+  </data>
+  <data name="DiagramHideHubs" xml:space="preserve">
+    <value>Hide heavily referenced tables</value>
+  </data>
+  <data name="DiagramHideHubsTip" xml:space="preserve">
+    <value>Tables related to more than 30 tables (users, patients…) connect everything with everything: they are hidden and listed on the right, so you can show them if needed.</value>
+  </data>
+  <data name="DiagramHops1" xml:space="preserve">
+    <value>1 step (neighbors)</value>
+  </data>
+  <data name="DiagramHops2" xml:space="preserve">
+    <value>2 steps</value>
+  </data>
+  <data name="DiagramHubDetail" xml:space="preserve">
+    <value>{0} links to the diagram · {1} neighbors in all</value>
+  </data>
+  <data name="DiagramIsHub" xml:space="preserve">
+    <value>heavily referenced</value>
+  </data>
+  <data name="DiagramLayout" xml:space="preserve">
+    <value>Layout:</value>
+  </data>
+  <data name="DiagramLayoutAuto" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="DiagramLayoutDistances" xml:space="preserve">
+    <value>By distance</value>
+  </data>
+  <data name="DiagramLayoutForces" xml:space="preserve">
+    <value>Force-directed</value>
+  </data>
+  <data name="DiagramLayoutLayered" xml:space="preserve">
+    <value>Layered</value>
+  </data>
+  <data name="DiagramLinkOne" xml:space="preserve">
+    <value>1 link</value>
+  </data>
+  <data name="DiagramLinks" xml:space="preserve">
+    <value>{0} links</value>
+  </data>
+  <data name="DiagramLoadFailed" xml:space="preserve">
+    <value>Could not read the tables and relationships: {0}</value>
+  </data>
+  <data name="DiagramLogicalOne" xml:space="preserve">
+    <value>1 logical</value>
+  </data>
+  <data name="DiagramMoreColumnOne" xml:space="preserve">
+    <value>+ 1 column</value>
+  </data>
+  <data name="DiagramMoreColumns" xml:space="preserve">
+    <value>+ {0} columns</value>
+  </data>
+  <data name="DiagramNeighbors" xml:space="preserve">
+    <value>Neighbors:</value>
+  </data>
+  <data name="DiagramNoMoreNeighbors" xml:space="preserve">
+    <value>{0} has no more neighbors to add (heavily referenced ones are hidden).</value>
+  </data>
+  <data name="DiagramOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="DiagramPickDatabase" xml:space="preserve">
+    <value>Pick a database in the tree to see its diagram.</value>
+  </data>
+  <data name="DiagramPickTable" xml:space="preserve">
+    <value>Pick a table in the diagram to see what it relates to.</value>
+  </data>
+  <data name="DiagramRelayout" xml:space="preserve">
+    <value>Rearrange</value>
+  </data>
+  <data name="DiagramRemove" xml:space="preserve">
+    <value>Remove from diagram</value>
+  </data>
+  <data name="DiagramReread" xml:space="preserve">
+    <value>Re-read database</value>
+  </data>
+  <data name="DiagramRereadTip" xml:space="preserve">
+    <value>Reads the tables and relationships again (after changing the database structure).</value>
+  </data>
+  <data name="DiagramShowHub" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="DiagramShowLogical" xml:space="preserve">
+    <value>Logical FKs (dashed)</value>
+  </data>
+  <data name="DiagramShowLogicalTip" xml:space="preserve">
+    <value>Relationships that are not FOREIGN KEYs but are written in the column comment (#FK_%TABLE,%FIELD…).</value>
+  </data>
+  <data name="DiagramShowOutside" xml:space="preserve">
+    <value>Show neighbors outside the area</value>
+  </data>
+  <data name="DiagramSummaryHidden" xml:space="preserve">
+    <value>{0} hidden</value>
+  </data>
+  <data name="DiagramSummaryLogical" xml:space="preserve">
+    <value>{0} logical</value>
+  </data>
+  <data name="DiagramTableMissing" xml:space="preserve">
+    <value>There is no table or view called {0}.</value>
+  </data>
+  <data name="DiagramTableOne" xml:space="preserve">
+    <value>1 table</value>
+  </data>
+  <data name="DiagramTables" xml:space="preserve">
+    <value>{0} tables</value>
+  </data>
+  <data name="DiagramTitleArea" xml:space="preserve">
+    <value>Diagram · area {0}</value>
+  </data>
+  <data name="DiagramTitleTable" xml:space="preserve">
+    <value>Diagram · {0}</value>
+  </data>
+  <data name="DiagramUsedBy" xml:space="preserve">
+    <value>Used by: {0}</value>
+  </data>
+  <data name="DiagramUses" xml:space="preserve">
+    <value>Uses: {0}</value>
+  </data>
+  <data name="DiscardAndClose" xml:space="preserve">
+    <value>Discard and close</value>
+  </data>
+  <data name="DiscardAndReload" xml:space="preserve">
+    <value>Discard and reload</value>
+  </data>
+  <data name="DisconnectedClosingTabs" xml:space="preserve">
+    <value>Disconnected from {0}: its {1} tab(s) were closed.</value>
+  </data>
+  <data name="DisconnectedFrom" xml:space="preserve">
+    <value>Disconnected from {0}.</value>
+  </data>
+  <data name="DisconnectWhileRunning" xml:space="preserve">
+    <value>{0} was not disconnected: tab “{1}” is running. Cancel it or wait for it to finish.</value>
+  </data>
+  <data name="DontClose" xml:space="preserve">
+    <value>Don't close</value>
+  </data>
+  <data name="DontExit" xml:space="preserve">
+    <value>Don't exit</value>
+  </data>
+  <data name="DontRun" xml:space="preserve">
+    <value>Don't run</value>
+  </data>
+  <data name="ErrorStatus" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="Executed" xml:space="preserve">
+    <value>executed</value>
+  </data>
+  <data name="ExitAndDiscard" xml:space="preserve">
+    <value>Exit and discard</value>
+  </data>
+  <data name="ExitAndUndo" xml:space="preserve">
+    <value>Exit and undo</value>
+  </data>
+  <data name="ExitOpenTransactions" xml:space="preserve">
+    <value>There are open write transactions in: {0}. If you exit, the changes are undone (rollback).</value>
+  </data>
+  <data name="ExitPendingTitle" xml:space="preserve">
+    <value>Before exiting</value>
+  </data>
+  <data name="ExitRunning" xml:space="preserve">
+    <value>There are queries running in: {0}. If you exit, they are cancelled and anything not committed is rolled back.</value>
+  </data>
+  <data name="ExitUnsavedChanges" xml:space="preserve">
+    <value>There are uncompiled or unsaved changes in: {0}. If you exit, they are lost.</value>
+  </data>
+  <data name="ExportAll" xml:space="preserve">
+    <value>Export ALL (runs the query again)</value>
+  </data>
+  <data name="ExportCancelled" xml:space="preserve">
+    <value>Export cancelled (the file is incomplete).</value>
+  </data>
+  <data name="ExportCsvForExcel" xml:space="preserve">
+    <value>CSV for Excel (; and decimal comma)</value>
+  </data>
+  <data name="Exported" xml:space="preserve">
+    <value>{0} exported: {1:N0} rows in {2:N1} s → {3}</value>
+  </data>
+  <data name="ExportFailed" xml:space="preserve">
+    <value>Export failed: {0}</value>
+  </data>
+  <data name="ExportFileName" xml:space="preserve">
+    <value>result</value>
+  </data>
+  <data name="Exporting" xml:space="preserve">
+    <value>Exporting… {0:N0} rows · {1:N0} s</value>
+  </data>
+  <data name="ExportingOf" xml:space="preserve">
+    <value>Exporting… {0:N0} of {1:N0} rows ({2:P0}) · {3:N0} s · ~{4:N0} s left</value>
+  </data>
+  <data name="ExportInsertDefaultTable" xml:space="preserve">
+    <value>TABLE_NAME</value>
+  </data>
+  <data name="ExportInsertPrompt" xml:space="preserve">
+    <value>Target table of the INSERTs (the FROM table is suggested):</value>
+  </data>
+  <data name="ExportInsertTitle" xml:space="preserve">
+    <value>Export as INSERT</value>
+  </data>
+  <data name="ExportOnlyLoaded" xml:space="preserve">
+    <value>Only the {0:N0} loaded</value>
+  </data>
+  <data name="ExportPartialQuestion" xml:space="preserve">
+    <value>The grid has {0:N0} rows, but the query returns more (the limit was reached or it was cancelled).</value>
+  </data>
+  <data name="ExportPickerTitle" xml:space="preserve">
+    <value>Export result ({0})</value>
+  </data>
+  <data name="ExportScriptInsert" xml:space="preserve">
+    <value>INSERT script (.sql)</value>
+  </data>
+  <data name="ExportSqlScript" xml:space="preserve">
+    <value>SQL script</value>
+  </data>
+  <data name="ExportTitle" xml:space="preserve">
+    <value>Export {0}</value>
+  </data>
+  <data name="FilterAnd" xml:space="preserve">
+    <value>and</value>
+  </data>
+  <data name="FilterApply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="FilterClear" xml:space="preserve">
+    <value>Remove filter</value>
+  </data>
+  <data name="FilterNullValue" xml:space="preserve">
+    <value>(empty)</value>
+  </data>
+  <data name="FilterOpAfter" xml:space="preserve">
+    <value>after</value>
+  </data>
+  <data name="FilterOpBefore" xml:space="preserve">
+    <value>before</value>
+  </data>
+  <data name="FilterOpBetween" xml:space="preserve">
+    <value>between</value>
+  </data>
+  <data name="FilterOpContains" xml:space="preserve">
+    <value>contains</value>
+  </data>
+  <data name="FilterOpDay" xml:space="preserve">
+    <value>is the day</value>
+  </data>
+  <data name="FilterOpEndsWith" xml:space="preserve">
+    <value>ends with</value>
+  </data>
+  <data name="FilterOpEquals" xml:space="preserve">
+    <value>equals</value>
+  </data>
+  <data name="FilterOpFrom" xml:space="preserve">
+    <value>from</value>
+  </data>
+  <data name="FilterOpGreater" xml:space="preserve">
+    <value>greater than</value>
+  </data>
+  <data name="FilterOpGreaterOrEqual" xml:space="preserve">
+    <value>greater than or equal to</value>
+  </data>
+  <data name="FilterOpIsNotNull" xml:space="preserve">
+    <value>has a value</value>
+  </data>
+  <data name="FilterOpIsNull" xml:space="preserve">
+    <value>empty (NULL)</value>
+  </data>
+  <data name="FilterOpLess" xml:space="preserve">
+    <value>less than</value>
+  </data>
+  <data name="FilterOpLessOrEqual" xml:space="preserve">
+    <value>less than or equal to</value>
+  </data>
+  <data name="FilterOpNo" xml:space="preserve">
+    <value>no</value>
+  </data>
+  <data name="FilterOpNotContains" xml:space="preserve">
+    <value>does not contain</value>
+  </data>
+  <data name="FilterOpNotEquals" xml:space="preserve">
+    <value>is not</value>
+  </data>
+  <data name="FilterOpOtherDay" xml:space="preserve">
+    <value>any day but</value>
+  </data>
+  <data name="FilterOpPeriod" xml:space="preserve">
+    <value>in the period</value>
+  </data>
+  <data name="FilterOpStartsWith" xml:space="preserve">
+    <value>starts with</value>
+  </data>
+  <data name="FilterOpUntil" xml:space="preserve">
+    <value>until (inclusive)</value>
+  </data>
+  <data name="FilterOpYes" xml:space="preserve">
+    <value>yes</value>
+  </data>
+  <data name="FilterPickDate" xml:space="preserve">
+    <value>Pick the day on a calendar</value>
+  </data>
+  <data name="FilterPreview" xml:space="preserve">
+    <value>In the filter row: {0}</value>
+  </data>
+  <data name="FilterPreviewNone" xml:space="preserve">
+    <value>No filter</value>
+  </data>
+  <data name="FilterRelLast30" xml:space="preserve">
+    <value>last 30 days</value>
+  </data>
+  <data name="FilterRelLast7" xml:space="preserve">
+    <value>last 7 days</value>
+  </data>
+  <data name="FilterRelLastMonth" xml:space="preserve">
+    <value>last month</value>
+  </data>
+  <data name="FilterRelLastWeek" xml:space="preserve">
+    <value>last week</value>
+  </data>
+  <data name="FilterRelThisMonth" xml:space="preserve">
+    <value>this month</value>
+  </data>
+  <data name="FilterRelThisWeek" xml:space="preserve">
+    <value>this week</value>
+  </data>
+  <data name="FilterRelThisYear" xml:space="preserve">
+    <value>this year</value>
+  </data>
+  <data name="FilterRelToday" xml:space="preserve">
+    <value>today</value>
+  </data>
+  <data name="FilterRelYesterday" xml:space="preserve">
+    <value>yesterday</value>
+  </data>
+  <data name="FilterTextPlaceholder" xml:space="preserve">
+    <value>text</value>
+  </data>
+  <data name="FilterTitle" xml:space="preserve">
+    <value>Filter {0}</value>
+  </data>
+  <data name="FilterValues" xml:space="preserve">
+    <value>Values (tick one or more)</value>
+  </data>
+  <data name="FilterValuesByDay" xml:space="preserve">
+    <value>Days (tick one or more)</value>
+  </data>
+  <data name="FilterValuesFailed" xml:space="preserve">
+    <value>Could not read the values: {0}</value>
+  </data>
+  <data name="FilterValuesLoad" xml:space="preserve">
+    <value>Load the values from the server</value>
+  </data>
+  <data name="FilterValuesLoading" xml:space="preserve">
+    <value>Reading the values…</value>
+  </data>
+  <data name="FilterValuesLoadTip" xml:space="preserve">
+    <value>Scans the table (with the other filters) and brings the {0} most frequent values.</value>
+  </data>
+  <data name="FilterValuesMore" xml:space="preserve">
+    <value>Showing the {0} most frequent.</value>
+  </data>
+  <data name="FilterValuesNone" xml:space="preserve">
+    <value>No values.</value>
+  </data>
+  <data name="FilterValuesSearch" xml:space="preserve">
+    <value>Search a value</value>
+  </data>
+  <data name="FolderCreate" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="FolderCreated" xml:space="preserve">
+    <value>Folder “{0}” with {1} database(s).</value>
+  </data>
+  <data name="FolderDatabasesLabel" xml:space="preserve">
+    <value>Databases in the folder (later, move them with right-click → Registration → “Move to folder…” or the “Folder” field of the registration):</value>
+  </data>
+  <data name="FolderIntoItself" xml:space="preserve">
+    <value>Folder “{0}” cannot go inside itself.</value>
+  </data>
+  <data name="FolderMoved" xml:space="preserve">
+    <value>{0} is now in folder “{1}”.</value>
+  </data>
+  <data name="FolderMovedToEnvironment" xml:space="preserve">
+    <value>{0} is back in the “{1}” group.</value>
+  </data>
+  <data name="FolderMovePrompt" xml:space="preserve">
+    <value>Folder for “{0}”: pick one or type a new one (use / for a folder inside another: Clinica/Production). Empty puts the database back in its environment group.</value>
+  </data>
+  <data name="FolderNameLabel" xml:space="preserve">
+    <value>Folder name</value>
+  </data>
+  <data name="FolderNamePlaceholder" xml:space="preserve">
+    <value>e.g. Clinica, or Clinica/Production</value>
+  </data>
+  <data name="FolderNeedsDatabase" xml:space="preserve">
+    <value>Tick at least one database: the folder is made of its databases.</value>
+  </data>
+  <data name="FolderNeedsName" xml:space="preserve">
+    <value>Type a name for the folder.</value>
+  </data>
+  <data name="FolderNewTitle" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="FolderOtherEnvironment" xml:space="preserve">
+    <value>Without a folder, {0} goes in its environment group ({1}): the environment is changed in the registration.</value>
+  </data>
+  <data name="FolderRemoved" xml:space="preserve">
+    <value>Folder “{0}” was removed: its databases are back in their environment groups.</value>
+  </data>
+  <data name="FolderRenamed" xml:space="preserve">
+    <value>Folder “{0}” is now called “{1}”.</value>
+  </data>
+  <data name="FolderRenamePrompt" xml:space="preserve">
+    <value>New name for folder “{0}” (if it already exists they are merged; empty puts its databases back in their environment groups).</value>
+  </data>
+  <data name="FormatDone" xml:space="preserve">
+    <value>SQL formatted (Ctrl+Z undoes it).</value>
+  </data>
+  <data name="FormatNothing" xml:space="preserve">
+    <value>No queries to format: DDL and PSQL blocks are left as they are.</value>
+  </data>
+  <data name="GoToNoName" xml:space="preserve">
+    <value>Put the cursor (or Ctrl+click) on the name of a table, view, procedure or other object.</value>
+  </data>
+  <data name="GoToNotFound" xml:space="preserve">
+    <value>There is no object called {0} in {1}.</value>
+  </data>
+  <data name="GoToOpening" xml:space="preserve">
+    <value>Opening {0}…</value>
+  </data>
+  <data name="GridAutoFit" xml:space="preserve">
+    <value>Fit width to content</value>
+  </data>
+  <data name="GridAverage" xml:space="preserve">
+    <value>Average</value>
+  </data>
+  <data name="GridAvgPrefix" xml:space="preserve">
+    <value>avg. </value>
+  </data>
+  <data name="GridClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="GridCollapseAll" xml:space="preserve">
+    <value>Collapse all</value>
+  </data>
+  <data name="GridCopyAllRows" xml:space="preserve">
+    <value>Copy all rows ({0:N0}) with headers</value>
+  </data>
+  <data name="GridCopyAnyway" xml:space="preserve">
+    <value>Copy anyway</value>
+  </data>
+  <data name="GridCopyAsInsert" xml:space="preserve">
+    <value>Copy as INSERT</value>
+  </data>
+  <data name="GridCopyAsUpdate" xml:space="preserve">
+    <value>Copy as UPDATE</value>
+  </data>
+  <data name="GridCopyCell" xml:space="preserve">
+    <value>Copy cell</value>
+  </data>
+  <data name="GridCopyColumn" xml:space="preserve">
+    <value>Copy column ({0:N0} values)</value>
+  </data>
+  <data name="GridCopyManyTitle" xml:space="preserve">
+    <value>Copy many rows</value>
+  </data>
+  <data name="GridCopyManyWarning" xml:space="preserve">
+    <value>You are about to copy {0:N0} rows to the clipboard: it may take a while and use a lot of memory. For that many rows, Export (CSV or Excel) is better.</value>
+  </data>
+  <data name="GridCopyRow" xml:space="preserve">
+    <value>Copy row with headers</value>
+  </data>
+  <data name="GridCopySelectedRows" xml:space="preserve">
+    <value>Copy the {0:N0} selected rows with headers</value>
+  </data>
+  <data name="GridCount" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="GridDeleteRows" xml:space="preserve">
+    <value>Mark for deletion ({0:N0}) (Del)</value>
+  </data>
+  <data name="GridEditCell" xml:space="preserve">
+    <value>Edit cell (F2)</value>
+  </data>
+  <data name="GridEmpty" xml:space="preserve">
+    <value>Run a query (F9) to see results here.</value>
+  </data>
+  <data name="GridExcludeValue" xml:space="preserve">
+    <value>Exclude this value</value>
+  </data>
+  <data name="GridExpandAll" xml:space="preserve">
+    <value>Expand all</value>
+  </data>
+  <data name="GridFilterByValue" xml:space="preserve">
+    <value>Filter by this value</value>
+  </data>
+  <data name="GridFiltered" xml:space="preserve">
+    <value>Filtered: {0:N0} of {1:N0} rows</value>
+  </data>
+  <data name="GridFilteredOnServer" xml:space="preserve">
+    <value>Filter resolved on the server</value>
+  </data>
+  <data name="GridFilterMenu" xml:space="preserve">
+    <value>Filter…</value>
+  </data>
+  <data name="GridFilterRow" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="GridFilterTextPlaceholder" xml:space="preserve">
+    <value>text, PÉREZ*, null</value>
+  </data>
+  <data name="GridGroupByColumn" xml:space="preserve">
+    <value>Group by this column</value>
+  </data>
+  <data name="GridGroupHint" xml:space="preserve">
+    <value>Drag a header here (or right-click → Group) to group by that column</value>
+  </data>
+  <data name="GridMaximum" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
+  <data name="GridMaxPrefix" xml:space="preserve">
+    <value>max. </value>
+  </data>
+  <data name="GridMinimum" xml:space="preserve">
+    <value>Minimum</value>
+  </data>
+  <data name="GridMinPrefix" xml:space="preserve">
+    <value>min. </value>
+  </data>
+  <data name="GridNewRow" xml:space="preserve">
+    <value>New row (Insert)</value>
+  </data>
+  <data name="GridNoTotal" xml:space="preserve">
+    <value>No total</value>
+  </data>
+  <data name="GridOneRow" xml:space="preserve">
+    <value>1 row</value>
+  </data>
+  <data name="GridProcessing" xml:space="preserve">
+    <value>Processing…</value>
+  </data>
+  <data name="GridRemoveAllFilters" xml:space="preserve">
+    <value>Remove all filters</value>
+  </data>
+  <data name="GridRemoveColumnFilter" xml:space="preserve">
+    <value>Remove this column's filter</value>
+  </data>
+  <data name="GridRemoveGroup" xml:space="preserve">
+    <value>Remove this grouping</value>
+  </data>
+  <data name="GridRemoveSort" xml:space="preserve">
+    <value>Remove sorting</value>
+  </data>
+  <data name="GridResetColumns" xml:space="preserve">
+    <value>Reset column order and widths</value>
+  </data>
+  <data name="GridRevertRows" xml:space="preserve">
+    <value>Undo the row's changes</value>
+  </data>
+  <data name="GridSetNull" xml:space="preserve">
+    <value>Set to NULL</value>
+  </data>
+  <data name="GridSortAscending" xml:space="preserve">
+    <value>Sort ascending</value>
+  </data>
+  <data name="GridSortDescending" xml:space="preserve">
+    <value>Sort descending</value>
+  </data>
+  <data name="GridSum" xml:space="preserve">
+    <value>Sum</value>
+  </data>
+  <data name="GridTotalsHint" xml:space="preserve">
+    <value>Right-click here to choose totals (sum, average, min., max., count)</value>
+  </data>
+  <data name="GridUndelete" xml:space="preserve">
+    <value>Unmark for deletion</value>
+  </data>
+  <data name="GridUngroupColumn" xml:space="preserve">
+    <value>Ungroup this column</value>
+  </data>
+  <data name="HistoryFilterPlaceholder" xml:space="preserve">
+    <value>Search the SQL or the errors</value>
+  </data>
+  <data name="HistoryHint" xml:space="preserve">
+    <value>Double-click: loads the statement into the editor</value>
+  </data>
+  <data name="HistoryOnlyThisDatabase" xml:space="preserve">
+    <value>Only this tab's database</value>
+  </data>
+  <data name="HistoryReadFailed" xml:space="preserve">
+    <value>Could not read the history: {0}</value>
+  </data>
+  <data name="HistorySaveFailed" xml:space="preserve">
+    <value>Could not save the history: {0}</value>
+  </data>
+  <data name="HistoryTab" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="ImportAuto" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="ImportCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ImportCancelled" xml:space="preserve">
+    <value>Import cancelled: nothing was saved.</value>
+  </data>
+  <data name="ImportChooseFile" xml:space="preserve">
+    <value>Choose file…</value>
+  </data>
+  <data name="ImportDelimiter" xml:space="preserve">
+    <value>Separator</value>
+  </data>
+  <data name="ImportDone" xml:space="preserve">
+    <value>{0:N0} rows imported in {1:N1} s.</value>
+  </data>
+  <data name="ImportDoneDeleted" xml:space="preserve">
+    <value>{0:N0} rows were deleted first.</value>
+  </data>
+  <data name="ImportDoneWithErrors" xml:space="preserve">
+    <value>{0:N0} rows imported in {1:N1} s; {2:N0} rows with errors were skipped (see below).</value>
+  </data>
+  <data name="ImportEmptyConfirm" xml:space="preserve">
+    <value>Before importing, ALL rows of {0} in "{1}" will be DELETED. If the import fails or is cancelled, they come back.</value>
+  </data>
+  <data name="ImportEmptyFirst" xml:space="preserve">
+    <value>Empty the table before importing</value>
+  </data>
+  <data name="ImportEmptyIsNull" xml:space="preserve">
+    <value>Empty cells as NULL</value>
+  </data>
+  <data name="ImportEmptyTitle" xml:space="preserve">
+    <value>Empty the table</value>
+  </data>
+  <data name="ImportEncoding" xml:space="preserve">
+    <value>Encoding</value>
+  </data>
+  <data name="ImportEncoding1252" xml:space="preserve">
+    <value>Windows-1252 (Excel, Western)</value>
+  </data>
+  <data name="ImportErrorLine" xml:space="preserve">
+    <value>Line {0}: {1}</value>
+  </data>
+  <data name="ImportFailed" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="ImportFile" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="ImportFileTypes" xml:space="preserve">
+    <value>CSV or Excel</value>
+  </data>
+  <data name="ImportHasHeader" xml:space="preserve">
+    <value>The first row has the column names</value>
+  </data>
+  <data name="ImportIntro" xml:space="preserve">
+    <value>Pick a CSV or Excel (.xlsx) file. Columns named like the table's are matched automatically.</value>
+  </data>
+  <data name="ImportMapping" xml:space="preserve">
+    <value>Which file column goes to each table column</value>
+  </data>
+  <data name="ImportPickTable" xml:space="preserve">
+    <value>Pick a table in the tree (right-click → Import data).</value>
+  </data>
+  <data name="ImportPreview" xml:space="preserve">
+    <value>Preview (first {0:N0} rows of the file)</value>
+  </data>
+  <data name="ImportProduction" xml:space="preserve">
+    <value>You are about to insert {0:N0} rows into {1} in "{2}", a PRODUCTION database.</value>
+  </data>
+  <data name="ImportProductionTitle" xml:space="preserve">
+    <value>Import into production</value>
+  </data>
+  <data name="ImportRead" xml:space="preserve">
+    <value>{0}: {1:N0} rows and {2} columns; {3} of {4} table columns matched.</value>
+  </data>
+  <data name="ImportReadFailed" xml:space="preserve">
+    <value>The file could not be read: {0}</value>
+  </data>
+  <data name="ImportReading" xml:space="preserve">
+    <value>Reading {0}…</value>
+  </data>
+  <data name="ImportReadOnly" xml:space="preserve">
+    <value>This registration is read-only: it cannot import.</value>
+  </data>
+  <data name="ImportRolledBack" xml:space="preserve">
+    <value>Nothing was imported: the row on line {0} failed and everything was undone. {1}</value>
+  </data>
+  <data name="ImportRun" xml:space="preserve">
+    <value>Import {0:N0} rows</value>
+  </data>
+  <data name="ImportRunning" xml:space="preserve">
+    <value>Importing… {0:N0} rows</value>
+  </data>
+  <data name="ImportRunNoCount" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ImportSheet" xml:space="preserve">
+    <value>Sheet</value>
+  </data>
+  <data name="ImportSkipColumn" xml:space="preserve">
+    <value>(do not import)</value>
+  </data>
+  <data name="ImportSkipErrors" xml:space="preserve">
+    <value>If a row fails, skip it and go on</value>
+  </data>
+  <data name="ImportStart" xml:space="preserve">
+    <value>Import into {0} from {1}</value>
+  </data>
+  <data name="ImportStopOnError" xml:space="preserve">
+    <value>If a row fails, stop and undo everything</value>
+  </data>
+  <data name="ImportTabChar" xml:space="preserve">
+    <value>Tab</value>
+  </data>
+  <data name="ImportTabTitle" xml:space="preserve">
+    <value>Import · {0}</value>
+  </data>
+  <data name="KeepEditing" xml:space="preserve">
+    <value>Keep editing</value>
+  </data>
+  <data name="LanguageAppliesOnRestart" xml:space="preserve">
+    <value>The language changes the next time you open FbStudio.</value>
+  </data>
+  <data name="LanguageRestartQuestion" xml:space="preserve">
+    <value>The new language shows after restarting FbStudio. Restart now?</value>
+  </data>
+  <data name="LanguageRestartTabs" xml:space="preserve">
+    <value>The {0} open tab(s) will be closed (if any has an open transaction, you will be asked first).</value>
+  </data>
+  <data name="LanguageRestartTitle" xml:space="preserve">
+    <value>Language change</value>
+  </data>
+  <data name="LanguageSystem" xml:space="preserve">
+    <value>Same as Windows</value>
+  </data>
+  <data name="LimitReached" xml:space="preserve">
+    <value> · limit of {0:N0} reached (raise it to fetch more)</value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Loading…</value>
+  </data>
+  <data name="LockHeldBy" xml:space="preserve">
+    <value>the record is held by transaction {0}: {1} from {2} ({3}), open since {4:HH:mm:ss}</value>
+  </data>
+  <data name="LockHeldByOther" xml:space="preserve">
+    <value>the record is held by another connection (transaction {0}); the RDB$ADMIN role is needed to see which one</value>
+  </data>
+  <data name="LockHeldByTab" xml:space="preserve">
+    <value>the record is held by the tab “{0}” (transaction {1}): commit or roll it back</value>
+  </data>
+  <data name="LogCopied" xml:space="preserve">
+    <value>Log copied.</value>
+  </data>
+  <data name="LogFileDatabase" xml:space="preserve">
+    <value>Database: {0} ({1}@{2}:{3}/{4})</value>
+  </data>
+  <data name="LogFileHeader" xml:space="preserve">
+    <value>FbStudio · log of {0:yyyy-MM-dd HH:mm:ss}</value>
+  </data>
+  <data name="LogFileName" xml:space="preserve">
+    <value>log</value>
+  </data>
+  <data name="LogFileType" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="LogSaved" xml:space="preserve">
+    <value>Log saved to {0}</value>
+  </data>
+  <data name="MaintBackupDone" xml:space="preserve">
+    <value>Backup finished: {0} ({1:N1} s).</value>
+  </data>
+  <data name="MaintBackupFile" xml:space="preserve">
+    <value>Backup file (path on the server)</value>
+  </data>
+  <data name="MaintBackupIgnoreChecksums" xml:space="preserve">
+    <value>Ignore checksum errors (to rescue a damaged database)</value>
+  </data>
+  <data name="MaintBackupIgnoreChecksumsTip" xml:space="preserve">
+    <value>Goes on even with damaged pages: the backup may be incomplete. It is for getting what you can out of a database a normal backup cannot finish.</value>
+  </data>
+  <data name="MaintBackupMetadataOnly" xml:space="preserve">
+    <value>Structure only (no data)</value>
+  </data>
+  <data name="MaintBackupMetadataOnlyTip" xml:space="preserve">
+    <value>gbak -m. When restored, generators go back to 0 and identities to 1: for an empty database that keeps the same numbering, use "Empty database".</value>
+  </data>
+  <data name="MaintBackupNoGc" xml:space="preserve">
+    <value>No garbage collection (-g): faster</value>
+  </data>
+  <data name="MaintBackupNonTransportable" xml:space="preserve">
+    <value>Non-transportable format (faster; restores only on the same kind of system)</value>
+  </data>
+  <data name="MaintBackupNote" xml:space="preserve">
+    <value>The server does it: if you close FbStudio or the network drops, the backup runs to the end. If the file already exists, it is replaced.</value>
+  </data>
+  <data name="MaintBackupNotRunning" xml:space="preserve">
+    <value>No backup by {0} is running: if you started one, it has finished.</value>
+  </data>
+  <data name="MaintBackupRunning" xml:space="preserve">
+    <value>Running the backup on the server…</value>
+  </data>
+  <data name="MaintBackupRunningNow" xml:space="preserve">
+    <value>The server is still running a backup by {0}.</value>
+  </data>
+  <data name="MaintBackupStart" xml:space="preserve">
+    <value>Backup of {0} to {1} (run by the server)</value>
+  </data>
+  <data name="MaintBackupStillRunning" xml:space="preserve">
+    <value>The server is still running the backup; waiting for it to finish…</value>
+  </data>
+  <data name="MaintBackupStopWatching" xml:space="preserve">
+    <value>Stopped watching: the server keeps running the backup. "Check status" tells you when it has finished.</value>
+  </data>
+  <data name="MaintBackupTargetIsDatabase" xml:space="preserve">
+    <value>The backup target must be a backup file (.fbk or .gbk), not a database: gbak would overwrite it.</value>
+  </data>
+  <data name="MaintCancelled" xml:space="preserve">
+    <value>Cancelled.</value>
+  </data>
+  <data name="MaintCheckState" xml:space="preserve">
+    <value>Check status</value>
+  </data>
+  <data name="MaintCheckStateTip" xml:space="preserve">
+    <value>Backup: whether one of yours is still running. Restore: how the new database ended up.</value>
+  </data>
+  <data name="MaintCopyLog" xml:space="preserve">
+    <value>Copy log</value>
+  </data>
+  <data name="MaintDatabaseInfo" xml:space="preserve">
+    <value>Database {0} · {1:N0}-byte pages · {2}</value>
+  </data>
+  <data name="MaintEmptyClear" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="MaintEmptyCopyCancelled" xml:space="preserve">
+    <value>Cancelled: the new database is half built. Delete it or build it again under another name.</value>
+  </data>
+  <data name="MaintEmptyCopyDone" xml:space="preserve">
+    <value>Empty database created at {0}: {1} table(s) copied with {2:N0} rows ({3:N0} s).</value>
+  </data>
+  <data name="MaintEmptyCopyDoneWithErrors" xml:space="preserve">
+    <value>Database created at {0}, with {1} failed statement(s) and {2} table(s) not copied: see the log ({3:N0} s).</value>
+  </data>
+  <data name="MaintEmptyCopyRunning" xml:space="preserve">
+    <value>Building the empty database…</value>
+  </data>
+  <data name="MaintEmptyCopyStart" xml:space="preserve">
+    <value>Empty database from {0} at {1}</value>
+  </data>
+  <data name="MaintEmptyFilter" xml:space="preserve">
+    <value>Filter tables</value>
+  </data>
+  <data name="MaintEmptyGenerators" xml:space="preserve">
+    <value>Generators and identities with their current value</value>
+  </data>
+  <data name="MaintEmptyGeneratorsTip" xml:space="preserve">
+    <value>So the new database keeps numbering like this one. Without it they start from zero (if you copy tables with data, their keys may clash).</value>
+  </data>
+  <data name="MaintEmptyNote" xml:space="preserve">
+    <value>Creates the database with the whole structure (same charset and page size) from the database script: tables, views, procedures, triggers and permissions. Data is copied before foreign keys and triggers are created. FbStudio does it: if you close it, it stops. It never overwrites an existing file.</value>
+  </data>
+  <data name="MaintEmptyTables" xml:space="preserve">
+    <value>Tables to copy with their data</value>
+  </data>
+  <data name="MaintEmptyTarget" xml:space="preserve">
+    <value>New database (path on the server)</value>
+  </data>
+  <data name="MaintFailed" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="MaintFileHint" xml:space="preserve">
+    <value>File on the server, with the full path: D:\Backups\base.fbk or /backups/base.fbk</value>
+  </data>
+  <data name="MaintIntro" xml:space="preserve">
+    <value>Backup, restore, empty database, validation and sweep. Paths are on the server (as Firebird sees them), not on this PC.</value>
+  </data>
+  <data name="MaintLoadingTables" xml:space="preserve">
+    <value>Reading the tables…</value>
+  </data>
+  <data name="MaintLogCopied" xml:space="preserve">
+    <value>Log copied.</value>
+  </data>
+  <data name="MaintNBackupColDate" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="MaintNBackupColFile" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="MaintNBackupColLevel" xml:space="preserve">
+    <value>Level</value>
+  </data>
+  <data name="MaintNBackupDeltaCustom" xml:space="preserve">
+    <value>The delta goes to another file defined in the database (ALTER DATABASE ADD DIFFERENCE FILE).</value>
+  </data>
+  <data name="MaintNBackupDeltaDefault" xml:space="preserve">
+    <value>The delta file goes next to the database (the default).</value>
+  </data>
+  <data name="MaintNBackupHistory" xml:space="preserve">
+    <value>nbackup backups recorded in the database ({0})</value>
+  </data>
+  <data name="MaintNBackupNoHistory" xml:space="preserve">
+    <value>This database has no recorded nbackup backups.</value>
+  </data>
+  <data name="MaintNBackupNote" xml:space="preserve">
+    <value>For now FbStudio only looks: nbackup is still run on the server. A level N backup is based on the last level N − 1 one, so incrementals depend on the last level 0.</value>
+  </data>
+  <data name="MaintNBackupRead" xml:space="preserve">
+    <value>nbackup: {0}</value>
+  </data>
+  <data name="MaintNBackupRefresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="MaintNBackupStateNormal" xml:space="preserve">
+    <value>The database is not in backup mode.</value>
+  </data>
+  <data name="MaintNewDatabaseHint" xml:space="preserve">
+    <value>New database on the server: full path (D:\Bases\new.fdb) or alias</value>
+  </data>
+  <data name="MaintNoTablesChosen" xml:space="preserve">
+    <value>None: structure only</value>
+  </data>
+  <data name="MaintOptionsUsed" xml:space="preserve">
+    <value>Options: {0}</value>
+  </data>
+  <data name="MaintPageSizeSame" xml:space="preserve">
+    <value>Same as before</value>
+  </data>
+  <data name="MaintPathMissing" xml:space="preserve">
+    <value>The file path (on the server) is missing.</value>
+  </data>
+  <data name="MaintPickDatabase" xml:space="preserve">
+    <value>Pick a database in the tree for maintenance.</value>
+  </data>
+  <data name="MaintPropForcedWrites" xml:space="preserve">
+    <value>Forced writes (each change goes to disk on commit)</value>
+  </data>
+  <data name="MaintPropForcedWritesOff" xml:space="preserve">
+    <value>Without forced writes, a power cut or a server crash can damage the database.</value>
+  </data>
+  <data name="MaintPropForcedWritesShort" xml:space="preserve">
+    <value>Forced writes</value>
+  </data>
+  <data name="MaintPropNote" xml:space="preserve">
+    <value>The server changes them, like gfix: it takes SYSDBA, the database owner or the RDB$ADMIN role. To switch to read-only nobody else may be connected.</value>
+  </data>
+  <data name="MaintPropPageBuffers" xml:space="preserve">
+    <value>Cache pages (0 = the server's)</value>
+  </data>
+  <data name="MaintPropPageBuffersShort" xml:space="preserve">
+    <value>Cache pages</value>
+  </data>
+  <data name="MaintPropReadOnly" xml:space="preserve">
+    <value>Read-only (nobody can write)</value>
+  </data>
+  <data name="MaintPropReadOnlyShort" xml:space="preserve">
+    <value>Read-only</value>
+  </data>
+  <data name="MaintPropsApplied" xml:space="preserve">
+    <value>Properties applied to {0}.</value>
+  </data>
+  <data name="MaintPropsChange" xml:space="preserve">
+    <value>{0}: {1} → {2}</value>
+  </data>
+  <data name="MaintPropsConfirm" xml:space="preserve">
+    <value>These properties of {0} will change:</value>
+  </data>
+  <data name="MaintPropsNo" xml:space="preserve">
+    <value>no</value>
+  </data>
+  <data name="MaintPropsOff" xml:space="preserve">
+    <value>off</value>
+  </data>
+  <data name="MaintPropsProduction" xml:space="preserve">
+    <value>It is a PRODUCTION database.</value>
+  </data>
+  <data name="MaintPropsRead" xml:space="preserve">
+    <value>Properties of {0}: sweep {1}, forced writes {2}, read-only {3}, cache {4}.</value>
+  </data>
+  <data name="MaintPropsReadOnlyHint" xml:space="preserve">
+    <value>To switch to read-only nobody else may be connected (FbStudio in another tab neither).</value>
+  </data>
+  <data name="MaintPropsReadOnlyWarn" xml:space="preserve">
+    <value>In read-only mode nobody will be able to write to the database until it is changed back.</value>
+  </data>
+  <data name="MaintPropsServer" xml:space="preserve">
+    <value>the server's</value>
+  </data>
+  <data name="MaintPropsTitle" xml:space="preserve">
+    <value>Change the database properties</value>
+  </data>
+  <data name="MaintPropsUnchanged" xml:space="preserve">
+    <value>Nothing changed.</value>
+  </data>
+  <data name="MaintPropSweep" xml:space="preserve">
+    <value>Automatic sweep (0 = off)</value>
+  </data>
+  <data name="MaintPropSweepShort" xml:space="preserve">
+    <value>Automatic sweep</value>
+  </data>
+  <data name="MaintPropSweepTip" xml:space="preserve">
+    <value>The server runs a sweep when OST − OIT goes past this number. 20,000 is the default.</value>
+  </data>
+  <data name="MaintPropsYes" xml:space="preserve">
+    <value>yes</value>
+  </data>
+  <data name="MaintReadOnlyNote" xml:space="preserve">
+    <value>This registration is read-only: restore, empty database and sweep are not offered.</value>
+  </data>
+  <data name="MaintRegistered" xml:space="preserve">
+    <value>Registered as "{0}" ({1}). Edit it from the tree like any other.</value>
+  </data>
+  <data name="MaintRegisterNew" xml:space="preserve">
+    <value>Register the new database</value>
+  </data>
+  <data name="MaintRegisterNewTip" xml:space="preserve">
+    <value>Registers it like this one (a copy of production becomes test).</value>
+  </data>
+  <data name="MaintReplaceConfirm" xml:space="preserve">
+    <value>{0} will be REPLACED: everything in that file is lost.</value>
+  </data>
+  <data name="MaintReplaceTitle" xml:space="preserve">
+    <value>Replace a database</value>
+  </data>
+  <data name="MaintRestoreDeactivateIndexes" xml:space="preserve">
+    <value>Without activating indexes (-i): faster; activate them later</value>
+  </data>
+  <data name="MaintRestoreDone" xml:space="preserve">
+    <value>Restore finished: {0} is ready to use ({1:hh\:mm\:ss}).</value>
+  </data>
+  <data name="MaintRestoreFailedMissing" xml:space="preserve">
+    <value>The restore left no database at {0}: it failed (see the details above).</value>
+  </data>
+  <data name="MaintRestoreMetadataOnly" xml:space="preserve">
+    <value>Structure only</value>
+  </data>
+  <data name="MaintRestoreNoShadow" xml:space="preserve">
+    <value>Without shadow files</value>
+  </data>
+  <data name="MaintRestoreNote" xml:space="preserve">
+    <value>Always to a new file: this registration's database is never overwritten. The server does it even if you close FbStudio; a large database can take hours. "Check status" tells you whether it has finished.</value>
+  </data>
+  <data name="MaintRestoreNoValidity" xml:space="preserve">
+    <value>Without the columns' NOT NULL rules (to rescue old data)</value>
+  </data>
+  <data name="MaintRestoreNoValidityTip" xml:space="preserve">
+    <value>Restores even with rows holding NULL in a NOT NULL column, which make a normal restore fail. The database is left WITHOUT those NOT NULL rules (CHECKs are kept): fix the data and put them back afterwards.</value>
+  </data>
+  <data name="MaintRestoreOneAtATime" xml:space="preserve">
+    <value>Commit table by table (if one table's data fails, the others stay)</value>
+  </data>
+  <data name="MaintRestorePageSize" xml:space="preserve">
+    <value>Page size</value>
+  </data>
+  <data name="MaintRestoreReplace" xml:space="preserve">
+    <value>Replace if it exists (asks you to type the file name)</value>
+  </data>
+  <data name="MaintRestoreRunning" xml:space="preserve">
+    <value>Restoring on the server…</value>
+  </data>
+  <data name="MaintRestoreSource" xml:space="preserve">
+    <value>Backup to restore (path on the server)</value>
+  </data>
+  <data name="MaintRestoreStart" xml:space="preserve">
+    <value>Restore of {0} to {1} (run by the server)</value>
+  </data>
+  <data name="MaintRestoreStillRunning" xml:space="preserve">
+    <value>Still restoring… ({0:hh\:mm\:ss})</value>
+  </data>
+  <data name="MaintRestoreStopWatching" xml:space="preserve">
+    <value>Stopped watching: the server keeps running the restore. "Check status" tells you how the database ended up.</value>
+  </data>
+  <data name="MaintRestoreTarget" xml:space="preserve">
+    <value>New database (path on the server)</value>
+  </data>
+  <data name="MaintRunBackup" xml:space="preserve">
+    <value>Back up</value>
+  </data>
+  <data name="MaintRunEmptyCopy" xml:space="preserve">
+    <value>Create the empty database</value>
+  </data>
+  <data name="MaintRunProperties" xml:space="preserve">
+    <value>Apply changes</value>
+  </data>
+  <data name="MaintRunRestore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="MaintRunSweep" xml:space="preserve">
+    <value>Run sweep</value>
+  </data>
+  <data name="MaintRunValidate" xml:space="preserve">
+    <value>Validate</value>
+  </data>
+  <data name="MaintSkipData" xml:space="preserve">
+    <value>Without the data of these tables (the structure is kept):</value>
+  </data>
+  <data name="MaintSkipDataHint" xml:space="preserve">
+    <value>None. Comma-separated: ACCESS_LOG, AUDIT</value>
+  </data>
+  <data name="MaintStateInProgress" xml:space="preserve">
+    <value>{0} is still being restored (or was left half restored if the restore failed).</value>
+  </data>
+  <data name="MaintStateMissing" xml:space="preserve">
+    <value>There is no database at {0} (the restore has not started, or it failed and was deleted).</value>
+  </data>
+  <data name="MaintStateOnline" xml:space="preserve">
+    <value>{0} is ready to use.</value>
+  </data>
+  <data name="MaintStateUnknown" xml:space="preserve">
+    <value>Could not tell how {0} ended up: {1}</value>
+  </data>
+  <data name="MaintStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="MaintStopTip" xml:space="preserve">
+    <value>For backup and restore it only stops watching: the server keeps going to the end.</value>
+  </data>
+  <data name="MaintSweepConfirm" xml:space="preserve">
+    <value>The sweep goes through the whole {0} database and removes old record versions: on a large database it loads the server for quite a while.</value>
+  </data>
+  <data name="MaintSweepDone" xml:space="preserve">
+    <value>Sweep finished ({0:N1} s). "Statistics" shows where OIT and OAT ended up.</value>
+  </data>
+  <data name="MaintSweepNote" xml:space="preserve">
+    <value>Removes old record versions across the whole database (same as gfix -sweep).</value>
+  </data>
+  <data name="MaintSweepProduction" xml:space="preserve">
+    <value>It is a PRODUCTION database.</value>
+  </data>
+  <data name="MaintSweepRunning" xml:space="preserve">
+    <value>Running the sweep…</value>
+  </data>
+  <data name="MaintSweepStart" xml:space="preserve">
+    <value>Sweep of {0}</value>
+  </data>
+  <data name="MaintSweepTitle" xml:space="preserve">
+    <value>Sweep</value>
+  </data>
+  <data name="MaintTablesChosen" xml:space="preserve">
+    <value>{0} chosen; the tables their foreign keys reference are added automatically</value>
+  </data>
+  <data name="MaintTabTitle" xml:space="preserve">
+    <value>Maintenance</value>
+  </data>
+  <data name="MaintTaskBackup" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="MaintTaskEmptyCopy" xml:space="preserve">
+    <value>Empty database</value>
+  </data>
+  <data name="MaintTaskNBackup" xml:space="preserve">
+    <value>nbackup</value>
+  </data>
+  <data name="MaintTaskProperties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="MaintTaskRestore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="MaintTaskSweep" xml:space="preserve">
+    <value>Sweep</value>
+  </data>
+  <data name="MaintTaskValidate" xml:space="preserve">
+    <value>Validation</value>
+  </data>
+  <data name="MaintValidateIncomplete" xml:space="preserve">
+    <value>The validation did not reach the end: see the log.</value>
+  </data>
+  <data name="MaintValidateNote" xml:space="preserve">
+    <value>Online validation: with the database in use, no exclusive connection. Checks the pages and indexes of each table (locking it briefly). It fixes nothing: it only reports.</value>
+  </data>
+  <data name="MaintValidateOk" xml:space="preserve">
+    <value>Validation finished with no errors ({0:N1} s).</value>
+  </data>
+  <data name="MaintValidateProblems" xml:space="preserve">
+    <value>Validation found {0} error(s) and {1} warning(s): see the log.</value>
+  </data>
+  <data name="MaintValidateProduction" xml:space="preserve">
+    <value>{0} is a PRODUCTION database: online validation locks each table briefly while checking it. Better run it off-hours.</value>
+  </data>
+  <data name="MaintValidateProductionTables" xml:space="preserve">
+    <value>{1} will be validated in {0}, a PRODUCTION database: each table is locked for a while as it is checked.</value>
+  </data>
+  <data name="MaintValidateRunning" xml:space="preserve">
+    <value>Validating…</value>
+  </data>
+  <data name="MaintValidateStart" xml:space="preserve">
+    <value>Online validation of {0}</value>
+  </data>
+  <data name="MaintValidateStartTables" xml:space="preserve">
+    <value>Validation of {0}, only {1}</value>
+  </data>
+  <data name="MaintValidateTables" xml:space="preserve">
+    <value>Only these tables, with their indexes (empty: the whole database):</value>
+  </data>
+  <data name="MaintValidateTablesHint" xml:space="preserve">
+    <value>All. Comma-separated: ORDERS, CUSTOMERS</value>
+  </data>
+  <data name="MaintValidateTitle" xml:space="preserve">
+    <value>Validate the database</value>
+  </data>
+  <data name="MenuAbout" xml:space="preserve">
+    <value>_About FbStudio…</value>
+  </data>
+  <data name="MenuAreas" xml:space="preserve">
+    <value>Database areas…</value>
+  </data>
+  <data name="MenuCancel" xml:space="preserve">
+    <value>C_ancel</value>
+  </data>
+  <data name="MenuCloseTab" xml:space="preserve">
+    <value>_Close tab</value>
+  </data>
+  <data name="MenuCommit" xml:space="preserve">
+    <value>C_ommit</value>
+  </data>
+  <data name="MenuCompare" xml:space="preserve">
+    <value>_Compare databases…</value>
+  </data>
+  <data name="MenuConnect" xml:space="preserve">
+    <value>_Connect the selected database</value>
+  </data>
+  <data name="MenuDatabase" xml:space="preserve">
+    <value>_Database</value>
+  </data>
+  <data name="MenuDisconnect" xml:space="preserve">
+    <value>_Disconnect the selected database</value>
+  </data>
+  <data name="MenuEditRegistrations" xml:space="preserve">
+    <value>_Edit registrations…</value>
+  </data>
+  <data name="MenuExit" xml:space="preserve">
+    <value>E_xit</value>
+  </data>
+  <data name="MenuExportCsv" xml:space="preserve">
+    <value>E_xport to CSV…</value>
+  </data>
+  <data name="MenuExportInsert" xml:space="preserve">
+    <value>Export as _INSERT (.sql)…</value>
+  </data>
+  <data name="MenuExportProfiles" xml:space="preserve">
+    <value>Export registrations…</value>
+  </data>
+  <data name="MenuExportXlsx" xml:space="preserve">
+    <value>Export to Exce_l (.xlsx)…</value>
+  </data>
+  <data name="MenuFormatSql" xml:space="preserve">
+    <value>Format SQL</value>
+  </data>
+  <data name="MenuGoToDefinition" xml:space="preserve">
+    <value>Open the object (Ctrl+click)</value>
+  </data>
+  <data name="MenuHelp" xml:space="preserve">
+    <value>_Help</value>
+  </data>
+  <data name="MenuImportProfiles" xml:space="preserve">
+    <value>Import registrations…</value>
+  </data>
+  <data name="MenuInsertTemplate" xml:space="preserve">
+    <value>Insert template…</value>
+  </data>
+  <data name="MenuMaintenance" xml:space="preserve">
+    <value>Maintenance (backup, restore…)</value>
+  </data>
+  <data name="MenuMonitor" xml:space="preserve">
+    <value>_Monitoring (connections and transactions)</value>
+  </data>
+  <data name="MenuNewFolder" xml:space="preserve">
+    <value>New _folder…</value>
+  </data>
+  <data name="MenuNewTab" xml:space="preserve">
+    <value>_New tab</value>
+  </data>
+  <data name="MenuOptions" xml:space="preserve">
+    <value>_Options…</value>
+  </data>
+  <data name="MenuQuery" xml:space="preserve">
+    <value>_Query</value>
+  </data>
+  <data name="MenuRegister" xml:space="preserve">
+    <value>_Register database…</value>
+  </data>
+  <data name="MenuRollback" xml:space="preserve">
+    <value>_Rollback</value>
+  </data>
+  <data name="MenuRun" xml:space="preserve">
+    <value>_Execute (all or the selection)</value>
+  </data>
+  <data name="MenuRunScript" xml:space="preserve">
+    <value>Run as _script (no grid)</value>
+  </data>
+  <data name="MenuRunStatement" xml:space="preserve">
+    <value>Execute the state_ment at the cursor</value>
+  </data>
+  <data name="MenuSchemaScript" xml:space="preserve">
+    <value>Database _script…</value>
+  </data>
+  <data name="MenuScriptContinueOnError" xml:space="preserve">
+    <value>Continue on errors in scripts</value>
+  </data>
+  <data name="MenuSearchMetadata" xml:space="preserve">
+    <value>_Search metadata…</value>
+  </data>
+  <data name="MenuSecurity" xml:space="preserve">
+    <value>Users and permissions</value>
+  </data>
+  <data name="MenuShortcuts" xml:space="preserve">
+    <value>_Keyboard shortcuts</value>
+  </data>
+  <data name="MenuStatistics" xml:space="preserve">
+    <value>Database _statistics</value>
+  </data>
+  <data name="MenuTools" xml:space="preserve">
+    <value>_Tools</value>
+  </data>
+  <data name="MenuTrace" xml:space="preserve">
+    <value>Trace (live statements)…</value>
+  </data>
+  <data name="MenuView" xml:space="preserve">
+    <value>_View</value>
+  </data>
+  <data name="MenuViewHistory" xml:space="preserve">
+    <value>_History</value>
+  </data>
+  <data name="MenuViewMessages" xml:space="preserve">
+    <value>_Messages</value>
+  </data>
+  <data name="MenuViewPlan" xml:space="preserve">
+    <value>_Plan</value>
+  </data>
+  <data name="MenuViewResults" xml:space="preserve">
+    <value>_Results</value>
+  </data>
+  <data name="MenuViewStats" xml:space="preserve">
+    <value>_Statistics</value>
+  </data>
+  <data name="MessagesTab" xml:space="preserve">
+    <value>Messages</value>
+  </data>
+  <data name="Minutes" xml:space="preserve">
+    <value>minutes</value>
+  </data>
+  <data name="MonAgeDays" xml:space="preserve">
+    <value>{0} days {1} h</value>
+  </data>
+  <data name="MonAgeHours" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="MonAgeMinutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="MonAgeSeconds" xml:space="preserve">
+    <value>{0} s</value>
+  </data>
+  <data name="MonAutoRefresh" xml:space="preserve">
+    <value> · refreshes every {0} s while this tab is visible</value>
+  </data>
+  <data name="MonCancelConfirm" xml:space="preserve">
+    <value>You are about to cancel statement {0} of {1}: whoever runs it gets an error. {2}</value>
+  </data>
+  <data name="MonCancelled" xml:space="preserve">
+    <value>Statement {0} cancelled.</value>
+  </data>
+  <data name="MonCancelNotFound" xml:space="preserve">
+    <value>Statement {0} had already finished.</value>
+  </data>
+  <data name="MonCancelStatement" xml:space="preserve">
+    <value>Cancel statement</value>
+  </data>
+  <data name="MonCancelTip" xml:space="preserve">
+    <value>Cancels the selected statement without killing the connection (DELETE FROM MON$STATEMENTS)</value>
+  </data>
+  <data name="MonCancelTitle" xml:space="preserve">
+    <value>Cancel a statement</value>
+  </data>
+  <data name="MonClassicNote" xml:space="preserve">
+    <value>Classic server: every refresh asks each server process, one per connection, for its data. With many connections, refreshing every {0} s loads the server; every {1} s or more is better.</value>
+  </data>
+  <data name="MonClassicRefresh" xml:space="preserve">
+    <value>On Classic, automatic refresh starts at every {0} s.</value>
+  </data>
+  <data name="MonCloneQuery" xml:space="preserve">
+    <value>Clone “{0}” as a custom query…</value>
+  </data>
+  <data name="MonCopyOf" xml:space="preserve">
+    <value>{0} (copy)</value>
+  </data>
+  <data name="MonCopyQueryTip" xml:space="preserve">
+    <value>Clone the selected query as a custom one (works with built-in and custom queries)</value>
+  </data>
+  <data name="MonCounts" xml:space="preserve">
+    <value>{0} connections · {1} transactions · {2} running</value>
+  </data>
+  <data name="MonCustomGroup" xml:space="preserve">
+    <value>Custom ({0})</value>
+  </data>
+  <data name="MonDeleteQueryConfirm" xml:space="preserve">
+    <value>You are about to delete the custom query “{0}”.</value>
+  </data>
+  <data name="MonDeleteQueryNamed" xml:space="preserve">
+    <value>Delete “{0}”</value>
+  </data>
+  <data name="MonDeleteQueryTip" xml:space="preserve">
+    <value>Delete the selected custom query</value>
+  </data>
+  <data name="MonDeleteQueryTitle" xml:space="preserve">
+    <value>Delete a query</value>
+  </data>
+  <data name="MonDontCancel" xml:space="preserve">
+    <value>Don't cancel</value>
+  </data>
+  <data name="MonDontKill" xml:space="preserve">
+    <value>Don't kill</value>
+  </data>
+  <data name="MonEditQueryNamed" xml:space="preserve">
+    <value>Edit “{0}”…</value>
+  </data>
+  <data name="MonEditQueryTip" xml:space="preserve">
+    <value>Edit the selected custom query (or double-click)</value>
+  </data>
+  <data name="MonEvery" xml:space="preserve">
+    <value>Every {0} s</value>
+  </data>
+  <data name="MonExported" xml:space="preserve">
+    <value>{0} custom query(ies) exported to {1}.</value>
+  </data>
+  <data name="MonExportQueries" xml:space="preserve">
+    <value>Export custom queries…</value>
+  </data>
+  <data name="MonFailed" xml:space="preserve">
+    <value>Could not read the monitor: {0}</value>
+  </data>
+  <data name="MonGap" xml:space="preserve">
+    <value>Gap (next − OAT)</value>
+  </data>
+  <data name="MonGapTip" xml:space="preserve">
+    <value>How many transactions have started since the OAT. If it keeps growing, someone has had a transaction open for a long time.</value>
+  </data>
+  <data name="MonImported" xml:space="preserve">
+    <value>{0} query(ies) imported from {1}.</value>
+  </data>
+  <data name="MonImportFailed" xml:space="preserve">
+    <value>Could not import: {0}</value>
+  </data>
+  <data name="MonImportQueries" xml:space="preserve">
+    <value>Import queries…</value>
+  </data>
+  <data name="MonIntervalTip" xml:space="preserve">
+    <value>Automatic refresh (only while the tab is visible)</value>
+  </data>
+  <data name="MonitorIntro" xml:space="preserve">
+    <value>Connections, transactions and statements of the database. Each refresh is a new transaction that is committed right away.</value>
+  </data>
+  <data name="MonitorPickDatabase" xml:space="preserve">
+    <value>Pick a database in the tree to monitor it.</value>
+  </data>
+  <data name="MonitorTabTitle" xml:space="preserve">
+    <value>Monitoring</value>
+  </data>
+  <data name="MonKill" xml:space="preserve">
+    <value>Kill connection</value>
+  </data>
+  <data name="MonKillConfirm" xml:space="preserve">
+    <value>You are about to kill connection {0} ({1}). If it has an open transaction, it is rolled back, and the program will get an error.</value>
+  </data>
+  <data name="MonKilled" xml:space="preserve">
+    <value>Connection {0} killed.</value>
+  </data>
+  <data name="MonKillFbStudio" xml:space="preserve">
+    <value>It is an FbStudio connection on this PC: that tab will lose its connection.</value>
+  </data>
+  <data name="MonKillNotFound" xml:space="preserve">
+    <value>Connection {0} no longer existed (or is not visible without RDB$ADMIN).</value>
+  </data>
+  <data name="MonKillProduction" xml:space="preserve">
+    <value>The database is PRODUCTION ({0}).</value>
+  </data>
+  <data name="MonKillTip" xml:space="preserve">
+    <value>Kills the selected connection (DELETE FROM MON$ATTACHMENTS): its open transaction is rolled back</value>
+  </data>
+  <data name="MonKillTitle" xml:space="preserve">
+    <value>Kill a connection</value>
+  </data>
+  <data name="MonManual" xml:space="preserve">
+    <value>Manual</value>
+  </data>
+  <data name="MonNewQuery" xml:space="preserve">
+    <value>New custom query…</value>
+  </data>
+  <data name="MonNewQuerySql" xml:space="preserve">
+    <value>SELECT a.MON$ATTACHMENT_ID, a.MON$USER, a.MON$REMOTE_ADDRESS, a.MON$REMOTE_PROCESS, a.MON$TIMESTAMP
+FROM MON$ATTACHMENTS a
+WHERE a.MON$SYSTEM_FLAG = 0
+ORDER BY a.MON$TIMESTAMP</value>
+  </data>
+  <data name="MonNewQueryTip" xml:space="preserve">
+    <value>New custom query</value>
+  </data>
+  <data name="MonNext" xml:space="preserve">
+    <value>Next transaction</value>
+  </data>
+  <data name="MonNextTip" xml:space="preserve">
+    <value>Number the next transaction will take.</value>
+  </data>
+  <data name="MonNow" xml:space="preserve">
+    <value>Now</value>
+  </data>
+  <data name="MonOat" xml:space="preserve">
+    <value>OAT (oldest active)</value>
+  </data>
+  <data name="MonOatAge" xml:space="preserve">
+    <value>OAT open for</value>
+  </data>
+  <data name="MonOatAgeTip" xml:space="preserve">
+    <value>How long ago the oldest active transaction started.</value>
+  </data>
+  <data name="MonOatHolder" xml:space="preserve">
+    <value>It is held by {0} (marked “holds the OAT” in “Connections”).</value>
+  </data>
+  <data name="MonOatMaintenance" xml:space="preserve">
+    <value>The OAT (transaction {0}) has been open for {1}, but it belongs to a backup or a sweep ({2}): that is expected while it runs.</value>
+  </data>
+  <data name="MonOatNotVisible" xml:space="preserve">
+    <value>not visible</value>
+  </data>
+  <data name="MonOatTip" xml:space="preserve">
+    <value>Oldest Active Transaction: the oldest open transaction. While it stays open, Firebird cannot clean up old record versions (garbage).</value>
+  </data>
+  <data name="MonOatWarning" xml:space="preserve">
+    <value>⚠ The OAT (transaction {0}) has been open for {1} and {2} transactions have started since: it blocks garbage collection.</value>
+  </data>
+  <data name="MonOitTip" xml:space="preserve">
+    <value>Oldest Interesting Transaction: the oldest one that did not finish cleanly (active, rolled back or in limbo).</value>
+  </data>
+  <data name="MonOnlyYours" xml:space="preserve">
+    <value>You only see your own connections: to see everyone, connect with the RDB$ADMIN role, as SYSDBA or as the user who owns the database.</value>
+  </data>
+  <data name="MonOstTip" xml:space="preserve">
+    <value>Oldest Snapshot Transaction: how far garbage can be collected.</value>
+  </data>
+  <data name="MonPredefined" xml:space="preserve">
+    <value>Built-in</value>
+  </data>
+  <data name="MonQueryAttachmentColumn" xml:space="preserve">
+    <value>Connection no.</value>
+  </data>
+  <data name="MonQueryAutoDetect" xml:space="preserve">
+    <value>(auto-detected)</value>
+  </data>
+  <data name="MonQueryColumnsNote" xml:space="preserve">
+    <value>These columns enable “Kill connection”, “Cancel statement” and the SQL below. If they are named as in MON$ (MON$ATTACHMENT_ID, ATTACHMENT_ID, "Attachment ID", MON$STATEMENT_ID, MON$SQL_TEXT…) they are recognized automatically.</value>
+  </data>
+  <data name="MonQueryDeleted" xml:space="preserve">
+    <value>Query “{0}” deleted.</value>
+  </data>
+  <data name="MonQueryEditTitle" xml:space="preserve">
+    <value>Edit monitoring query</value>
+  </data>
+  <data name="MonQueryName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="MonQueryNamePlaceholder" xml:space="preserve">
+    <value>For example: Connections by IP, 192.0.2.21, not APP_WEB</value>
+  </data>
+  <data name="MonQueryNewTitle" xml:space="preserve">
+    <value>New monitoring query</value>
+  </data>
+  <data name="MonQueryNoName" xml:space="preserve">
+    <value>The name is missing.</value>
+  </data>
+  <data name="MonQueryNoSql" xml:space="preserve">
+    <value>The SQL is missing.</value>
+  </data>
+  <data name="MonQueryOnlySelect" xml:space="preserve">
+    <value>It must be a single SELECT (the monitor runs it every few seconds, in a read-only transaction).</value>
+  </data>
+  <data name="MonQuerySaved" xml:space="preserve">
+    <value>Query “{0}” saved.</value>
+  </data>
+  <data name="MonQuerySqlColumn" xml:space="preserve">
+    <value>SQL text</value>
+  </data>
+  <data name="MonQueryStatementColumn" xml:space="preserve">
+    <value>Statement no.</value>
+  </data>
+  <data name="MonQueryTest" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="MonQueryTested" xml:space="preserve">
+    <value>Works: {0:N0} rows. Columns: {1}</value>
+  </data>
+  <data name="MonQueryTesting" xml:space="preserve">
+    <value>Testing…</value>
+  </data>
+  <data name="MonRefresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="MonRefreshedAt" xml:space="preserve">
+    <value>updated {0:HH:mm:ss}</value>
+  </data>
+  <data name="MonRefreshTip" xml:space="preserve">
+    <value>Read again now (F9)</value>
+  </data>
+  <data name="MonServer" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="MonShareTip" xml:space="preserve">
+    <value>Share custom queries with the team: export or import a file</value>
+  </data>
+  <data name="MonStatus" xml:space="preserve">
+    <value>{0}: {1:N0} rows</value>
+  </data>
+  <data name="MonWaiting" xml:space="preserve">
+    <value>Waiting on a lock</value>
+  </data>
+  <data name="MonWaitingText" xml:space="preserve">
+    <value>{0} · longest {1}</value>
+  </data>
+  <data name="MonWaitingTip" xml:space="preserve">
+    <value>Statements waiting for a record locked by another transaction (click: “Locks” query, with the possible holders).</value>
+  </data>
+  <data name="NewTabTip" xml:space="preserve">
+    <value>New query tab on the same database (Ctrl+T)</value>
+  </data>
+  <data name="NoDatabase" xml:space="preserve">
+    <value>No database</value>
+  </data>
+  <data name="NoPlan" xml:space="preserve">
+    <value>(no plan)</value>
+  </data>
+  <data name="NoSavedPassword" xml:space="preserve">
+    <value>The database "{0}" has no saved password: edit its registration.</value>
+  </data>
+  <data name="NoStatementAtCursor" xml:space="preserve">
+    <value>There is no statement where the cursor is.</value>
+  </data>
+  <data name="NothingToExport" xml:space="preserve">
+    <value>There is no result to export.</value>
+  </data>
+  <data name="NothingToRun" xml:space="preserve">
+    <value>There is no statement to execute.</value>
+  </data>
+  <data name="NotRunCancelledInConfirmation" xml:space="preserve">
+    <value>Not executed (cancelled at the confirmation).</value>
+  </data>
+  <data name="ObjectCompile" xml:space="preserve">
+    <value>Compile</value>
+  </data>
+  <data name="ObjectNotCompiled" xml:space="preserve">
+    <value>● not compiled</value>
+  </data>
+  <data name="ObjectReload" xml:space="preserve">
+    <value>Reload</value>
+  </data>
+  <data name="ObjectReloadTip" xml:space="preserve">
+    <value>Read the DDL from the database again</value>
+  </data>
+  <data name="ObjectTabCompilable" xml:space="preserve">
+    <value>{0} {1}: edit and compile it (changes apply only when you compile).</value>
+  </data>
+  <data name="ObjectTabDdl" xml:space="preserve">
+    <value>DDL of {0} generated from the metadata (to view or copy; F9 executes the statement under the cursor).</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="OpenTransactionsTitle" xml:space="preserve">
+    <value>Open transactions</value>
+  </data>
+  <data name="OpenTransactionTitle" xml:space="preserve">
+    <value>Open transaction</value>
+  </data>
+  <data name="OptionsDataApply" xml:space="preserve">
+    <value>When applying changes in the Data tab</value>
+  </data>
+  <data name="OptionsDataApplyDirect" xml:space="preserve">
+    <value>Run them directly</value>
+  </data>
+  <data name="OptionsDataApplyNote" xml:space="preserve">
+    <value>Either way the same thing runs: everything together in a short transaction, checking that nobody changed the row. On production or with deletions, confirmation is still requested.</value>
+  </data>
+  <data name="OptionsDataApplyPreview" xml:space="preserve">
+    <value>Show the commands first (run them, copy them or take them to a query tab)</value>
+  </data>
+  <data name="OptionsDefaults" xml:space="preserve">
+    <value>Defaults</value>
+  </data>
+  <data name="OptionsDefaultsTip" xml:space="preserve">
+    <value>Resets every option to its default (nothing is saved until “OK”)</value>
+  </data>
+  <data name="OptionsEditor" xml:space="preserve">
+    <value>Editor</value>
+  </data>
+  <data name="OptionsFont" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="OptionsFontSize" xml:space="preserve">
+    <value>Font size</value>
+  </data>
+  <data name="OptionsFormatUppercase" xml:space="preserve">
+    <value>When formatting, keywords in uppercase</value>
+  </data>
+  <data name="OptionsGeneral" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="OptionsHighlightLine" xml:space="preserve">
+    <value>Highlight the cursor line</value>
+  </data>
+  <data name="OptionsHistory" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="OptionsLanguage" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="OptionsLanguageNote" xml:space="preserve">
+    <value>Applies the next time FbStudio opens. Numbers and dates keep the Windows regional format.</value>
+  </data>
+  <data name="OptionsLineNumbers" xml:space="preserve">
+    <value>Show line numbers</value>
+  </data>
+  <data name="OptionsLockTimeout" xml:space="preserve">
+    <value>Wait for a locked record</value>
+  </data>
+  <data name="OptionsLockTimeoutNote" xml:space="preserve">
+    <value>If another transaction has locked the record being modified, the write waits up to this long and then fails, instead of leaving the tab hanging. Applies to transactions opened from now on.</value>
+  </data>
+  <data name="OptionsMonitor" xml:space="preserve">
+    <value>Monitoring</value>
+  </data>
+  <data name="OptionsOatDanger" xml:space="preserve">
+    <value>and in red if open for more than</value>
+  </data>
+  <data name="OptionsOatIgnoreMaintenance" xml:space="preserve">
+    <value>Do not alarm if the OAT belongs to a backup or a sweep (gbak, gfix, nbackup): it is reported without color</value>
+  </data>
+  <data name="OptionsOatNote" xml:space="preserve">
+    <value>There is always an OAT while transactions are open; what matters is how long it lasts. A gbak backup or a sweep keeps it open while they run.</value>
+  </data>
+  <data name="OptionsOatWarn" xml:space="preserve">
+    <value>OAT in amber if open for more than</value>
+  </data>
+  <data name="OptionsQueries" xml:space="preserve">
+    <value>Queries</value>
+  </data>
+  <data name="OptionsRetention" xml:space="preserve">
+    <value>Keep statements for</value>
+  </data>
+  <data name="OptionsRetentionNote" xml:space="preserve">
+    <value>When the period is shortened, older statements are deleted right away. History SQL and errors are stored encrypted with the Windows account.</value>
+  </data>
+  <data name="OptionsRowLimit" xml:space="preserve">
+    <value>Rows a SELECT fetches</value>
+  </data>
+  <data name="OptionsRowLimitNote" xml:space="preserve">
+    <value>This is the value FbStudio starts with. The toolbar selector changes it only until the application closes. Exporting “all rows” has no limit.</value>
+  </data>
+  <data name="OptionsScriptContinue" xml:space="preserve">
+    <value>Continue with the next statement</value>
+  </data>
+  <data name="OptionsScriptNote" xml:space="preserve">
+    <value>A failing statement is undone by itself; what came before and the transaction stay. At the end the log lists the errors and the cursor goes to the first one. Also available in the Query menu.</value>
+  </data>
+  <data name="OptionsScriptOnError" xml:space="preserve">
+    <value>On an error in a script</value>
+  </data>
+  <data name="OptionsScriptStop" xml:space="preserve">
+    <value>Stop at the first error</value>
+  </data>
+  <data name="OptionsScrollPastEnd" xml:space="preserve">
+    <value>Allow scrolling past the last line</value>
+  </data>
+  <data name="OptionsTabSize" xml:space="preserve">
+    <value>Tab width</value>
+  </data>
+  <data name="OptionsTabsToSpaces" xml:space="preserve">
+    <value>Tab inserts spaces (not a tab character)</value>
+  </data>
+  <data name="OptionsTemplateAbbreviation" xml:space="preserve">
+    <value>Abbreviation</value>
+  </data>
+  <data name="OptionsTemplateAdd" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="OptionsTemplateDefaults" xml:space="preserve">
+    <value>The defaults</value>
+  </data>
+  <data name="OptionsTemplateDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="OptionsTemplateName" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="OptionsTemplateNew" xml:space="preserve">
+    <value>new</value>
+  </data>
+  <data name="OptionsTemplates" xml:space="preserve">
+    <value>Templates</value>
+  </data>
+  <data name="OptionsTemplatesNote" xml:space="preserve">
+    <value>Type the abbreviation and Tab, or Ctrl+J to pick from the list. ${cursor} marks where the cursor goes.</value>
+  </data>
+  <data name="OptionsTemplateText" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="OptionsTheme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="OptionsThemeNote" xml:space="preserve">
+    <value>“Same as Windows” follows the light or dark mode set in Windows (Settings → Personalization → Colors).</value>
+  </data>
+  <data name="OptionsTitle" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="OptionsZoom" xml:space="preserve">
+    <value>Ctrl + mouse wheel enlarges or shrinks the font (Ctrl+0 resets it to the chosen size)</value>
+  </data>
+  <data name="ParamsCancelled" xml:space="preserve">
+    <value>Not run: the parameters were cancelled.</value>
+  </data>
+  <data name="ParamsHint" xml:space="preserve">
+    <value>Text without quotes; dates like 2026-10-22; numbers with a decimal point.</value>
+  </data>
+  <data name="ParamsNull" xml:space="preserve">
+    <value>NULL</value>
+  </data>
+  <data name="ParamsOnlySingle" xml:space="preserve">
+    <value>Parameters (? or :name) are asked for when running a single statement: select it, or put the cursor on it and press Ctrl+Enter.</value>
+  </data>
+  <data name="ParamsRun" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="ParamsTitle" xml:space="preserve">
+    <value>Query parameters</value>
+  </data>
+  <data name="ParamsUnnamed" xml:space="preserve">
+    <value>Parameter {0}</value>
+  </data>
+  <data name="PasswordsNotSaved" xml:space="preserve">
+    <value>No system keyring: passwords are remembered only while FbStudio is open and the history is not saved. On Linux, install GNOME Keyring or KWallet and libsecret-tools.</value>
+  </data>
+  <data name="PendingChanges" xml:space="preserve">
+    <value>uncompiled changes</value>
+  </data>
+  <data name="PendingData" xml:space="preserve">
+    <value>unapplied data</value>
+  </data>
+  <data name="PendingTransaction" xml:space="preserve">
+    <value>open transaction</value>
+  </data>
+  <data name="PickDatabaseInTree" xml:space="preserve">
+    <value>Pick a database in the tree (or double-click it).</value>
+  </data>
+  <data name="PlanDetailed" xml:space="preserve">
+    <value>Detailed plan</value>
+  </data>
+  <data name="PlanFullScanWarning" xml:space="preserve">
+    <value>⚠ full scan of {0} (no index): it may take a while</value>
+  </data>
+  <data name="PlanTab" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="ProfileDatabase" xml:space="preserve">
+    <value>Database (alias or path)</value>
+  </data>
+  <data name="ProfileEnvironment" xml:space="preserve">
+    <value>Environment</value>
+  </data>
+  <data name="ProfileFolder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="ProfileFolderNone" xml:space="preserve">
+    <value>(no folder: environment group)</value>
+  </data>
+  <data name="ProfileFolderPick" xml:space="preserve">
+    <value>Pick an existing folder</value>
+  </data>
+  <data name="ProfileFolderPlaceholder" xml:space="preserve">
+    <value>Type a new one or pick one with ▾ (empty: by environment)</value>
+  </data>
+  <data name="ProfileMissingData" xml:space="preserve">
+    <value>Missing data: name, server, database and user are required.</value>
+  </data>
+  <data name="ProfileName" xml:space="preserve">
+    <value>Name (alias)</value>
+  </data>
+  <data name="ProfileNoPassword" xml:space="preserve">
+    <value>The password is missing.</value>
+  </data>
+  <data name="ProfilePassword" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="ProfilePasswordMissing" xml:space="preserve">
+    <value>(password missing)</value>
+  </data>
+  <data name="ProfilePasswordUnchanged" xml:space="preserve">
+    <value>(unchanged)</value>
+  </data>
+  <data name="ProfilePort" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="ProfileProductionRequiresCrypt" xml:space="preserve">
+    <value>In production, encryption becomes «Required»: if the server does not accept it, it will not connect. Test the connection before saving.</value>
+  </data>
+  <data name="ProfileReadOnly" xml:space="preserve">
+    <value>Read-only (blocks DML, DDL and EXECUTE)</value>
+  </data>
+  <data name="ProfileRole" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="ProfileSaved" xml:space="preserve">
+    <value>Saved.</value>
+  </data>
+  <data name="ProfileSavedMessage" xml:space="preserve">
+    <value>The registration of “{0}” was saved.</value>
+  </data>
+  <data name="ProfileSavedTitle" xml:space="preserve">
+    <value>Registration saved</value>
+  </data>
+  <data name="ProfileSaveHistory" xml:space="preserve">
+    <value>Keep statement history (encrypted; the number of days is set in Options)</value>
+  </data>
+  <data name="ProfilesDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="ProfileServer" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="ProfilesNew" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="ProfilesSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="ProfilesTest" xml:space="preserve">
+    <value>Test connection</value>
+  </data>
+  <data name="ProfilesTitle" xml:space="preserve">
+    <value>Registered databases</value>
+  </data>
+  <data name="ProfileTesting" xml:space="preserve">
+    <value>Testing…</value>
+  </data>
+  <data name="ProfileUser" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="ProfileWireCrypt" xml:space="preserve">
+    <value>Connection encryption</value>
+  </data>
+  <data name="QueryTabTitle" xml:space="preserve">
+    <value>Query {0}</value>
+  </data>
+  <data name="ReadingDdl" xml:space="preserve">
+    <value>Reading the DDL of {0}…</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Ready. F9 executes the selection or the statement under the cursor; Esc cancels.</value>
+  </data>
+  <data name="Receiving" xml:space="preserve">
+    <value>Receiving… {0:N0} rows · {1:N1} s</value>
+  </data>
+  <data name="RegisterFirst" xml:space="preserve">
+    <value>Register a database first (the “Register” button).</value>
+  </data>
+  <data name="ReloadDiscardChanges" xml:space="preserve">
+    <value>“{0}” has uncompiled changes. If you reload, they are lost.</value>
+  </data>
+  <data name="RestartLater" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="RestartNow" xml:space="preserve">
+    <value>Restart now</value>
+  </data>
+  <data name="ResultsTab" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="RollbackDone" xml:space="preserve">
+    <value>Rollback done: the changes were discarded.</value>
+  </data>
+  <data name="RowCountFormat" xml:space="preserve">
+    <value>{0:N0} rows</value>
+  </data>
+  <data name="RowsAffected" xml:space="preserve">
+    <value>{0:N0} rows affected</value>
+  </data>
+  <data name="RowScriptCopied" xml:space="preserve">
+    <value>{0} row(s) copied as {1} ({2}).</value>
+  </data>
+  <data name="RowScriptGuessedTable" xml:space="preserve">
+    <value>The query's table was not recognized: change "{0}" when pasting.</value>
+  </data>
+  <data name="RowScriptKeyMissing" xml:space="preserve">
+    <value>The result does not include the whole key of {0} (missing {1}): add it to the SELECT to copy as UPDATE.</value>
+  </data>
+  <data name="RowScriptNoColumns" xml:space="preserve">
+    <value>No column of the result belongs to {0}: there is nothing to copy.</value>
+  </data>
+  <data name="RowScriptNoKey" xml:space="preserve">
+    <value>{0} has no primary key: the UPDATE's WHERE cannot be built.</value>
+  </data>
+  <data name="RowScriptNoRows" xml:space="preserve">
+    <value>No rows selected.</value>
+  </data>
+  <data name="RowScriptNoTable" xml:space="preserve">
+    <value>The query's table is not recognized: copying as UPDATE needs the table and its key (the table's Data tab always has them).</value>
+  </data>
+  <data name="RowScriptNothingToSet" xml:space="preserve">
+    <value>Only key columns: there is nothing to update.</value>
+  </data>
+  <data name="RowScriptSkipped" xml:space="preserve">
+    <value>Without {0}: not table columns, or computed.</value>
+  </data>
+  <data name="RowsIn" xml:space="preserve">
+    <value>{0:N0} rows in {1:N1} s</value>
+  </data>
+  <data name="RunAnyway" xml:space="preserve">
+    <value>Run anyway</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>Executing {0}…</value>
+  </data>
+  <data name="RunningWaiting" xml:space="preserve">
+    <value>Executing {0}… {1:N0} s · Esc cancels</value>
+  </data>
+  <data name="SaveLog" xml:space="preserve">
+    <value>Save log…</value>
+  </data>
+  <data name="SaveLogTip" xml:space="preserve">
+    <value>Saves these messages to a text file, with the date and the database.</value>
+  </data>
+  <data name="SaveLogTitle" xml:space="preserve">
+    <value>Save the log</value>
+  </data>
+  <data name="SchemaScriptCancelled" xml:space="preserve">
+    <value>Script cancelled.</value>
+  </data>
+  <data name="SchemaScriptCopied" xml:space="preserve">
+    <value>Script copied.</value>
+  </data>
+  <data name="SchemaScriptDialogNote" xml:space="preserve">
+    <value>Reads the database in a read-only transaction: it blocks nobody. On a large database it is thousands of short queries and may take a while.</value>
+  </data>
+  <data name="SchemaScriptDialogText" xml:space="preserve">
+    <value>What to include in the script of {0}:</value>
+  </data>
+  <data name="SchemaScriptDialogTitle" xml:space="preserve">
+    <value>Database script</value>
+  </data>
+  <data name="SchemaScriptDomains" xml:space="preserve">
+    <value>Domains</value>
+  </data>
+  <data name="SchemaScriptDone" xml:space="preserve">
+    <value>Script ready: {0:N0} objects, {1:N0} lines in {2:0.0} s. Save or copy it; run it on an empty database.</value>
+  </data>
+  <data name="SchemaScriptExceptions" xml:space="preserve">
+    <value>Exceptions</value>
+  </data>
+  <data name="SchemaScriptFailed" xml:space="preserve">
+    <value>Could not build the script: {0}</value>
+  </data>
+  <data name="SchemaScriptFunctions" xml:space="preserve">
+    <value>Functions (PSQL and UDF)</value>
+  </data>
+  <data name="SchemaScriptGenerate" xml:space="preserve">
+    <value>Generate</value>
+  </data>
+  <data name="SchemaScriptGeneratedAt" xml:space="preserve">
+    <value>Generated at {0:HH:mm} · {1:N0} objects</value>
+  </data>
+  <data name="SchemaScriptGenerators" xml:space="preserve">
+    <value>Generators</value>
+  </data>
+  <data name="SchemaScriptGeneratorValues" xml:space="preserve">
+    <value>with their current value</value>
+  </data>
+  <data name="SchemaScriptIntro" xml:space="preserve">
+    <value>Script to recreate the database in an empty one (extract the metadata).</value>
+  </data>
+  <data name="SchemaScriptOpen" xml:space="preserve">
+    <value>Open in a tab without database</value>
+  </data>
+  <data name="SchemaScriptOpenTip" xml:space="preserve">
+    <value>Takes it to a query tab without a database: double-click the EMPTY database in the tree where it should run.</value>
+  </data>
+  <data name="SchemaScriptPackages" xml:space="preserve">
+    <value>Packages</value>
+  </data>
+  <data name="SchemaScriptPickDatabase" xml:space="preserve">
+    <value>Pick a database in the tree to get its script.</value>
+  </data>
+  <data name="SchemaScriptPickTarget" xml:space="preserve">
+    <value>Script without a database: double-click the EMPTY database where you want to run it (on the same database it would fail or overwrite objects).</value>
+  </data>
+  <data name="SchemaScriptPrivileges" xml:space="preserve">
+    <value>Privileges (GRANT)</value>
+  </data>
+  <data name="SchemaScriptProcedures" xml:space="preserve">
+    <value>Procedures</value>
+  </data>
+  <data name="SchemaScriptProgress" xml:space="preserve">
+    <value>Reading {0:N0} of {1:N0}: {2}</value>
+  </data>
+  <data name="SchemaScriptQueryTitle" xml:space="preserve">
+    <value>Script of {0}</value>
+  </data>
+  <data name="SchemaScriptReading" xml:space="preserve">
+    <value>Reading the database objects…</value>
+  </data>
+  <data name="SchemaScriptRegenerate" xml:space="preserve">
+    <value>Generate again…</value>
+  </data>
+  <data name="SchemaScriptRegenerateTip" xml:space="preserve">
+    <value>Pick again what to include and read the database again.</value>
+  </data>
+  <data name="SchemaScriptRoles" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="SchemaScriptSave" xml:space="preserve">
+    <value>Save as…</value>
+  </data>
+  <data name="SchemaScriptSaved" xml:space="preserve">
+    <value>Script saved to {0}</value>
+  </data>
+  <data name="SchemaScriptSaveTip" xml:space="preserve">
+    <value>Saves the script to a .sql file (UTF-8).</value>
+  </data>
+  <data name="SchemaScriptSaveTitle" xml:space="preserve">
+    <value>Save the database script</value>
+  </data>
+  <data name="SchemaScriptTables" xml:space="preserve">
+    <value>Tables (with keys, CHECKs and indexes)</value>
+  </data>
+  <data name="SchemaScriptTabTitle" xml:space="preserve">
+    <value>Database script</value>
+  </data>
+  <data name="SchemaScriptTriggers" xml:space="preserve">
+    <value>Triggers</value>
+  </data>
+  <data name="SchemaScriptViews" xml:space="preserve">
+    <value>Views</value>
+  </data>
+  <data name="ScopeSelectionLine" xml:space="preserve">
+    <value>only the selection was executed (line {0})</value>
+  </data>
+  <data name="ScopeSelectionLines" xml:space="preserve">
+    <value>only the selection was executed (lines {0} to {1})</value>
+  </data>
+  <data name="ScopeStatement" xml:space="preserve">
+    <value>only the statement at the cursor was executed (line {0})</value>
+  </data>
+  <data name="ScriptBlocked" xml:space="preserve">
+    <value>Blocked (no statement of the script was executed): {0}</value>
+  </data>
+  <data name="ScriptByKeyword" xml:space="preserve">
+    <value>{0}: {1:N0} statements · {2:N0} rows</value>
+  </data>
+  <data name="ScriptCancelled" xml:space="preserve">
+    <value>cancelled</value>
+  </data>
+  <data name="ScriptCancelledInConfirmation" xml:space="preserve">
+    <value>The script was not executed (cancelled at the confirmation).</value>
+  </data>
+  <data name="ScriptErrorAt" xml:space="preserve">
+    <value>1 with an error (line {0})</value>
+  </data>
+  <data name="ScriptErrorsAt" xml:space="preserve">
+    <value>{0} with errors (lines {1})</value>
+  </data>
+  <data name="ScriptGridless" xml:space="preserve">
+    <value>no grid</value>
+  </data>
+  <data name="ScriptGridlessAuto" xml:space="preserve">
+    <value>no grid: more than {0} statements</value>
+  </data>
+  <data name="ScriptLimitReached" xml:space="preserve">
+    <value> (limit reached)</value>
+  </data>
+  <data name="ScriptLineReason" xml:space="preserve">
+    <value>Line {0}: {1}</value>
+  </data>
+  <data name="ScriptLogCancelled" xml:space="preserve">
+    <value>■ line {0} · {1}: cancelled</value>
+  </data>
+  <data name="ScriptLogError" xml:space="preserve">
+    <value>✗ line {0} · {1}: {2}</value>
+  </data>
+  <data name="ScriptLogOk" xml:space="preserve">
+    <value>✓ line {0} · {1}</value>
+  </data>
+  <data name="ScriptModifiesProduction" xml:space="preserve">
+    <value>The script has {0} statement(s) that modify PRODUCTION ({1}).</value>
+  </data>
+  <data name="ScriptNoWhere" xml:space="preserve">
+    <value>Line {0}: {1} without WHERE (affects ALL rows).</value>
+  </data>
+  <data name="ScriptProgress" xml:space="preserve">
+    <value>Script: statement {0} of {1} ({2}, line {3})…</value>
+  </data>
+  <data name="ScriptProgressFast" xml:space="preserve">
+    <value>Script: {0:N0} of {1:N0} ({2:P0}) · {3} with errors · Esc cancels</value>
+  </data>
+  <data name="ScriptRoutineInTransaction" xml:space="preserve">
+    <value>Line {0}: uses {1} inside the open write transaction (if it changes data, that stays in the transaction).</value>
+  </data>
+  <data name="ScriptRows" xml:space="preserve">
+    <value>{0}: {1:N0} rows</value>
+  </data>
+  <data name="ScriptRowsCounted" xml:space="preserve">
+    <value>{0}: {1:N0} rows (not shown without the grid)</value>
+  </data>
+  <data name="ScriptStopped" xml:space="preserve">
+    <value>stopped by an error</value>
+  </data>
+  <data name="ScriptStoppedAtLine" xml:space="preserve">
+    <value>stopped by an error at line {0}</value>
+  </data>
+  <data name="ScriptSummary" xml:space="preserve">
+    <value>Script: {0} of {1} statements in {2:N1} s</value>
+  </data>
+  <data name="SearchAreaAll" xml:space="preserve">
+    <value>All areas</value>
+  </data>
+  <data name="SearchAreaColumn" xml:space="preserve">
+    <value>column</value>
+  </data>
+  <data name="SearchAreaDescription" xml:space="preserve">
+    <value>description</value>
+  </data>
+  <data name="SearchAreaFiltered" xml:space="preserve">
+    <value>Area “{1}”: {0}</value>
+  </data>
+  <data name="SearchAreaLabel" xml:space="preserve">
+    <value>Area:</value>
+  </data>
+  <data name="SearchAreaName" xml:space="preserve">
+    <value>name</value>
+  </data>
+  <data name="SearchAreaSource" xml:space="preserve">
+    <value>source</value>
+  </data>
+  <data name="SearchAreaTip" xml:space="preserve">
+    <value>Show only what is in an area</value>
+  </data>
+  <data name="SearchAtLine" xml:space="preserve">
+    <value>line {0}</value>
+  </data>
+  <data name="SearchCancelled" xml:space="preserve">
+    <value>Search cancelled.</value>
+  </data>
+  <data name="SearchFailed" xml:space="preserve">
+    <value>Search failed: {0}</value>
+  </data>
+  <data name="SearchInColumns" xml:space="preserve">
+    <value>Columns</value>
+  </data>
+  <data name="SearchInDescriptions" xml:space="preserve">
+    <value>Descriptions</value>
+  </data>
+  <data name="SearchInNames" xml:space="preserve">
+    <value>Object names</value>
+  </data>
+  <data name="SearchInSources" xml:space="preserve">
+    <value>Sources (procedures, triggers, views, functions, packages)</value>
+  </data>
+  <data name="SearchIntro" xml:space="preserve">
+    <value>Search for text in procedures, triggers, views, functions, names, columns and descriptions.</value>
+  </data>
+  <data name="SearchMatches" xml:space="preserve">
+    <value>{0:N0} matches</value>
+  </data>
+  <data name="SearchNoResults" xml:space="preserve">
+    <value>No results for “{0}”.</value>
+  </data>
+  <data name="SearchObjects" xml:space="preserve">
+    <value>{0:N0} objects</value>
+  </data>
+  <data name="SearchOneMatch" xml:space="preserve">
+    <value>1 match</value>
+  </data>
+  <data name="SearchOneObject" xml:space="preserve">
+    <value>1 object</value>
+  </data>
+  <data name="SearchPickDatabase" xml:space="preserve">
+    <value>Pick a database: double-click it in the tree on the left.</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>Text to search (case-insensitive): CLINICA_TURNOS, GEN_ID(, fecha_alta…</value>
+  </data>
+  <data name="SearchRunning" xml:space="preserve">
+    <value>Searching for “{0}” in {1}…</value>
+  </data>
+  <data name="SearchSummary" xml:space="preserve">
+    <value>{0:N0} matches in {1:N0} objects ({2:N1} s). Double-click: open the object at the line.</value>
+  </data>
+  <data name="SearchTabTitle" xml:space="preserve">
+    <value>Search “{0}”</value>
+  </data>
+  <data name="SearchTooShort" xml:space="preserve">
+    <value>Type at least 2 characters.</value>
+  </data>
+  <data name="SecAdminFlag" xml:space="preserve">
+    <value>manages users</value>
+  </data>
+  <data name="SecAdminNote" xml:space="preserve">
+    <value>To see all users and create, change or delete them, connect as SYSDBA or with the RDB$ADMIN role.</value>
+  </data>
+  <data name="SecApplied" xml:space="preserve">
+    <value>Applied: {0} statements.</value>
+  </data>
+  <data name="SecApply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="SecApplyConfirm" xml:space="preserve">
+    <value>{0} GRANT/REVOKE statements will run on {1}, all together (if one fails, none is applied). The SQL is shown below.</value>
+  </data>
+  <data name="SecApplyTitle" xml:space="preserve">
+    <value>Apply permissions</value>
+  </data>
+  <data name="SecColGrantOption" xml:space="preserve">
+    <value>Can grant</value>
+  </data>
+  <data name="SecColGrantOptionTip" xml:space="preserve">
+    <value>WITH GRANT OPTION: can give these permissions to others. Applies to the whole row.</value>
+  </data>
+  <data name="SecColKind" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="SecColObject" xml:space="preserve">
+    <value>Object</value>
+  </data>
+  <data name="SecColumnsNote" xml:space="preserve">
+    <value>Only some columns: {0}</value>
+  </data>
+  <data name="SecDeleteRole" xml:space="preserve">
+    <value>Delete role…</value>
+  </data>
+  <data name="SecDeleteRoleConfirm" xml:space="preserve">
+    <value>Role {0} will be DELETED from {1}, with its permissions: users who have it lose them.</value>
+  </data>
+  <data name="SecDeleteRoleTitle" xml:space="preserve">
+    <value>Delete role</value>
+  </data>
+  <data name="SecDeleteUser" xml:space="preserve">
+    <value>Delete user…</value>
+  </data>
+  <data name="SecDeleteUserConfirm" xml:space="preserve">
+    <value>User {0} will be DELETED from the server of {1}: it will not be able to connect to any of its databases. Its permissions in the databases remain (shown as "not on the server").</value>
+  </data>
+  <data name="SecDeleteUserTitle" xml:space="preserve">
+    <value>Delete user</value>
+  </data>
+  <data name="SecDiscard" xml:space="preserve">
+    <value>Discard</value>
+  </data>
+  <data name="SecDiscardPending" xml:space="preserve">
+    <value>There are {0} pending permission changes: they will be discarded.</value>
+  </data>
+  <data name="SecDiscardPendingTitle" xml:space="preserve">
+    <value>Pending changes</value>
+  </data>
+  <data name="SecDiscardRun" xml:space="preserve">
+    <value>Discard and go on</value>
+  </data>
+  <data name="SecEditUser" xml:space="preserve">
+    <value>Edit user…</value>
+  </data>
+  <data name="SecFailed" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="SecFilter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="SecGranteeScopePsql" xml:space="preserve">
+    <value>Procedures, functions, packages, triggers and views</value>
+  </data>
+  <data name="SecGranteeScopeUsers" xml:space="preserve">
+    <value>Users and roles</value>
+  </data>
+  <data name="SecInactive" xml:space="preserve">
+    <value>inactive</value>
+  </data>
+  <data name="SecIntro" xml:space="preserve">
+    <value>Server users, database roles and permissions.</value>
+  </data>
+  <data name="SecKindException" xml:space="preserve">
+    <value>Exception</value>
+  </data>
+  <data name="SecKindFunction" xml:space="preserve">
+    <value>Function</value>
+  </data>
+  <data name="SecKindGenerator" xml:space="preserve">
+    <value>Generator</value>
+  </data>
+  <data name="SecKindPackage" xml:space="preserve">
+    <value>Package</value>
+  </data>
+  <data name="SecKindProcedure" xml:space="preserve">
+    <value>Procedure</value>
+  </data>
+  <data name="SecKindRole" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="SecKindTable" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="SecKindTrigger" xml:space="preserve">
+    <value>Trigger</value>
+  </data>
+  <data name="SecKindUser" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="SecKindView" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="SecLoaded" xml:space="preserve">
+    <value>{0} users, {1} roles and {2} permissions.</value>
+  </data>
+  <data name="SecLoading" xml:space="preserve">
+    <value>Reading users, roles and permissions…</value>
+  </data>
+  <data name="SecNewRole" xml:space="preserve">
+    <value>New role…</value>
+  </data>
+  <data name="SecNewUser" xml:space="preserve">
+    <value>New user…</value>
+  </data>
+  <data name="SecNoPending" xml:space="preserve">
+    <value>No changes</value>
+  </data>
+  <data name="SecNotApplied" xml:space="preserve">
+    <value>Nothing was applied. "{0}" failed: {1}</value>
+  </data>
+  <data name="SecNotAppliedCommit" xml:space="preserve">
+    <value>Nothing was applied: Firebird rejected it on commit: {0}</value>
+  </data>
+  <data name="SecNotOnServer" xml:space="preserve">
+    <value>not on the server</value>
+  </data>
+  <data name="SecObjectKindAll" xml:space="preserve">
+    <value>All objects</value>
+  </data>
+  <data name="SecObjectKindExceptions" xml:space="preserve">
+    <value>Exceptions</value>
+  </data>
+  <data name="SecObjectKindFunctions" xml:space="preserve">
+    <value>Functions</value>
+  </data>
+  <data name="SecObjectKindGenerators" xml:space="preserve">
+    <value>Generators</value>
+  </data>
+  <data name="SecObjectKindPackages" xml:space="preserve">
+    <value>Packages</value>
+  </data>
+  <data name="SecObjectKindProcedures" xml:space="preserve">
+    <value>Procedures</value>
+  </data>
+  <data name="SecObjectKindTables" xml:space="preserve">
+    <value>Tables</value>
+  </data>
+  <data name="SecObjectKindViews" xml:space="preserve">
+    <value>Views</value>
+  </data>
+  <data name="Seconds" xml:space="preserve">
+    <value>seconds</value>
+  </data>
+  <data name="SecOnlyGranted" xml:space="preserve">
+    <value>Only granted</value>
+  </data>
+  <data name="SecPending" xml:space="preserve">
+    <value>{0} pending changes</value>
+  </data>
+  <data name="SecPermissions" xml:space="preserve">
+    <value>Permissions</value>
+  </data>
+  <data name="SecPickDatabase" xml:space="preserve">
+    <value>Pick a database in the tree to see its users and permissions.</value>
+  </data>
+  <data name="SecPickGrantee" xml:space="preserve">
+    <value>Pick a user or role from the list to see and change its permissions.</value>
+  </data>
+  <data name="SecProduction" xml:space="preserve">
+    <value>It is a PRODUCTION database.</value>
+  </data>
+  <data name="SecPublicNote" xml:space="preserve">
+    <value>all users</value>
+  </data>
+  <data name="SecReadOnly" xml:space="preserve">
+    <value>Read-only registration: you can look, but not change anything.</value>
+  </data>
+  <data name="SecRefresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="SecRoleAdminOption" xml:space="preserve">
+    <value>{0} (can give it to others)</value>
+  </data>
+  <data name="SecRoleCreated" xml:space="preserve">
+    <value>Role {0} created.</value>
+  </data>
+  <data name="SecRoleDbAdmin" xml:space="preserve">
+    <value>RDB$ADMIN (database administrator)</value>
+  </data>
+  <data name="SecRoleDeleted" xml:space="preserve">
+    <value>Role {0} deleted.</value>
+  </data>
+  <data name="SecRoleProduction" xml:space="preserve">
+    <value>Role {0} will be created in {1}, a PRODUCTION database.</value>
+  </data>
+  <data name="SecRoleProductionTitle" xml:space="preserve">
+    <value>Roles in production</value>
+  </data>
+  <data name="SecRolePrompt" xml:space="preserve">
+    <value>Role name:</value>
+  </data>
+  <data name="SecRoles" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="SecRoleTitle" xml:space="preserve">
+    <value>New role</value>
+  </data>
+  <data name="SecRun" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="SecScopeNote" xml:space="preserve">
+    <value>Users belong to the server (they work for all its databases); roles and permissions belong to this database.</value>
+  </data>
+  <data name="SecShowSql" xml:space="preserve">
+    <value>Show SQL</value>
+  </data>
+  <data name="SecSqlHeader" xml:space="preserve">
+    <value>-- {0} statements (not run yet)</value>
+  </data>
+  <data name="SecTabTitle" xml:space="preserve">
+    <value>Users and permissions</value>
+  </data>
+  <data name="SecUserActive" xml:space="preserve">
+    <value>Active (can connect)</value>
+  </data>
+  <data name="SecUserAdmin" xml:space="preserve">
+    <value>Manages users (GRANT ADMIN ROLE)</value>
+  </data>
+  <data name="SecUserChanged" xml:space="preserve">
+    <value>User {0} changed.</value>
+  </data>
+  <data name="SecUserCreated" xml:space="preserve">
+    <value>User {0} created.</value>
+  </data>
+  <data name="SecUserDeleted" xml:space="preserve">
+    <value>User {0} deleted.</value>
+  </data>
+  <data name="SecUserDescription" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="SecUserFirstName" xml:space="preserve">
+    <value>First name</value>
+  </data>
+  <data name="SecUserLastName" xml:space="preserve">
+    <value>Last name</value>
+  </data>
+  <data name="SecUserMiddleName" xml:space="preserve">
+    <value>Middle name</value>
+  </data>
+  <data name="SecUserName" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="SecUserNameRequired" xml:space="preserve">
+    <value>The user name is missing.</value>
+  </data>
+  <data name="SecUserPassword" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="SecUserPasswordKeep" xml:space="preserve">
+    <value>Empty: unchanged</value>
+  </data>
+  <data name="SecUserPasswordMismatch" xml:space="preserve">
+    <value>The two passwords are different.</value>
+  </data>
+  <data name="SecUserPasswordRepeat" xml:space="preserve">
+    <value>Repeat the password</value>
+  </data>
+  <data name="SecUserPasswordRequired" xml:space="preserve">
+    <value>The password is missing.</value>
+  </data>
+  <data name="SecUserPlugin" xml:space="preserve">
+    <value>User manager</value>
+  </data>
+  <data name="SecUserPluginDefault" xml:space="preserve">
+    <value>(the server's)</value>
+  </data>
+  <data name="SecUserProduction" xml:space="preserve">
+    <value>The server of {0} is PRODUCTION: the change applies to all its databases.</value>
+  </data>
+  <data name="SecUserProductionTitle" xml:space="preserve">
+    <value>Users in production</value>
+  </data>
+  <data name="SecUserSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SecUserServerNote" xml:space="preserve">
+    <value>The user belongs to the server: it works for all its databases.</value>
+  </data>
+  <data name="SecUserTitleEdit" xml:space="preserve">
+    <value>Edit user {0}</value>
+  </data>
+  <data name="SecUserTitleNew" xml:space="preserve">
+    <value>New user</value>
+  </data>
+  <data name="SecUserUnchanged" xml:space="preserve">
+    <value>Nothing changed.</value>
+  </data>
+  <data name="ServerDialogTitle" xml:space="preserve">
+    <value>Server details · {0}</value>
+  </data>
+  <data name="ServerReadFailed" xml:space="preserve">
+    <value>The server details could not be read: {0}</value>
+  </data>
+  <data name="ServerReading" xml:space="preserve">
+    <value>Reading the server details…</value>
+  </data>
+  <data name="ShortcutsHelp" xml:space="preserve">
+    <value>F9 (or F5)              Execute the selection; without a selection, the WHOLE editor:
+                        several statements run in order and stop at the first error;
+                        a COMMIT or ROLLBACK written in the script is executed
+                        (in the tab of a procedure, trigger, view or function: compile it)
+Ctrl+Enter              Execute only the statement where the cursor is
+Ctrl+F9                 Run as a script, without the grid (long scripts: thousands of INSERT or UPDATE)
+Esc                     Cancel the execution
+Ctrl+Alt+C / Ctrl+Alt+R Commit / Rollback
+Ctrl+Space              Autocomplete (tables, columns by alias)
+Ctrl+wheel / Ctrl+0     Enlarge or shrink the editor font / reset it to the Options size
+Ctrl+1 … Ctrl+5         Results, Plan, Statistics, History, Messages
+Ctrl+6                  Dependencies (in an object tab)
+Ctrl+7                  Data (in a table or view tab)
+
+Tabs (each with its own database and transaction):
+Ctrl+T                  New tab on the same database
+Ctrl+W (or Ctrl+F4)     Close the tab (middle click too)
+Ctrl+Tab                Go to the next one (Ctrl+Shift+Tab: the previous one)
+Ctrl+Shift+F            Search metadata (sources, names, columns, descriptions)
+F9 in the monitor       Refresh (Tools → Monitoring)
+
+In the grid:
+Click a header           Sort (again: reverse; Ctrl+click: remove)
+"Filter" row             Click and type: text, PÉREZ*, &gt;100, 2026-07-01, null
+Drag a header            Onto the panel above to group
+Right-click the footer   Choose totals (sum, average, min., max., count)
+Ctrl+C / Ctrl+Shift+C    Copy cell / row with headers (with several rows
+                         selected, Ctrl+C copies them all)
+Shift+click, Ctrl+click  Select a range of rows / add single rows
+Ctrl+A                   Select all rows
+Right-click              “Copy all rows”, “Copy column”
+
+In the Data tab (nothing is saved until “Apply”):
+Double-click, F2, type    Edit the cell (Enter saves and moves down, Tab moves right, Esc cancels)
+Del                      Mark or unmark the selected rows for deletion
+Right-click              “Set to NULL”, “Undo the row's changes”
+
+In the tree:
+Double-click a database  Connect and use it in the tab
+Double-click an object   Open its DDL in a tab (procedures, triggers,
+                         views and functions are edited and compiled there)
+Double-click a column    Insert the name into the editor</value>
+  </data>
+  <data name="ShortcutsTitle" xml:space="preserve">
+    <value>Keyboard shortcuts</value>
+  </data>
+  <data name="SignatureFunction" xml:space="preserve">
+    <value>function</value>
+  </data>
+  <data name="SignatureProcedure" xml:space="preserve">
+    <value>procedure</value>
+  </data>
+  <data name="StartHintText" xml:space="preserve">
+    <value>Double-click a database in the tree to connect: a query tab opens for it. Right-click the database for monitoring, metadata search and more.</value>
+  </data>
+  <data name="StartHintTitle" xml:space="preserve">
+    <value>No tabs open</value>
+  </data>
+  <data name="StatementDone" xml:space="preserve">
+    <value>{0} done</value>
+  </data>
+  <data name="StatementTook" xml:space="preserve">
+    <value>{0}: {1} in {2:N0} ms</value>
+  </data>
+  <data name="StatHdrAttributes" xml:space="preserve">
+    <value>Attributes</value>
+  </data>
+  <data name="StatHdrCreated" xml:space="preserve">
+    <value>Creation date</value>
+  </data>
+  <data name="StatHdrDialect" xml:space="preserve">
+    <value>Dialect</value>
+  </data>
+  <data name="StatHdrFlags" xml:space="preserve">
+    <value>Flags</value>
+  </data>
+  <data name="StatHdrGeneration" xml:space="preserve">
+    <value>Generation</value>
+  </data>
+  <data name="StatHdrImplementation" xml:space="preserve">
+    <value>Implementation</value>
+  </data>
+  <data name="StatHdrNext" xml:space="preserve">
+    <value>Next transaction</value>
+  </data>
+  <data name="StatHdrNextAttachment" xml:space="preserve">
+    <value>Next attachment ID</value>
+  </data>
+  <data name="StatHdrNextHeader" xml:space="preserve">
+    <value>Next header page</value>
+  </data>
+  <data name="StatHdrOat" xml:space="preserve">
+    <value>Oldest active transaction (OAT)</value>
+  </data>
+  <data name="StatHdrOds" xml:space="preserve">
+    <value>ODS version</value>
+  </data>
+  <data name="StatHdrOit" xml:space="preserve">
+    <value>Oldest interesting transaction (OIT)</value>
+  </data>
+  <data name="StatHdrOst" xml:space="preserve">
+    <value>Oldest snapshot (OST)</value>
+  </data>
+  <data name="StatHdrPageBuffers" xml:space="preserve">
+    <value>Page buffers (0 = server default)</value>
+  </data>
+  <data name="StatHdrPageSize" xml:space="preserve">
+    <value>Page size</value>
+  </data>
+  <data name="StatHdrScn" xml:space="preserve">
+    <value>System change number</value>
+  </data>
+  <data name="StatHdrSequence" xml:space="preserve">
+    <value>Sequence number</value>
+  </data>
+  <data name="StatHdrShadows" xml:space="preserve">
+    <value>Shadow count</value>
+  </data>
+  <data name="StatHdrSweep" xml:space="preserve">
+    <value>Sweep interval</value>
+  </data>
+  <data name="StatsActiveGap" xml:space="preserve">
+    <value>Next − OAT</value>
+  </data>
+  <data name="StatsActiveGapTip" xml:space="preserve">
+    <value>Transactions started after the oldest active one. If it keeps growing, something has kept a transaction open for long (see Monitoring).</value>
+  </data>
+  <data name="StatsAnalysisSummary" xml:space="preserve">
+    <value>{0} tables, {1} indexes</value>
+  </data>
+  <data name="StatsAnalysisWarnings" xml:space="preserve">
+    <value>{0} with warnings (column «Warning»)</value>
+  </data>
+  <data name="StatsCancelLatency" xml:space="preserve">
+    <value>Cancel latency: {0:N0} ms</value>
+  </data>
+  <data name="StatsCancelled" xml:space="preserve">
+    <value>Statistics cancelled.</value>
+  </data>
+  <data name="StatsColClustering" xml:space="preserve">
+    <value>Clustering</value>
+  </data>
+  <data name="StatsColCompression" xml:space="preserve">
+    <value>Compression</value>
+  </data>
+  <data name="StatsColDataPages" xml:space="preserve">
+    <value>Data pages</value>
+  </data>
+  <data name="StatsColDepth" xml:space="preserve">
+    <value>Depth</value>
+  </data>
+  <data name="StatsColDepthA" xml:space="preserve">
+    <value>Depth (A)</value>
+  </data>
+  <data name="StatsColDepthB" xml:space="preserve">
+    <value>Depth (B)</value>
+  </data>
+  <data name="StatsColDupA" xml:space="preserve">
+    <value>Duplicates % (A)</value>
+  </data>
+  <data name="StatsColDupB" xml:space="preserve">
+    <value>Duplicates % (B)</value>
+  </data>
+  <data name="StatsColDuplicatePct" xml:space="preserve">
+    <value>% duplicated</value>
+  </data>
+  <data name="StatsColDuplicates" xml:space="preserve">
+    <value>Duplicates</value>
+  </data>
+  <data name="StatsColEmptyPages" xml:space="preserve">
+    <value>Empty pages</value>
+  </data>
+  <data name="StatsColFill" xml:space="preserve">
+    <value>Fill %</value>
+  </data>
+  <data name="StatsColFillA" xml:space="preserve">
+    <value>Fill % (A)</value>
+  </data>
+  <data name="StatsColFillB" xml:space="preserve">
+    <value>Fill % (B)</value>
+  </data>
+  <data name="StatsColFormats" xml:space="preserve">
+    <value>Formats</value>
+  </data>
+  <data name="StatsColFragments" xml:space="preserve">
+    <value>Fragments</value>
+  </data>
+  <data name="StatsColFullPages" xml:space="preserve">
+    <value>Full pages</value>
+  </data>
+  <data name="StatsColIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="StatsColKeyLength" xml:space="preserve">
+    <value>Key length</value>
+  </data>
+  <data name="StatsColLeafBuckets" xml:space="preserve">
+    <value>Leaf buckets</value>
+  </data>
+  <data name="StatsColMaxDuplicates" xml:space="preserve">
+    <value>Max duplicates</value>
+  </data>
+  <data name="StatsColMaxVersions" xml:space="preserve">
+    <value>Max versions</value>
+  </data>
+  <data name="StatsColNodes" xml:space="preserve">
+    <value>Nodes</value>
+  </data>
+  <data name="StatsColNodesA" xml:space="preserve">
+    <value>Nodes (A)</value>
+  </data>
+  <data name="StatsColNodesB" xml:space="preserve">
+    <value>Nodes (B)</value>
+  </data>
+  <data name="StatsColNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="StatsColPagesA" xml:space="preserve">
+    <value>Pages (A)</value>
+  </data>
+  <data name="StatsColPagesB" xml:space="preserve">
+    <value>Pages (B)</value>
+  </data>
+  <data name="StatsColPagesDiff" xml:space="preserve">
+    <value>Pages diff.</value>
+  </data>
+  <data name="StatsColRecordLength" xml:space="preserve">
+    <value>Record length</value>
+  </data>
+  <data name="StatsColRecords" xml:space="preserve">
+    <value>Records</value>
+  </data>
+  <data name="StatsColRecordsA" xml:space="preserve">
+    <value>Records (A)</value>
+  </data>
+  <data name="StatsColRecordsB" xml:space="preserve">
+    <value>Records (B)</value>
+  </data>
+  <data name="StatsColRecordsDiff" xml:space="preserve">
+    <value>Difference</value>
+  </data>
+  <data name="StatsColTable" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="StatsColVersionLength" xml:space="preserve">
+    <value>Version length</value>
+  </data>
+  <data name="StatsColVersions" xml:space="preserve">
+    <value>Versions</value>
+  </data>
+  <data name="StatsColVersionsA" xml:space="preserve">
+    <value>Versions (A)</value>
+  </data>
+  <data name="StatsColVersionsB" xml:space="preserve">
+    <value>Versions (B)</value>
+  </data>
+  <data name="StatsColWarning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="StatsCompareConfirm" xml:space="preserve">
+    <value>Then the same is read on "{0}", to compare them.</value>
+  </data>
+  <data name="StatsCompareDone" xml:space="preserve">
+    <value>Compared with "{0}" ({1:0.0} s): {2} tables and {3} indexes.</value>
+  </data>
+  <data name="StatsCompareFailed" xml:space="preserve">
+    <value>"{0}" could not be read to compare: {1}</value>
+  </data>
+  <data name="StatsCompareIndexesTab" xml:space="preserve">
+    <value>Compare indexes ({0})</value>
+  </data>
+  <data name="StatsCompareLegend" xml:space="preserve">
+    <value>A = {0} · B = {1}. Difference = B − A.</value>
+  </data>
+  <data name="StatsCompareNone" xml:space="preserve">
+    <value>(do not compare)</value>
+  </data>
+  <data name="StatsCompareProduction" xml:space="preserve">
+    <value>"{0}" is a PRODUCTION database: better outside business hours.</value>
+  </data>
+  <data name="StatsCompareReading" xml:space="preserve">
+    <value>Reading the same on "{0}" to compare… (can be cancelled)</value>
+  </data>
+  <data name="StatsCompareTablesTab" xml:space="preserve">
+    <value>Compare tables ({0})</value>
+  </data>
+  <data name="StatsCompareTextHeader" xml:space="preserve">
+    <value>── {0} ──</value>
+  </data>
+  <data name="StatsCompareTip" xml:space="preserve">
+    <value>Reads the same on another database (for example, test against production) and shows them side by side.</value>
+  </data>
+  <data name="StatsCompareWith" xml:space="preserve">
+    <value>Compare with</value>
+  </data>
+  <data name="StatsCopied" xml:space="preserve">
+    <value>Statistics text copied.</value>
+  </data>
+  <data name="StatsCopy" xml:space="preserve">
+    <value>Copy text</value>
+  </data>
+  <data name="StatsCopyTip" xml:space="preserve">
+    <value>Copies the gstat output as is (to paste in a mail or a ticket).</value>
+  </data>
+  <data name="StatsCounts" xml:space="preserve">
+    <value>Rows fetched: {0:N0} · affected: {1} · fetches: {2:N0} · page reads: {3:N0} · writes: {4:N0}</value>
+  </data>
+  <data name="StatsDeeperIn" xml:space="preserve">
+    <value>Deeper in {0}</value>
+  </data>
+  <data name="StatsFailed" xml:space="preserve">
+    <value>Could not read statistics: {0}</value>
+  </data>
+  <data name="StatsForcedWrites" xml:space="preserve">
+    <value>Forced writes</value>
+  </data>
+  <data name="StatsForcedWritesOff" xml:space="preserve">
+    <value>No (risky)</value>
+  </data>
+  <data name="StatsForcedWritesOn" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="StatsForcedWritesTip" xml:space="preserve">
+    <value>With forced writes every change reaches the disk before commit. Off, a power cut can corrupt the database.</value>
+  </data>
+  <data name="StatsFullConfirm" xml:space="preserve">
+    <value>Full statistics of {0} reads every data and index page: on a large database it can take minutes and loads the server disk. It blocks nobody and can be cancelled.</value>
+  </data>
+  <data name="StatsFullDone" xml:space="preserve">
+    <value>Full statistics read: {0:N0} lines in {1:0.0} s.</value>
+  </data>
+  <data name="StatsFullProduction" xml:space="preserve">
+    <value>This is a PRODUCTION database: better outside business hours.</value>
+  </data>
+  <data name="StatsFullRun" xml:space="preserve">
+    <value>Read everything</value>
+  </data>
+  <data name="StatsFullTitle" xml:space="preserve">
+    <value>Full statistics</value>
+  </data>
+  <data name="StatsHeaderDone" xml:space="preserve">
+    <value>Header of {0} read.</value>
+  </data>
+  <data name="StatsIndexesTab" xml:space="preserve">
+    <value>Indexes ({0})</value>
+  </data>
+  <data name="StatsIndexesTabEmpty" xml:space="preserve">
+    <value>Indexes</value>
+  </data>
+  <data name="StatsIntro" xml:space="preserve">
+    <value>Database header (like gstat -h): reads a single page, opens no transactions.</value>
+  </data>
+  <data name="StatsNeedsFull" xml:space="preserve">
+    <value>Tables and indexes come from «Full statistics…» (it scans the whole database). The header only has the general data.</value>
+  </data>
+  <data name="StatsNext" xml:space="preserve">
+    <value>Next transaction</value>
+  </data>
+  <data name="StatsNoData" xml:space="preserve">
+    <value>  (no data)</value>
+  </data>
+  <data name="StatsOatTip" xml:space="preserve">
+    <value>OAT: oldest active transaction.</value>
+  </data>
+  <data name="StatsOitTip" xml:space="preserve">
+    <value>OIT: oldest interesting transaction. Everything below it is committed or cleaned up.</value>
+  </data>
+  <data name="StatsOnlyIn" xml:space="preserve">
+    <value>Only in {0}</value>
+  </data>
+  <data name="StatsOstTip" xml:space="preserve">
+    <value>OST: oldest snapshot someone can still see; garbage collection can clean up to it.</value>
+  </data>
+  <data name="StatsPage" xml:space="preserve">
+    <value>{0} · ODS {1}</value>
+  </data>
+  <data name="StatsPageCaption" xml:space="preserve">
+    <value>Page · ODS</value>
+  </data>
+  <data name="StatsPickDatabase" xml:space="preserve">
+    <value>Pick a database in the tree to see its statistics.</value>
+  </data>
+  <data name="StatsReadAt" xml:space="preserve">
+    <value>Read at {0:HH:mm:ss} ({1:0.0} s)</value>
+  </data>
+  <data name="StatsReadFull" xml:space="preserve">
+    <value>Full statistics…</value>
+  </data>
+  <data name="StatsReadFullTip" xml:space="preserve">
+    <value>Data and index pages of every table (gstat -a): scans the whole database, may take a while.</value>
+  </data>
+  <data name="StatsReadHeader" xml:space="preserve">
+    <value>Read header</value>
+  </data>
+  <data name="StatsReadHeaderTip" xml:space="preserve">
+    <value>Reads the header page again (gstat -h): instant even on a large database.</value>
+  </data>
+  <data name="StatsReadingFull" xml:space="preserve">
+    <value>Reading full statistics… (can be cancelled)</value>
+  </data>
+  <data name="StatsReadingHeader" xml:space="preserve">
+    <value>Reading the header…</value>
+  </data>
+  <data name="StatsReadingLines" xml:space="preserve">
+    <value>Reading full statistics… {0:N0} lines</value>
+  </data>
+  <data name="StatsReadingTables" xml:space="preserve">
+    <value>Reading the statistics of {0} tables… (can be cancelled)</value>
+  </data>
+  <data name="StatsReadsByTable" xml:space="preserve">
+    <value>Reads per table (MON$TABLE_STATS):</value>
+  </data>
+  <data name="StatsReadTables" xml:space="preserve">
+    <value>Statistics of {0} tables…</value>
+  </data>
+  <data name="StatsSequentialRead" xml:space="preserve">
+    <value>   ⚠ sequential read (no index)</value>
+  </data>
+  <data name="StatsSweep" xml:space="preserve">
+    <value>Automatic sweep</value>
+  </data>
+  <data name="StatsSweepDefault" xml:space="preserve">
+    <value>{0} (default)</value>
+  </data>
+  <data name="StatsSweepDue" xml:space="preserve">
+    <value>OST − OIT is {0}, more than the sweep interval ({1}): the automatic sweep should already have run. If the gap keeps growing, an old transaction is holding it back (see the OAT in Monitoring).</value>
+  </data>
+  <data name="StatsSweepGap" xml:space="preserve">
+    <value>OST − OIT: {0}</value>
+  </data>
+  <data name="StatsSweepOff" xml:space="preserve">
+    <value>off</value>
+  </data>
+  <data name="StatsSweepTip" xml:space="preserve">
+    <value>The automatic sweep runs when OST − OIT exceeds this interval (0 = off; changed with gfix -h).</value>
+  </data>
+  <data name="StatsTab" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="StatsTableLine" xml:space="preserve">
+    <value>  {0,-32} indexed {1,12:N0}   non-indexed {2,12:N0}</value>
+  </data>
+  <data name="StatsTablesAll" xml:space="preserve">
+    <value>Tables: all</value>
+  </data>
+  <data name="StatsTablesChosen" xml:space="preserve">
+    <value>Tables: {0} chosen</value>
+  </data>
+  <data name="StatsTablesClear" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="StatsTablesConfirm" xml:space="preserve">
+    <value>The data and index pages of {0} tables of {1} will be read: {2}. It loads the server disk while it lasts; it blocks nobody and can be cancelled.</value>
+  </data>
+  <data name="StatsTablesDone" xml:space="preserve">
+    <value>Statistics of {0} tables read: {1:N0} lines in {2:0.0} s.</value>
+  </data>
+  <data name="StatsTablesFilter" xml:space="preserve">
+    <value>Filter tables</value>
+  </data>
+  <data name="StatsTablesLoading" xml:space="preserve">
+    <value>Reading the tables…</value>
+  </data>
+  <data name="StatsTablesNote" xml:space="preserve">
+    <value>With none ticked, all are read.</value>
+  </data>
+  <data name="StatsTablesRun" xml:space="preserve">
+    <value>Read</value>
+  </data>
+  <data name="StatsTablesTab" xml:space="preserve">
+    <value>Tables ({0})</value>
+  </data>
+  <data name="StatsTablesTabEmpty" xml:space="preserve">
+    <value>Tables</value>
+  </data>
+  <data name="StatsTablesTip" xml:space="preserve">
+    <value>Choose tables to read only their statistics and their indexes' (gstat -t): much faster on a large database.</value>
+  </data>
+  <data name="StatsTablesTitle" xml:space="preserve">
+    <value>Statistics of chosen tables</value>
+  </data>
+  <data name="StatsTabTitle" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="StatsTextTab" xml:space="preserve">
+    <value>gstat text</value>
+  </data>
+  <data name="StatsTimes" xml:space="preserve">
+    <value>Prepare: {0:N0} ms · first row: {1:N0} ms · total: {2:N2} s</value>
+  </data>
+  <data name="StatsWarnDeep" xml:space="preserve">
+    <value>depth {0}: worth rebuilding</value>
+  </data>
+  <data name="StatsWarnSelectivity" xml:space="preserve">
+    <value>poorly selective ({0:P0} duplicated)</value>
+  </data>
+  <data name="StatsWarnVersions" xml:space="preserve">
+    <value>many old versions: garbage is not being collected (a long-open transaction?)</value>
+  </data>
+  <data name="TabCloseTip" xml:space="preserve">
+    <value>Close (Ctrl+W)</value>
+  </data>
+  <data name="TabDatabaseIs" xml:space="preserve">
+    <value>Database of this tab: {0}. F9 executes.</value>
+  </data>
+  <data name="TabHasNoEditor" xml:space="preserve">
+    <value>The selected tab has no editor</value>
+  </data>
+  <data name="TabNewOnDatabase" xml:space="preserve">
+    <value>New tab on {0} (the previous one keeps its database and its transaction).</value>
+  </data>
+  <data name="TabOpenTransactionTip" xml:space="preserve">
+    <value>Write transaction open: Commit or Rollback</value>
+  </data>
+  <data name="TemplateNone" xml:space="preserve">
+    <value>There are no templates: add them in Tools → Options → Templates.</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="ThemeSystem" xml:space="preserve">
+    <value>Same as Windows</value>
+  </data>
+  <data name="ToolCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ToolCancelTip" xml:space="preserve">
+    <value>Cancel the execution (Esc)</value>
+  </data>
+  <data name="ToolCommitTip" xml:space="preserve">
+    <value>Commit the transaction (Ctrl+Alt+C)</value>
+  </data>
+  <data name="ToolConnect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="ToolConnectTip" xml:space="preserve">
+    <value>Connect the database selected in the tree</value>
+  </data>
+  <data name="ToolExport" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="ToolExportTip" xml:space="preserve">
+    <value>Export the result: CSV, Excel or INSERT script</value>
+  </data>
+  <data name="ToolRegister" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="ToolRegisterTip" xml:space="preserve">
+    <value>Register a database</value>
+  </data>
+  <data name="ToolRollbackTip" xml:space="preserve">
+    <value>Roll back the transaction (Ctrl+Alt+R)</value>
+  </data>
+  <data name="ToolRowLimit" xml:space="preserve">
+    <value>Limit</value>
+  </data>
+  <data name="ToolRun" xml:space="preserve">
+    <value>Execute</value>
+  </data>
+  <data name="ToolRunTip" xml:space="preserve">
+    <value>Execute the selection or the statement under the cursor (F9)</value>
+  </data>
+  <data name="ToolSearch" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="ToolSearchTip" xml:space="preserve">
+    <value>Search metadata: sources, names, columns and descriptions (Ctrl+Shift+F)</value>
+  </data>
+  <data name="TraceAnalysisTab" xml:space="preserve">
+    <value>Analysis by query</value>
+  </data>
+  <data name="TraceAutoStop" xml:space="preserve">
+    <value>Stops after {0} min</value>
+  </data>
+  <data name="TraceAutoStopNever" xml:space="preserve">
+    <value>No time limit</value>
+  </data>
+  <data name="TraceAutoStopped" xml:space="preserve">
+    <value>The trace stopped by itself after {0} minutes · {1:N0} events.</value>
+  </data>
+  <data name="TraceClear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="TraceColAddress" xml:space="preserve">
+    <value>IP</value>
+  </data>
+  <data name="TraceColAvgMs" xml:space="preserve">
+    <value>Avg ms</value>
+  </data>
+  <data name="TraceColCount" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="TraceColFailed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="TraceColFetches" xml:space="preserve">
+    <value>Fetches</value>
+  </data>
+  <data name="TraceColMaxMs" xml:space="preserve">
+    <value>Max ms</value>
+  </data>
+  <data name="TraceColMs" xml:space="preserve">
+    <value>ms</value>
+  </data>
+  <data name="TraceColProcess" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="TraceColQuery" xml:space="preserve">
+    <value>Query</value>
+  </data>
+  <data name="TraceColReads" xml:space="preserve">
+    <value>Reads</value>
+  </data>
+  <data name="TraceColRecords" xml:space="preserve">
+    <value>Rows</value>
+  </data>
+  <data name="TraceColSql" xml:space="preserve">
+    <value>SQL</value>
+  </data>
+  <data name="TraceColTime" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="TraceColTotalMs" xml:space="preserve">
+    <value>Total ms</value>
+  </data>
+  <data name="TraceColUser" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="TraceColWarning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="TraceColWrites" xml:space="preserve">
+    <value>Writes</value>
+  </data>
+  <data name="TraceDetailError" xml:space="preserve">
+    <value>Error:</value>
+  </data>
+  <data name="TraceDetailGroup" xml:space="preserve">
+    <value>Ran {0:N0} times · {1:N0} total ms · {2:N1} avg ms · {3:N0} ms the slowest (this one):</value>
+  </data>
+  <data name="TraceDetailHeader" xml:space="preserve">
+    <value>{0:dd/MM HH:mm:ss.fff} · {1} · attachment {2} · {3} · {4} · {5}</value>
+  </data>
+  <data name="TraceDetailParams" xml:space="preserve">
+    <value>Parameters:</value>
+  </data>
+  <data name="TraceDetailPerf" xml:space="preserve">
+    <value>{0:N0} ms · {1:N0} reads · {2:N0} fetches · {3:N0} writes · {4:N0} rows</value>
+  </data>
+  <data name="TraceDetailPlan" xml:space="preserve">
+    <value>Plan:</value>
+  </data>
+  <data name="TraceDetailTable" xml:space="preserve">
+    <value>{0}: {1:N0} without index · {2:N0} by index · {3:N0} updated · {4:N0} inserted · {5:N0} deleted</value>
+  </data>
+  <data name="TraceDetailTables" xml:space="preserve">
+    <value>Tables:</value>
+  </data>
+  <data name="TraceEndedByServer" xml:space="preserve">
+    <value>The server ended the trace · {0:N0} events · reason: {1}</value>
+  </data>
+  <data name="TraceErrors" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="TraceEventsTab" xml:space="preserve">
+    <value>Events</value>
+  </data>
+  <data name="TraceFailed" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="TraceFilter" xml:space="preserve">
+    <value>Only SQL containing… (e.g. ORDERS)</value>
+  </data>
+  <data name="TraceIntro" xml:space="preserve">
+    <value>Start the trace to see, from any program, the statements that take longer than the threshold. The analysis groups the same ones and sorts them by total time: what loads the server most is on top.</value>
+  </data>
+  <data name="TraceLogFiles" xml:space="preserve">
+    <value>Trace logs</value>
+  </data>
+  <data name="TraceLogOpened" xml:space="preserve">
+    <value>Log opened: {0:N0} events from {1}.</value>
+  </data>
+  <data name="TraceNoReason" xml:space="preserve">
+    <value>not given</value>
+  </data>
+  <data name="TraceNothingToSave" xml:space="preserve">
+    <value>There is nothing to save: the log is built while the trace runs.</value>
+  </data>
+  <data name="TraceOnlyYours" xml:space="preserve">
+    <value>Unless you connect as SYSDBA, the trace may only see your own connections: Firebird 3 does not accept the role (RDB$ADMIN) when starting a trace.</value>
+  </data>
+  <data name="TraceOpenLog" xml:space="preserve">
+    <value>Open log…</value>
+  </data>
+  <data name="TracePickDatabase" xml:space="preserve">
+    <value>Pick a database in the tree for the trace.</value>
+  </data>
+  <data name="TraceProcedures" xml:space="preserve">
+    <value>Procedures and functions</value>
+  </data>
+  <data name="TraceProduction" xml:space="preserve">
+    <value>You are about to trace "{0}", a PRODUCTION database. While it runs, the server records every statement that takes longer than {1} ms: with a low threshold that loads the server. It stops {2}.</value>
+  </data>
+  <data name="TraceProductionTitle" xml:space="preserve">
+    <value>Trace in production</value>
+  </data>
+  <data name="TraceRunning" xml:space="preserve">
+    <value>Trace running on {0} since {1:HH:mm:ss} · {2:N0} events · stops at {3:HH:mm}</value>
+  </data>
+  <data name="TraceRunningNoLimit" xml:space="preserve">
+    <value>Trace running on {0} since {1:HH:mm:ss} · {2:N0} events</value>
+  </data>
+  <data name="TraceSaved" xml:space="preserve">
+    <value>Log saved to {0} ({1:N0} lines). It has SQL with data: keep it somewhere safe.</value>
+  </data>
+  <data name="TraceSaveLog" xml:space="preserve">
+    <value>Save log…</value>
+  </data>
+  <data name="TraceStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="TraceStartFailed" xml:space="preserve">
+    <value>The trace could not be started: {0}</value>
+  </data>
+  <data name="TraceStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="TraceStopped" xml:space="preserve">
+    <value>Trace stopped · {0:N0} events.</value>
+  </data>
+  <data name="TraceStopsAfter" xml:space="preserve">
+    <value>by itself after {0} minutes</value>
+  </data>
+  <data name="TraceStopsManual" xml:space="preserve">
+    <value>when you stop it</value>
+  </data>
+  <data name="TraceTabTitle" xml:space="preserve">
+    <value>Trace</value>
+  </data>
+  <data name="TraceThreshold" xml:space="preserve">
+    <value>From {0} ms</value>
+  </data>
+  <data name="TraceThresholdAll" xml:space="preserve">
+    <value>Every statement</value>
+  </data>
+  <data name="TraceThresholdTip" xml:space="preserve">
+    <value>Only the statements that take at least this long. In production, better not go below 100 ms.</value>
+  </data>
+  <data name="TraceTriggers" xml:space="preserve">
+    <value>Triggers</value>
+  </data>
+  <data name="TraceUnify" xml:space="preserve">
+    <value>Group the ones that only differ in values</value>
+  </data>
+  <data name="TraceWarnFailed" xml:space="preserve">
+    <value>failed</value>
+  </data>
+  <data name="TraceWarnFullScan" xml:space="preserve">
+    <value>full scan of {0}</value>
+  </data>
+  <data name="TransactionOpenBanner" xml:space="preserve">
+    <value>Write transaction OPEN: confirm it (Commit) or undo it (Rollback)</value>
+  </data>
+  <data name="TransactionOpenSuffix" xml:space="preserve">
+    <value> · transaction OPEN (Commit/Rollback)</value>
+  </data>
+  <data name="TreeAreaDiagram" xml:space="preserve">
+    <value>Area diagram</value>
+  </data>
+  <data name="TreeAreas" xml:space="preserve">
+    <value>Areas…</value>
+  </data>
+  <data name="TreeClearFilterTip" xml:space="preserve">
+    <value>Clear the filter</value>
+  </data>
+  <data name="TreeCloneRegistration" xml:space="preserve">
+    <value>Clone registration… (and open its properties)</value>
+  </data>
+  <data name="TreeColumnCount" xml:space="preserve">
+    <value>{0}: {1:N0} columns</value>
+  </data>
+  <data name="TreeCompare" xml:space="preserve">
+    <value>Compare with another database…</value>
+  </data>
+  <data name="TreeConnected" xml:space="preserve">
+    <value>connected</value>
+  </data>
+  <data name="TreeConnectedTo" xml:space="preserve">
+    <value>Connected to {0}.</value>
+  </data>
+  <data name="TreeConnectFailed" xml:space="preserve">
+    <value>Could not connect: {0}</value>
+  </data>
+  <data name="TreeCopyName" xml:space="preserve">
+    <value>Copy the name</value>
+  </data>
+  <data name="TreeDependencies" xml:space="preserve">
+    <value>Dependencies (uses / used by)</value>
+  </data>
+  <data name="TreeDiagram" xml:space="preserve">
+    <value>Relationship diagram</value>
+  </data>
+  <data name="TreeDisconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="TreeEditAreas" xml:space="preserve">
+    <value>Edit areas…</value>
+  </data>
+  <data name="TreeEditRegistration" xml:space="preserve">
+    <value>Edit registration…</value>
+  </data>
+  <data name="TreeExportFolder" xml:space="preserve">
+    <value>Export the registrations in this folder…</value>
+  </data>
+  <data name="TreeExportThis" xml:space="preserve">
+    <value>Export this registration…</value>
+  </data>
+  <data name="TreeFilterCount" xml:space="preserve">
+    <value>{0:N0} of {1:N0}</value>
+  </data>
+  <data name="TreeFilterMatches" xml:space="preserve">
+    <value>{0:N0} objects match “{1}”</value>
+  </data>
+  <data name="TreeFilterPending" xml:space="preserve">
+    <value>… of {0:N0}</value>
+  </data>
+  <data name="TreeFilterPlaceholder" xml:space="preserve">
+    <value>Filter objects (text or CLINICA_*)</value>
+  </data>
+  <data name="TreeFilterSearching" xml:space="preserve">
+    <value>Searching for “{0}” in every category…</value>
+  </data>
+  <data name="TreeGroupMaintenance" xml:space="preserve">
+    <value>Maintenance</value>
+  </data>
+  <data name="TreeGroupRegistration" xml:space="preserve">
+    <value>Registration</value>
+  </data>
+  <data name="TreeGroupScript" xml:space="preserve">
+    <value>Script and compare</value>
+  </data>
+  <data name="TreeGroupTools" xml:space="preserve">
+    <value>Tools</value>
+  </data>
+  <data name="TreeHint" xml:space="preserve">
+    <value>Double-click a database to connect · right-click for more options · drag databases and folders to arrange them</value>
+  </data>
+  <data name="TreeImportData" xml:space="preserve">
+    <value>Import data (CSV or Excel)…</value>
+  </data>
+  <data name="TreeInsertName" xml:space="preserve">
+    <value>Type the name into the query</value>
+  </data>
+  <data name="TreeMaintenance" xml:space="preserve">
+    <value>Maintenance (backup, restore…)</value>
+  </data>
+  <data name="TreeMonitor" xml:space="preserve">
+    <value>Monitoring (connections and transactions)</value>
+  </data>
+  <data name="TreeMoveToFolder" xml:space="preserve">
+    <value>Move to folder…</value>
+  </data>
+  <data name="TreeNewFolder" xml:space="preserve">
+    <value>New folder…</value>
+  </data>
+  <data name="TreeNewQuery" xml:space="preserve">
+    <value>New query on this database</value>
+  </data>
+  <data name="TreeNoSavedPassword" xml:space="preserve">
+    <value>"{0}" has no saved password: right-click → Registration → Edit registration…</value>
+  </data>
+  <data name="TreeOpenCompilable" xml:space="preserve">
+    <value>Open (edit, compile and dependencies)</value>
+  </data>
+  <data name="TreeRegister" xml:space="preserve">
+    <value>Register database…</value>
+  </data>
+  <data name="TreeRegisterAnother" xml:space="preserve">
+    <value>Register another database…</value>
+  </data>
+  <data name="TreeReloadMetadata" xml:space="preserve">
+    <value>Reload metadata</value>
+  </data>
+  <data name="TreeRenameFolder" xml:space="preserve">
+    <value>Rename folder…</value>
+  </data>
+  <data name="TreeSchemaScript" xml:space="preserve">
+    <value>Database script…</value>
+  </data>
+  <data name="TreeSearchMetadata" xml:space="preserve">
+    <value>Search metadata…</value>
+  </data>
+  <data name="TreeSecurity" xml:space="preserve">
+    <value>Users and permissions…</value>
+  </data>
+  <data name="TreeServerDetails" xml:space="preserve">
+    <value>Server details…</value>
+  </data>
+  <data name="TreeStatistics" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="TreeTrace" xml:space="preserve">
+    <value>Trace (live statements)</value>
+  </data>
+  <data name="TreeUseInTab" xml:space="preserve">
+    <value>Use this database in the tab</value>
+  </data>
+  <data name="TreeViewData" xml:space="preserve">
+    <value>View data (edit without locking)</value>
+  </data>
+  <data name="TreeViewDdl" xml:space="preserve">
+    <value>Open (DDL and dependencies)</value>
+  </data>
+  <data name="TypedConfirmPrompt" xml:space="preserve">
+    <value>To continue, type "{0}":</value>
+  </data>
+  <data name="UncompiledChangesTitle" xml:space="preserve">
+    <value>Uncompiled changes</value>
+  </data>
+  <data name="UnexpectedError" xml:space="preserve">
+    <value>Unexpected error: {0} (saved in errors.log, in the FbStudio folder).</value>
+  </data>
+  <data name="WelcomeRegister" xml:space="preserve">
+    <value>Register database</value>
+  </data>
+  <data name="WelcomeText" xml:space="preserve">
+    <value>Enter server, database, user and password (stored encrypted). It will show up here and you connect with a double-click.</value>
+  </data>
+  <data name="WelcomeTitle" xml:space="preserve">
+    <value>Register your first database</value>
+  </data>
+  <data name="WireCryptDisabled" xml:space="preserve">
+    <value>Not encrypted (Disabled)</value>
+  </data>
+  <data name="WireCryptEnabled" xml:space="preserve">
+    <value>If the server accepts it (Enabled)</value>
+  </data>
+  <data name="WireCryptRequired" xml:space="preserve">
+    <value>Required</value>
+  </data>
+</root>

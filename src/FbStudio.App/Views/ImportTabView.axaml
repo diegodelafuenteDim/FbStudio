@@ -1,0 +1,105 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:rg="using:FbStudio.App.ResultGrid"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.ImportTabView"
+             x:DataType="vm:ImportTabViewModel"
+             IsVisible="{Binding IsSelected}">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Opacity" Value="0.7" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+    <Style Selector="Border.warn">
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsWarningBrush}" />
+      <Setter Property="Background" Value="{DynamicResource FbsWarningBackgroundBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="8,8,8,4">
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding IsReadOnlyProfile}">
+      <TextBlock Text="{x:Static res:Strings.ImportReadOnly}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- Archivo y cómo leerlo -->
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,6">
+      <TextBlock Classes="label" Text="{x:Static res:Strings.ImportFile}" />
+      <TextBox Grid.Column="1" Text="{Binding FilePath}" IsReadOnly="True" />
+      <Button Grid.Column="2" x:Name="ChooseFileButton" Margin="6,0,0,0">
+        <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="FolderOpenOutline" /><TextBlock Text="{x:Static res:Strings.ImportChooseFile}" /></StackPanel>
+      </Button>
+    </Grid>
+    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+      <StackPanel Orientation="Horizontal" IsVisible="{Binding IsCsv}" Margin="0,0,14,4">
+        <TextBlock Classes="label" Text="{x:Static res:Strings.ImportDelimiter}" />
+        <ComboBox ItemsSource="{Binding Delimiters}" SelectedIndex="{Binding DelimiterIndex}" MinWidth="130" />
+        <TextBlock Classes="label" Text="{x:Static res:Strings.ImportEncoding}" Margin="14,0,8,0" />
+        <ComboBox ItemsSource="{Binding Encodings}" SelectedIndex="{Binding EncodingIndex}" MinWidth="230" />
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" IsVisible="{Binding IsExcel}" Margin="0,0,14,4">
+        <TextBlock Classes="label" Text="{x:Static res:Strings.ImportSheet}" />
+        <ComboBox ItemsSource="{Binding Sheets}" SelectedIndex="{Binding SheetIndex}" MinWidth="180" />
+      </StackPanel>
+      <CheckBox Content="{x:Static res:Strings.ImportHasHeader}" IsChecked="{Binding HasHeader}" Margin="0,0,0,4" />
+    </WrapPanel>
+
+    <!-- Importar -->
+    <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,8,0,0">
+      <WrapPanel>
+        <CheckBox Content="{x:Static res:Strings.ImportEmptyIsNull}" IsChecked="{Binding EmptyIsNull}" Margin="0,0,16,4" />
+        <RadioButton GroupName="errors" Content="{x:Static res:Strings.ImportStopOnError}" IsChecked="{Binding StopOnError}" Margin="0,0,12,4" />
+        <RadioButton GroupName="errors" Content="{x:Static res:Strings.ImportSkipErrors}" IsChecked="{Binding !StopOnError}" Margin="0,0,16,4" />
+        <CheckBox Content="{x:Static res:Strings.ImportEmptyFirst}" IsChecked="{Binding EmptyTableFirst}" Margin="0,0,16,4"
+                  Foreground="{DynamicResource FbsDangerBrush}" />
+      </WrapPanel>
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Command="{Binding RunCommand}" Classes="accent">
+          <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="DatabaseImportOutline" /><TextBlock Text="{Binding RunText}" /></StackPanel>
+        </Button>
+        <Button Command="{Binding StopCommand}" Content="{x:Static res:Strings.ImportCancel}" />
+      </StackPanel>
+      <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4" Height="120">
+        <ae:TextEditor x:Name="LogView" IsReadOnly="True" ShowLineNumbers="False"
+                       FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" Padding="6,4"
+                       HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+      </Border>
+    </StackPanel>
+
+    <!-- Relación de columnas y vista previa -->
+    <Grid ColumnDefinitions="360,6,*">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.ImportMapping}" FontWeight="SemiBold" Margin="0,0,0,6" TextWrapping="Wrap" />
+        <ScrollViewer>
+          <ItemsControl ItemsSource="{Binding Columns}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ImportColumnChoice">
+                <Grid ColumnDefinitions="*,170" Margin="0,2">
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" />
+                    <TextBlock Text="{Binding Detail}" FontSize="11" Opacity="0.6" />
+                  </StackPanel>
+                  <ComboBox Grid.Column="1" ItemsSource="{Binding $parent[ItemsControl].((vm:ImportTabViewModel)DataContext).FileColumns}"
+                            SelectedIndex="{Binding FileIndex}" HorizontalAlignment="Stretch" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </DockPanel>
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" />
+      <DockPanel Grid.Column="2">
+        <TextBlock DockPanel.Dock="Top" x:Name="PreviewTitle" FontWeight="SemiBold" Margin="0,0,0,6" />
+        <rg:DrawnGrid x:Name="PreviewGrid" />
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</UserControl>

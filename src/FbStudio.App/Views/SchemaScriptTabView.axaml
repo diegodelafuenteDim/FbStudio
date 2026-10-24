@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.SchemaScriptTabView"
+             x:DataType="vm:SchemaScriptTabViewModel"
+             IsVisible="{Binding IsSelected}">
+  <UserControl.Styles>
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+    <Style Selector="Button.tool > StackPanel">
+      <Setter Property="Orientation" Value="Horizontal" />
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="8,8,8,4">
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+      <Button x:Name="RegenerateButton" Classes="tool" IsEnabled="{Binding !IsGenerating}" ToolTip.Tip="{x:Static res:Strings.SchemaScriptRegenerateTip}">
+        <StackPanel><mi:MaterialIcon Kind="Refresh" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.SchemaScriptRegenerate}" /></StackPanel>
+      </Button>
+      <Button x:Name="SaveButton" Classes="tool" IsEnabled="{Binding HasScript}" ToolTip.Tip="{x:Static res:Strings.SchemaScriptSaveTip}">
+        <StackPanel><mi:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.SchemaScriptSave}" /></StackPanel>
+      </Button>
+      <Button x:Name="CopyButton" Classes="tool" IsEnabled="{Binding HasScript}">
+        <StackPanel><mi:MaterialIcon Kind="ContentCopy" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.CopyLog}" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding OpenWithoutDatabaseCommand}" ToolTip.Tip="{x:Static res:Strings.SchemaScriptOpenTip}">
+        <StackPanel><mi:MaterialIcon Kind="TabPlus" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.SchemaScriptOpen}" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding CancelGenerateCommand}" IsVisible="{Binding IsGenerating}">
+        <StackPanel><mi:MaterialIcon Kind="Stop" Width="16" Height="16" Foreground="{DynamicResource FbsDangerBrush}" /><TextBlock Text="{x:Static res:Strings.Cancel}" /></StackPanel>
+      </Button>
+      <TextBlock Text="{Binding GeneratedAt}" Opacity="0.6" VerticalAlignment="Center" Margin="8,0,0,0" />
+    </StackPanel>
+    <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+      <ae:TextEditor x:Name="ScriptView" IsReadOnly="True" ShowLineNumbers="True"
+                     FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" Padding="6,4"
+                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+    </Border>
+  </DockPanel>
+</UserControl>

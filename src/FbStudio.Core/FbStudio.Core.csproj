@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Núcleo sin UI ni Firebird: perfiles, análisis de SQL, reglas de seguridad, modelo de resultados. -->
+  <PropertyGroup>
+    <NeutralLanguage>es</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="FbStudio.Core.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Acomodo de los diagramas (F-8) -->
+    <PackageReference Include="Msagl" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Textos que arman el núcleo, Firebird y Workspace (avisos, tipos de objeto, DDL): clase CoreStrings. -->
+    <EmbeddedResource Update="Resources\CoreStrings.resx">
+      <StronglyTypedFileName>$(IntermediateOutputPath)CoreStrings.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>$(RootNamespace).Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>CoreStrings</StronglyTypedClassName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

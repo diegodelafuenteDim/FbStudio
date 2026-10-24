@@ -1,0 +1,31 @@
+name: Feature request / Pedir una función
+description: Something FbStudio could do. / Algo que FbStudio podría hacer.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What do you want to do, and why? / ¿Qué querés poder hacer y para qué?
+      description: Describe the problem or task, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How do you picture it? / ¿Cómo te lo imaginás?
+      description: If another tool does it, describe the behavior in your own words (please do not paste text or screenshots from other products).
+  - type: dropdown
+    id: importance
+    attributes:
+      label: How important is it for you? / ¿Qué tan importante es para vos?
+      options:
+        - Nice to have / Me vendría bien
+        - I would use it often / Lo usaría seguido
+        - I cannot use FbStudio without it / Sin esto no puedo usar FbStudio
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help? / ¿Te animás a ayudar?
+      options:
+        - label: I can test it when it is ready / Puedo probarlo cuando esté
+        - label: I can try to code it / Puedo intentar programarlo

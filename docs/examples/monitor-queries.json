@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "0b7c9a5e-2f41-4d3a-8e6b-5c1d2e3f4a01",
+    "Name": "Connections (example)",
+    "Sql": "SELECT a.MON$ATTACHMENT_ID AS \"Attachment ID\",\n       a.MON$USER AS User_Name,\n       a.MON$REMOTE_ADDRESS AS IP,\n       a.MON$REMOTE_PROCESS AS Program,\n       a.MON$TIMESTAMP AS Since\nFROM MON$ATTACHMENTS a\nWHERE a.MON$SYSTEM_FLAG = 0\nORDER BY a.MON$TIMESTAMP",
+    "AttachmentColumn": null,
+    "StatementColumn": null,
+    "SqlColumn": null
+  },
+  {
+    "Id": "0b7c9a5e-2f41-4d3a-8e6b-5c1d2e3f4a02",
+    "Name": "Open transactions (example)",
+    "Sql": "SELECT t.MON$ATTACHMENT_ID AS ATTACHMENT_ID,\n       t.MON$TRANSACTION_ID AS Transaction_ID,\n       t.MON$TIMESTAMP AS Since,\n       a.MON$USER AS User_Name,\n       a.MON$REMOTE_PROCESS AS Program\nFROM MON$TRANSACTIONS t\nJOIN MON$ATTACHMENTS a ON a.MON$ATTACHMENT_ID = t.MON$ATTACHMENT_ID\nORDER BY t.MON$TIMESTAMP",
+    "AttachmentColumn": null,
+    "StatementColumn": null,
+    "SqlColumn": null
+  }
+]

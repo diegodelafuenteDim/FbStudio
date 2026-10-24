@@ -1,0 +1,167 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="using:FbStudio.App.Resources"
+        xmlns:vm="using:FbStudio.App.ViewModels"
+        x:Class="FbStudio.App.Views.OptionsWindow"
+        x:DataType="vm:OptionsViewModel"
+        Title="{x:Static res:Strings.OptionsTitle}"
+        Width="720" Height="500" MinWidth="600" MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+  <Window.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,6,12,6" />
+    </Style>
+    <Style Selector="TextBlock.note">
+      <Setter Property="Opacity" Value="0.6" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Margin" Value="0,2,0,10" />
+    </Style>
+    <Style Selector="CheckBox">
+      <Setter Property="Margin" Value="0,3" />
+    </Style>
+    <Style Selector="TabControl#Sections > TabItem">
+      <Setter Property="MinWidth" Value="130" />
+    </Style>
+  </Window.Styles>
+
+  <DockPanel Margin="12">
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto" Margin="0,12,0,0">
+      <Button Grid.Column="0" x:Name="DefaultsButton" Content="{x:Static res:Strings.OptionsDefaults}" Command="{Binding ResetDefaultsCommand}"
+              ToolTip.Tip="{x:Static res:Strings.OptionsDefaultsTip}" />
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+        <Button x:Name="OkButton" Content="{x:Static res:Strings.Ok}" Theme="{DynamicResource SolidButton}" Classes="Primary" IsDefault="True" MinWidth="90" />
+        <Button x:Name="CancelButton" Content="{x:Static res:Strings.Cancel}" IsCancel="True" />
+      </StackPanel>
+    </Grid>
+
+    <TabControl x:Name="Sections" TabStripPlacement="Left" Padding="16,0,0,0">
+      <TabItem Header="{x:Static res:Strings.OptionsGeneral}">
+        <StackPanel>
+          <Grid ColumnDefinitions="250,*">
+            <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsTheme}" />
+            <ComboBox Grid.Column="1" x:Name="ThemeBox" ItemsSource="{Binding Themes}" SelectedIndex="{Binding ThemeIndex}" MinWidth="220" />
+          </Grid>
+          <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsThemeNote}" />
+          <Grid ColumnDefinitions="250,*">
+            <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsLanguage}" />
+            <ComboBox Grid.Column="1" x:Name="LanguageBox" ItemsSource="{Binding Languages}" SelectedIndex="{Binding LanguageIndex}" MinWidth="220" />
+          </Grid>
+          <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsLanguageNote}" />
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="{x:Static res:Strings.OptionsEditor}">
+        <StackPanel>
+          <Grid ColumnDefinitions="250,*" RowDefinitions="Auto,Auto,Auto">
+            <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsFont}" />
+            <ComboBox Grid.Column="1" x:Name="FontBox" ItemsSource="{Binding Fonts}" SelectedItem="{Binding EditorFontFamily}" MinWidth="220" />
+            <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.OptionsFontSize}" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" x:Name="FontSizeBox" Value="{Binding EditorFontSize}" Minimum="8" Maximum="40" Increment="1"
+                           FormatString="0" Width="140" HorizontalAlignment="Left" Margin="0,4" />
+            <TextBlock Grid.Row="2" Classes="label" Text="{x:Static res:Strings.OptionsTabSize}" />
+            <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding TabSize}" Minimum="1" Maximum="16" Increment="1"
+                           FormatString="0" Width="140" HorizontalAlignment="Left" Margin="0,4" />
+          </Grid>
+          <CheckBox IsChecked="{Binding ConvertTabsToSpaces}" Content="{x:Static res:Strings.OptionsTabsToSpaces}" Margin="0,8,0,3" />
+          <CheckBox IsChecked="{Binding ShowLineNumbers}" Content="{x:Static res:Strings.OptionsLineNumbers}" />
+          <CheckBox IsChecked="{Binding HighlightCurrentLine}" Content="{x:Static res:Strings.OptionsHighlightLine}" />
+          <CheckBox IsChecked="{Binding ScrollPastEnd}" Content="{x:Static res:Strings.OptionsScrollPastEnd}" />
+          <CheckBox IsChecked="{Binding ZoomWithCtrlWheel}" Content="{x:Static res:Strings.OptionsZoom}" />
+          <CheckBox IsChecked="{Binding FormatUppercaseKeywords}" Content="{x:Static res:Strings.OptionsFormatUppercase}" />
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="{x:Static res:Strings.OptionsTemplates}">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Classes="note" Text="{x:Static res:Strings.OptionsTemplatesNote}" />
+          <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+            <Button Content="{x:Static res:Strings.OptionsTemplateAdd}" Command="{Binding AddTemplateCommand}" />
+            <Button Content="{x:Static res:Strings.OptionsTemplateDelete}" Command="{Binding DeleteTemplateCommand}" />
+            <Button Content="{x:Static res:Strings.OptionsTemplateDefaults}" Command="{Binding DefaultTemplatesCommand}" />
+          </StackPanel>
+          <Grid ColumnDefinitions="200,10,*">
+            <ListBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:TemplateEdit">
+                  <StackPanel>
+                    <TextBlock Text="{Binding Abbreviation}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Name}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" IsVisible="{Binding HasSelectedTemplate}">
+              <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsTemplateAbbreviation}" />
+              <TextBox Grid.Row="1" Text="{Binding SelectedTemplate.Abbreviation}" />
+              <TextBlock Grid.Row="2" Classes="label" Text="{x:Static res:Strings.OptionsTemplateName}" />
+              <TextBox Grid.Row="3" Text="{Binding SelectedTemplate.Name}" />
+              <TextBlock Grid.Row="4" Classes="label" Text="{x:Static res:Strings.OptionsTemplateText}" />
+              <TextBox Grid.Row="5" Text="{Binding SelectedTemplate.Text}" AcceptsReturn="True" AcceptsTab="True" TextWrapping="NoWrap"
+                       FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" VerticalAlignment="Stretch" VerticalContentAlignment="Top" />
+            </Grid>
+          </Grid>
+        </DockPanel>
+      </TabItem>
+
+      <TabItem Header="{x:Static res:Strings.OptionsQueries}">
+        <StackPanel>
+          <Grid ColumnDefinitions="250,*">
+            <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsRowLimit}" />
+            <ComboBox Grid.Column="1" x:Name="RowLimitBox" ItemsSource="{Binding RowLimits}" SelectedItem="{Binding DefaultRowLimit}" MinWidth="160">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="x:Int32">
+                  <TextBlock Text="{Binding StringFormat={x:Static res:Strings.RowCountFormat}}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </Grid>
+          <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsRowLimitNote}" />
+          <Grid ColumnDefinitions="250,Auto,Auto">
+            <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsLockTimeout}" />
+            <NumericUpDown Grid.Column="1" x:Name="LockTimeoutBox" Value="{Binding LockTimeoutSeconds}" Minimum="1" Maximum="600" Increment="1"
+                           FormatString="0" Width="140" Margin="0,4" />
+            <TextBlock Grid.Column="2" Classes="label" Text="{x:Static res:Strings.Seconds}" Margin="8,6,0,6" />
+          </Grid>
+          <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsLockTimeoutNote}" />
+          <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsDataApply}" />
+          <RadioButton GroupName="dataApply" IsChecked="{Binding PreviewDataChanges}" Content="{x:Static res:Strings.OptionsDataApplyPreview}" Margin="0,2" />
+          <RadioButton GroupName="dataApply" IsChecked="{Binding ApplyDirectly}" Content="{x:Static res:Strings.OptionsDataApplyDirect}" Margin="0,2" />
+          <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsDataApplyNote}" />
+          <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsScriptOnError}" />
+          <RadioButton GroupName="scriptError" IsChecked="{Binding ScriptStopOnError}" Content="{x:Static res:Strings.OptionsScriptStop}" Margin="0,2" />
+          <RadioButton GroupName="scriptError" IsChecked="{Binding ScriptContinueOnError}" Content="{x:Static res:Strings.OptionsScriptContinue}" Margin="0,2" />
+          <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsScriptNote}" />
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="{x:Static res:Strings.OptionsMonitor}">
+        <StackPanel>
+          <Grid ColumnDefinitions="250,Auto,Auto" RowDefinitions="Auto,Auto">
+            <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsOatWarn}" />
+            <NumericUpDown Grid.Column="1" Value="{Binding OatWarnMinutes}" Minimum="1" Maximum="1440" Increment="1" FormatString="0" Width="140" Margin="0,4" />
+            <TextBlock Grid.Column="2" Classes="label" Text="{x:Static res:Strings.Minutes}" Margin="8,6,0,6" />
+            <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.OptionsOatDanger}" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding OatDangerMinutes}" Minimum="1" Maximum="10080" Increment="1" FormatString="0" Width="140" Margin="0,4" />
+            <TextBlock Grid.Row="1" Grid.Column="2" Classes="label" Text="{x:Static res:Strings.Minutes}" Margin="8,6,0,6" />
+          </Grid>
+          <CheckBox IsChecked="{Binding OatIgnoreMaintenance}" Content="{x:Static res:Strings.OptionsOatIgnoreMaintenance}" Margin="0,6,0,2" />
+          <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsOatNote}" />
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="{x:Static res:Strings.OptionsHistory}">
+        <StackPanel>
+          <Grid ColumnDefinitions="250,Auto,Auto">
+            <TextBlock Classes="label" Text="{x:Static res:Strings.OptionsRetention}" />
+            <NumericUpDown Grid.Column="1" x:Name="RetentionBox" Value="{Binding HistoryRetentionDays}" Minimum="1" Maximum="3650" Increment="1"
+                           FormatString="0" Width="140" Margin="0,4" />
+            <TextBlock Grid.Column="2" Classes="label" Text="{x:Static res:Strings.Days}" Margin="8,6,0,6" />
+          </Grid>
+          <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsRetentionNote}" />
+        </StackPanel>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
+</Window>

@@ -1,0 +1,357 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="using:FbStudio.App.Resources"
+        xmlns:vm="using:FbStudio.App.ViewModels"
+        xmlns:views="using:FbStudio.App.Views"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="FbStudio.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="FbStudio"
+        Width="1440" Height="920">
+
+  <Window.Styles>
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.tool > StackPanel">
+      <Setter Property="Orientation" Value="Horizontal" />
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+    <Style Selector="Button.tool mi|MaterialIcon">
+      <Setter Property="Width" Value="18" />
+      <Setter Property="Height" Value="18" />
+    </Style>
+    <Style Selector="Border#EnvBanner">
+      <Setter Property="Background" Value="#5F6B7A" />
+    </Style>
+    <Style Selector="Border#EnvBanner.dev">
+      <Setter Property="Background" Value="#2E7D32" />
+    </Style>
+    <Style Selector="Border#EnvBanner.test">
+      <Setter Property="Background" Value="#B26A00" />
+    </Style>
+    <Style Selector="Border#EnvBanner.prod">
+      <Setter Property="Background" Value="#C62828" />
+    </Style>
+    <Style Selector="ListBox#Tree ListBoxItem">
+      <Setter Property="Padding" Value="4,1" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="TextBox#TreeFilter.active">
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsAccentBrush}" />
+      <Setter Property="BorderThickness" Value="1.5" />
+    </Style>
+    <Style Selector="ListBox#TabStrip">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox#TabStrip ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,2,0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="CornerRadius" Value="4,4,0,0" />
+    </Style>
+    <Style Selector="Button.tabclose">
+      <Setter Property="Padding" Value="3" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Opacity" Value="0.6" />
+    </Style>
+  </Window.Styles>
+
+  <DockPanel>
+    <!-- Menú -->
+    <Menu DockPanel.Dock="Top">
+      <MenuItem Header="{x:Static res:Strings.MenuDatabase}">
+        <MenuItem x:Name="MenuRegister" Header="{x:Static res:Strings.MenuRegister}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="DatabasePlus" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuEditRegistration" Header="{x:Static res:Strings.MenuEditRegistrations}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="DatabaseEdit" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuNewFolder" Header="{x:Static res:Strings.MenuNewFolder}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="FolderPlusOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuExportProfiles" Header="{x:Static res:Strings.MenuExportProfiles}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="DatabaseExportOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuImportProfiles" Header="{x:Static res:Strings.MenuImportProfiles}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="DatabaseImportOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <Separator />
+        <MenuItem x:Name="MenuConnect" Header="{x:Static res:Strings.MenuConnect}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="LanConnect" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuDisconnect" Header="{x:Static res:Strings.MenuDisconnect}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="LanDisconnect" /></MenuItem.Icon>
+        </MenuItem>
+        <Separator />
+        <MenuItem x:Name="MenuExit" Header="{x:Static res:Strings.MenuExit}" />
+      </MenuItem>
+      <MenuItem Header="{x:Static res:Strings.MenuQuery}">
+        <MenuItem x:Name="MenuNewTab" Header="{x:Static res:Strings.MenuNewTab}" InputGesture="Ctrl+T">
+          <MenuItem.Icon><mi:MaterialIcon Kind="TabPlus" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuCloseTab" Header="{x:Static res:Strings.MenuCloseTab}" InputGesture="Ctrl+W">
+          <MenuItem.Icon><mi:MaterialIcon Kind="TabRemove" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuSearch" Header="{x:Static res:Strings.MenuSearchMetadata}" InputGesture="Ctrl+Shift+F">
+          <MenuItem.Icon><mi:MaterialIcon Kind="Magnify" /></MenuItem.Icon>
+        </MenuItem>
+        <Separator />
+        <MenuItem x:Name="MenuRun" Header="{x:Static res:Strings.MenuRun}" InputGesture="F9">
+          <MenuItem.Icon><mi:MaterialIcon Kind="Play" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuRunStatement" Header="{x:Static res:Strings.MenuRunStatement}" InputGesture="Ctrl+Enter">
+          <MenuItem.Icon><mi:MaterialIcon Kind="PlayOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuRunScript" Header="{x:Static res:Strings.MenuRunScript}" InputGesture="Ctrl+F9">
+          <MenuItem.Icon><mi:MaterialIcon Kind="ScriptTextPlayOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuScriptContinue" Header="{x:Static res:Strings.MenuScriptContinueOnError}" ToggleType="CheckBox"
+                  IsChecked="{Binding ScriptContinueOnError}" />
+        <MenuItem x:Name="MenuFormatSql" Header="{x:Static res:Strings.MenuFormatSql}" InputGesture="Ctrl+Shift+L">
+          <MenuItem.Icon><mi:MaterialIcon Kind="FormatAlignLeft" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuInsertTemplate" Header="{x:Static res:Strings.MenuInsertTemplate}" InputGesture="Ctrl+J">
+          <MenuItem.Icon><mi:MaterialIcon Kind="TextBoxPlusOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuGoToDefinition" Header="{x:Static res:Strings.MenuGoToDefinition}" InputGesture="F12">
+          <MenuItem.Icon><mi:MaterialIcon Kind="OpenInNew" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem Header="{x:Static res:Strings.MenuCancel}" Command="{Binding SelectedTab.CancelCommand}" InputGesture="Escape">
+          <MenuItem.Icon><mi:MaterialIcon Kind="Stop" /></MenuItem.Icon>
+        </MenuItem>
+        <Separator />
+        <MenuItem Header="{x:Static res:Strings.MenuCommit}" Command="{Binding SelectedTab.CommitCommand}" InputGesture="Ctrl+Alt+C">
+          <MenuItem.Icon><mi:MaterialIcon Kind="Check" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem Header="{x:Static res:Strings.MenuRollback}" Command="{Binding SelectedTab.RollbackCommand}" InputGesture="Ctrl+Alt+R">
+          <MenuItem.Icon><mi:MaterialIcon Kind="Undo" /></MenuItem.Icon>
+        </MenuItem>
+        <Separator />
+        <MenuItem x:Name="MenuExport" Header="{x:Static res:Strings.MenuExportCsv}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="FileDelimited" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuExportXlsx" Header="{x:Static res:Strings.MenuExportXlsx}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="FileExcel" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuExportInsert" Header="{x:Static res:Strings.MenuExportInsert}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="DatabaseExport" /></MenuItem.Icon>
+        </MenuItem>
+      </MenuItem>
+      <MenuItem Header="{x:Static res:Strings.MenuView}">
+        <MenuItem x:Name="MenuViewResults" Header="{x:Static res:Strings.MenuViewResults}" InputGesture="Ctrl+1" />
+        <MenuItem x:Name="MenuViewPlan" Header="{x:Static res:Strings.MenuViewPlan}" InputGesture="Ctrl+2" />
+        <MenuItem x:Name="MenuViewStats" Header="{x:Static res:Strings.MenuViewStats}" InputGesture="Ctrl+3" />
+        <MenuItem x:Name="MenuViewHistory" Header="{x:Static res:Strings.MenuViewHistory}" InputGesture="Ctrl+4" />
+        <MenuItem x:Name="MenuViewMessages" Header="{x:Static res:Strings.MenuViewMessages}" InputGesture="Ctrl+5" />
+      </MenuItem>
+      <MenuItem Header="{x:Static res:Strings.MenuTools}">
+        <MenuItem x:Name="MenuMonitor" Header="{x:Static res:Strings.MenuMonitor}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="MonitorDashboard" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuStatistics" Header="{x:Static res:Strings.MenuStatistics}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="ChartBoxOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuMaintenance" Header="{x:Static res:Strings.MenuMaintenance}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="DatabaseCogOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuTrace" Header="{x:Static res:Strings.MenuTrace}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="TimelineClockOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuSecurity" Header="{x:Static res:Strings.MenuSecurity}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="AccountKeyOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuAreas" Header="{x:Static res:Strings.MenuAreas}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="Group" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuSchemaScript" Header="{x:Static res:Strings.MenuSchemaScript}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="ScriptTextOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuCompare" Header="{x:Static res:Strings.MenuCompare}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="CompareHorizontal" /></MenuItem.Icon>
+        </MenuItem>
+        <Separator />
+        <MenuItem x:Name="MenuOptions" Header="{x:Static res:Strings.MenuOptions}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="CogOutline" /></MenuItem.Icon>
+        </MenuItem>
+      </MenuItem>
+      <MenuItem Header="{x:Static res:Strings.MenuHelp}">
+        <MenuItem x:Name="MenuShortcuts" Header="{x:Static res:Strings.MenuShortcuts}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="KeyboardOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <Separator />
+        <MenuItem x:Name="MenuAbout" Header="{x:Static res:Strings.MenuAbout}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="InformationOutline" /></MenuItem.Icon>
+        </MenuItem>
+      </MenuItem>
+    </Menu>
+
+    <!-- Barra de herramientas -->
+    <Border DockPanel.Dock="Top" Padding="6,3" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource SemiColorBorder}">
+      <StackPanel Orientation="Horizontal" Spacing="2">
+        <Button x:Name="ToolRegister" Classes="tool" ToolTip.Tip="{x:Static res:Strings.ToolRegisterTip}">
+          <StackPanel><mi:MaterialIcon Kind="DatabasePlus" /><TextBlock Text="{x:Static res:Strings.ToolRegister}" /></StackPanel>
+        </Button>
+        <Button x:Name="ToolConnect" Classes="tool" ToolTip.Tip="{x:Static res:Strings.ToolConnectTip}">
+          <StackPanel><mi:MaterialIcon Kind="LanConnect" /><TextBlock Text="{x:Static res:Strings.ToolConnect}" /></StackPanel>
+        </Button>
+        <Button x:Name="ToolSearch" Classes="tool" ToolTip.Tip="{x:Static res:Strings.ToolSearchTip}">
+          <StackPanel><mi:MaterialIcon Kind="Magnify" /><TextBlock Text="{x:Static res:Strings.ToolSearch}" /></StackPanel>
+        </Button>
+        <Rectangle Width="1" Height="22" Fill="{DynamicResource SemiColorBorder}" Margin="6,0" />
+        <Button x:Name="RunButton" Classes="tool" ToolTip.Tip="{x:Static res:Strings.ToolRunTip}">
+          <StackPanel><mi:MaterialIcon Kind="Play" Foreground="{DynamicResource FbsSuccessBrush}" /><TextBlock Text="{x:Static res:Strings.ToolRun}" FontWeight="SemiBold" /><TextBlock Text="F9" Opacity="0.55" /></StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding SelectedTab.CancelCommand}" ToolTip.Tip="{x:Static res:Strings.ToolCancelTip}">
+          <StackPanel><mi:MaterialIcon Kind="Stop" Foreground="{DynamicResource FbsDangerBrush}" /><TextBlock Text="{x:Static res:Strings.ToolCancel}" /></StackPanel>
+        </Button>
+        <Rectangle Width="1" Height="22" Fill="{DynamicResource SemiColorBorder}" Margin="6,0" />
+        <Button Classes="tool" Command="{Binding SelectedTab.CommitCommand}" ToolTip.Tip="{x:Static res:Strings.ToolCommitTip}">
+          <StackPanel><mi:MaterialIcon Kind="Check" /><TextBlock Text="Commit" /></StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding SelectedTab.RollbackCommand}" ToolTip.Tip="{x:Static res:Strings.ToolRollbackTip}">
+          <StackPanel><mi:MaterialIcon Kind="Undo" /><TextBlock Text="Rollback" /></StackPanel>
+        </Button>
+        <Rectangle Width="1" Height="22" Fill="{DynamicResource SemiColorBorder}" Margin="6,0" />
+        <Button x:Name="ExportButton" Classes="tool" IsEnabled="{Binding !SelectedTab.IsRunning}" ToolTip.Tip="{x:Static res:Strings.ToolExportTip}">
+          <StackPanel><mi:MaterialIcon Kind="Export" /><TextBlock Text="{x:Static res:Strings.ToolExport}" /><mi:MaterialIcon Kind="MenuDown" Width="14" Height="14" /></StackPanel>
+          <Button.Flyout>
+            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+              <MenuItem x:Name="FlyoutExportCsv" Header="{x:Static res:Strings.ExportCsvForExcel}">
+                <MenuItem.Icon><mi:MaterialIcon Kind="FileDelimited" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem x:Name="FlyoutExportXlsx" Header="Excel (.xlsx)">
+                <MenuItem.Icon><mi:MaterialIcon Kind="FileExcel" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem x:Name="FlyoutExportInsert" Header="{x:Static res:Strings.ExportScriptInsert}">
+                <MenuItem.Icon><mi:MaterialIcon Kind="DatabaseExport" /></MenuItem.Icon>
+              </MenuItem>
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
+        <TextBlock Text="{x:Static res:Strings.ToolRowLimit}" VerticalAlignment="Center" Margin="14,0,6,0" Opacity="0.75" />
+        <ComboBox ItemsSource="{Binding RowLimits}" SelectedItem="{Binding RowLimit}" MinWidth="120">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="x:Int32">
+              <TextBlock Text="{Binding StringFormat={x:Static res:Strings.RowCountFormat}}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+    </Border>
+
+    <!-- Franja de la base activa + transacción -->
+    <Border x:Name="EnvBanner" DockPanel.Dock="Top" Padding="10,4"
+            Classes.prod="{Binding IsProduction}" Classes.test="{Binding IsTest}" Classes.dev="{Binding IsDevelopment}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding Banner}" Foreground="White" FontWeight="SemiBold" ToolTip.Tip="{Binding BannerTip}" />
+        <TextBlock Grid.Column="1" Text="{Binding SelectedTab.TransactionText}" Foreground="White" FontWeight="Bold" />
+      </Grid>
+    </Border>
+
+    <!-- Barra de estado -->
+    <Border DockPanel.Dock="Bottom" Padding="8,3" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource SemiColorBorder}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding SelectedTab.Status}" TextTrimming="CharacterEllipsis" />
+        <TextBlock Grid.Column="1" Text="{Binding Tree.Status}" Opacity="0.6" Margin="16,0,0,0" />
+      </Grid>
+    </Border>
+
+    <Grid ColumnDefinitions="300,5,*">
+      <!-- Árbol de bases registradas -->
+      <DockPanel Grid.Column="0" Margin="6,6,0,6">
+        <TextBox x:Name="TreeFilter" DockPanel.Dock="Top" Text="{Binding Tree.Filter}" Margin="0,0,0,6"
+                 PlaceholderText="{x:Static res:Strings.TreeFilterPlaceholder}" Classes.active="{Binding Tree.HasFilter}">
+          <TextBox.InnerRightContent>
+            <Button Classes="tool" Command="{Binding Tree.ClearFilterCommand}" IsVisible="{Binding Tree.HasFilter}"
+                    ToolTip.Tip="{x:Static res:Strings.TreeClearFilterTip}" Padding="4,0">
+              <mi:MaterialIcon Kind="Close" Width="14" Height="14" />
+            </Button>
+          </TextBox.InnerRightContent>
+        </TextBox>
+        <TextBlock DockPanel.Dock="Bottom" Text="{x:Static res:Strings.TreeHint}"
+                   TextWrapping="Wrap" FontSize="11" Opacity="0.55" Margin="2,6,0,0" />
+        <Panel>
+          <ListBox x:Name="Tree" ItemsSource="{Binding Tree.Rows}" SelectedItem="{Binding Tree.SelectedNode}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:TreeNode">
+                <StackPanel Orientation="Horizontal" Spacing="4" Margin="{Binding Indent, Converter={x:Static views:Converters.IndentMargin}}"
+                            ToolTip.Tip="{Binding Tooltip}" Opacity="{Binding IsDimmed, Converter={x:Static views:Converters.InactiveOpacity}}">
+                  <TextBlock Text="{Binding Glyph}" Width="12" FontSize="11" Opacity="0.7" VerticalAlignment="Center" />
+                  <mi:MaterialIcon Kind="{Binding Icon}" Width="16" Height="16" Classes="tone"
+                                   Classes.success="{Binding IsSuccessTone}" Classes.warning="{Binding IsWarningTone}" Classes.danger="{Binding IsDangerTone}" />
+                  <TextBlock Text="{Binding Text}" VerticalAlignment="Center"
+                             FontWeight="{Binding IsActive, Converter={x:Static views:Converters.BoldIfTrue}}" />
+                  <TextBlock Text="{Binding Alert}" IsVisible="{Binding HasAlert}" FontSize="11" FontWeight="SemiBold"
+                             Foreground="{DynamicResource FbsWarningBrush}" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding Detail}" FontSize="11" Opacity="0.55" VerticalAlignment="Center" />
+                  <TextBlock Text="⟳" IsVisible="{Binding IsBusy}" FontSize="11" Opacity="0.7" VerticalAlignment="Center" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <!-- Bienvenida cuando no hay bases registradas -->
+          <StackPanel x:Name="Welcome" IsVisible="{Binding Tree.IsEmpty}" Spacing="10" Margin="12,24" VerticalAlignment="Top">
+            <mi:MaterialIcon Kind="DatabasePlus" Width="40" Height="40" HorizontalAlignment="Left" Opacity="0.6" />
+            <TextBlock Text="{x:Static res:Strings.WelcomeTitle}" FontSize="16" FontWeight="SemiBold" />
+            <TextBlock Text="{x:Static res:Strings.WelcomeText}"
+                       TextWrapping="Wrap" Opacity="0.75" />
+            <Button x:Name="WelcomeRegister" Content="{x:Static res:Strings.WelcomeRegister}" Classes="Primary" Theme="{DynamicResource SolidButton}" HorizontalAlignment="Left" />
+          </StackPanel>
+        </Panel>
+      </DockPanel>
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" />
+
+      <!-- Pestañas de editor: cada una con su base, su sesión y sus resultados -->
+      <DockPanel Grid.Column="2">
+        <Border DockPanel.Dock="Top" Padding="4,4,4,0" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource SemiColorBorder}">
+          <DockPanel>
+            <Button x:Name="NewTabButton" DockPanel.Dock="Right" Classes="tool" VerticalAlignment="Center"
+                    ToolTip.Tip="{x:Static res:Strings.NewTabTip}">
+              <mi:MaterialIcon Kind="Plus" />
+            </Button>
+            <ListBox x:Name="TabStrip" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:EditorTabViewModel">
+                  <Border BorderThickness="0,0,0,3" Padding="8,3,2,3" Classes="tone"
+                          Classes.success="{Binding IsSuccessTone}" Classes.warning="{Binding IsWarningTone}" Classes.danger="{Binding IsDangerTone}"
+                          ToolTip.Tip="{Binding Profile.Display, FallbackValue={x:Static res:Strings.NoDatabase}}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <mi:MaterialIcon Kind="{Binding Icon}" Width="15" Height="15" />
+                      <TextBlock Text="●" Foreground="{DynamicResource FbsDangerBrush}" FontWeight="Bold" VerticalAlignment="Center" IsVisible="{Binding InTransaction}"
+                                 ToolTip.Tip="{x:Static res:Strings.TabOpenTransactionTip}" />
+                      <TextBlock Text="{Binding TitleText}" VerticalAlignment="Center" MaxWidth="280" TextTrimming="CharacterEllipsis" />
+                      <Button Classes="tabclose" Command="{Binding CloseCommand}" ToolTip.Tip="{x:Static res:Strings.TabCloseTip}">
+                        <mi:MaterialIcon Kind="Close" Width="12" Height="12" />
+                      </Button>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+        </Border>
+        <Panel>
+          <Panel x:Name="TabHost" />
+          <!-- Sin pestañas: cómo empezar -->
+          <StackPanel x:Name="StartHint" IsVisible="{Binding ShowStartHint}" Spacing="10" MaxWidth="460"
+                      HorizontalAlignment="Center" VerticalAlignment="Center">
+            <mi:MaterialIcon Kind="DatabaseArrowLeftOutline" Width="44" Height="44" Opacity="0.5" HorizontalAlignment="Center" />
+            <TextBlock Text="{x:Static res:Strings.StartHintTitle}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
+            <TextBlock Text="{x:Static res:Strings.StartHintText}" TextWrapping="Wrap" TextAlignment="Center" Opacity="0.7" />
+          </StackPanel>
+        </Panel>
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</Window>

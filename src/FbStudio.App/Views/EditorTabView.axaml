@@ -1,0 +1,169 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:views="using:FbStudio.App.Views"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:rg="using:FbStudio.App.ResultGrid"
+             xmlns:w="using:FbStudio.Workspace"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.EditorTabView"
+             x:DataType="vm:EditorTabViewModel"
+             IsVisible="{Binding IsSelected}">
+
+  <UserControl.Styles>
+    <Style Selector="ListBox#HistoryList ListBoxItem, ListBox.deps ListBoxItem">
+      <Setter Property="Padding" Value="6,2" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <!-- Barra del objeto (solo pestañas de objeto), editor, resultados -->
+  <Grid RowDefinitions="Auto,2*,5,3*">
+    <Border Grid.Row="0" IsVisible="{Binding IsObjectTab}" Padding="8,3" BorderThickness="0,0,0,1"
+            BorderBrush="{DynamicResource SemiColorBorder}" Background="{DynamicResource SemiColorFill0}">
+      <DockPanel>
+        <StackPanel x:Name="ObjectActions" DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2">
+          <Button Classes="tool" Command="{Binding CompileCommand}" IsVisible="{Binding IsCompilable}"
+                  ToolTip.Tip="{Binding CompileHint}" ToolTip.ShowOnDisabled="True">
+            <StackPanel><mi:MaterialIcon Kind="Cogs" Foreground="{DynamicResource FbsSuccessBrush}" /><TextBlock Text="{x:Static res:Strings.ObjectCompile}" FontWeight="SemiBold" /><TextBlock Text="F9" Opacity="0.55" /></StackPanel>
+          </Button>
+          <Button Classes="tool" Command="{Binding ReloadCommand}" ToolTip.Tip="{x:Static res:Strings.ObjectReloadTip}">
+            <StackPanel><mi:MaterialIcon Kind="Refresh" /><TextBlock Text="{x:Static res:Strings.ObjectReload}" /></StackPanel>
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <mi:MaterialIcon Kind="{Binding Icon}" Width="18" Height="18" />
+          <TextBlock Text="{Binding ObjectCaption}" FontWeight="SemiBold" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding Description}" Opacity="0.65" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="560"
+                     ToolTip.Tip="{Binding Description}" />
+          <TextBlock Text="{x:Static res:Strings.ObjectNotCompiled}" Foreground="{DynamicResource FbsWarningBrush}" FontWeight="SemiBold" IsVisible="{Binding IsModified}" VerticalAlignment="Center" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+    <ae:TextEditor x:Name="Editor" Grid.Row="1"
+                   ShowLineNumbers="True"
+                   FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="14"
+                   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+    <GridSplitter Grid.Row="2" ResizeDirection="Rows" />
+    <TabControl Grid.Row="3" Padding="0" SelectedIndex="{Binding SelectedResultTab}">
+      <TabItem Header="{x:Static res:Strings.ResultsTab}">
+        <rg:DrawnGrid x:Name="Results" />
+      </TabItem>
+      <TabItem Header="{x:Static res:Strings.PlanTab}">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto">
+          <SelectableTextBlock Text="{Binding Plan}" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" Margin="12" />
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="{x:Static res:Strings.StatsTab}">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto">
+          <SelectableTextBlock Text="{Binding Stats}" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" Margin="12" />
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="{x:Static res:Strings.HistoryTab}">
+        <DockPanel Margin="6">
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,6">
+            <TextBox Text="{Binding Owner.HistoryFilter}" Width="320" PlaceholderText="{x:Static res:Strings.HistoryFilterPlaceholder}" />
+            <CheckBox IsChecked="{Binding Owner.HistoryOnlyThisProfile}" Content="{x:Static res:Strings.HistoryOnlyThisDatabase}" />
+            <TextBlock Text="{x:Static res:Strings.HistoryHint}" Opacity="0.6" VerticalAlignment="Center" />
+          </StackPanel>
+          <ListBox x:Name="HistoryList" ItemsSource="{Binding Owner.HistoryItems}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="w:HistoryEntry">
+                <StackPanel Orientation="Horizontal" Spacing="10" ToolTip.Tip="{Binding Sql}">
+                  <TextBlock Text="{Binding ExecutedAt, StringFormat={}{0:dd/MM HH:mm:ss}}" FontFamily="Cascadia Mono,Consolas,monospace" Opacity="0.7" />
+                  <TextBlock Text="{Binding ProfileName}" Opacity="0.7" Width="170" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding Kind}" Width="110" />
+                  <TextBlock Text="{Binding DurationMs, StringFormat={}{0:N0} ms}" Width="80" TextAlignment="Right" />
+                  <TextBlock Text="{Binding Rows, StringFormat={x:Static res:Strings.RowCountFormat}}" Width="110" TextAlignment="Right" />
+                  <TextBlock Text="✗" Foreground="{DynamicResource FbsDangerBrush}" IsVisible="{Binding Failed}" FontWeight="Bold" />
+                  <TextBlock Text="{Binding FirstLine}" FontFamily="Cascadia Mono,Consolas,monospace" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </TabItem>
+      <TabItem Header="{x:Static res:Strings.MessagesTab}">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="8,6,8,0" IsVisible="{Binding HasMessages}">
+            <Button x:Name="SaveLogButton" Padding="8,3" ToolTip.Tip="{x:Static res:Strings.SaveLogTip}">
+              <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.SaveLog}" /></StackPanel>
+            </Button>
+            <Button x:Name="CopyLogButton" Padding="8,3">
+              <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="ContentCopy" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.CopyLog}" /></StackPanel>
+            </Button>
+          </StackPanel>
+          <ScrollViewer HorizontalScrollBarVisibility="Auto">
+            <SelectableTextBlock Text="{Binding Messages}" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" Margin="12" TextWrapping="Wrap" />
+          </ScrollViewer>
+        </DockPanel>
+      </TabItem>
+      <TabItem Header="{x:Static res:Strings.DependenciesTab}" IsVisible="{Binding IsObjectTab}">
+        <DockPanel Margin="6">
+          <TextBox DockPanel.Dock="Top" Text="{Binding DependencyFilter}" Margin="0,0,0,6" MaxWidth="420" HorizontalAlignment="Left"
+                   PlaceholderText="{x:Static res:Strings.DependenciesFilterPlaceholder}" />
+          <TextBlock DockPanel.Dock="Bottom" Text="{Binding DependenciesStatus}" Opacity="0.6" FontSize="12" Margin="2,6,0,0" TextWrapping="Wrap" />
+          <Grid ColumnDefinitions="*,8,*">
+            <DockPanel Grid.Column="0">
+              <TextBlock DockPanel.Dock="Top" Text="{Binding UsesHeader}" FontWeight="SemiBold" Margin="2,0,0,4" />
+              <ListBox x:Name="UsesList" Classes="deps" ItemsSource="{Binding UsesItems}">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:DependencyListItem">
+                    <StackPanel Orientation="Horizontal" Spacing="6" ToolTip.Tip="{Binding Detail}"
+                                Margin="{Binding Indent, Converter={x:Static views:Converters.IndentMargin}}">
+                      <mi:MaterialIcon Kind="{Binding Icon}" Width="15" Height="15" />
+                      <TextBlock Text="{Binding Caption}" FontWeight="{Binding Weight}" />
+                      <TextBlock Text="{Binding Detail}" Opacity="0.55" FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="420" VerticalAlignment="Center" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </DockPanel>
+            <DockPanel Grid.Column="2">
+              <TextBlock DockPanel.Dock="Top" Text="{Binding UsedByHeader}" FontWeight="SemiBold" Margin="2,0,0,4" />
+              <ListBox x:Name="UsedByList" Classes="deps" ItemsSource="{Binding UsedByItems}">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:DependencyListItem">
+                    <StackPanel Orientation="Horizontal" Spacing="6" ToolTip.Tip="{Binding Detail}"
+                                Margin="{Binding Indent, Converter={x:Static views:Converters.IndentMargin}}">
+                      <mi:MaterialIcon Kind="{Binding Icon}" Width="15" Height="15" />
+                      <TextBlock Text="{Binding Caption}" FontWeight="{Binding Weight}" />
+                      <TextBlock Text="{Binding Detail}" Opacity="0.55" FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="420" VerticalAlignment="Center" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </DockPanel>
+          </Grid>
+        </DockPanel>
+      </TabItem>
+      <TabItem Header="{x:Static res:Strings.DataTab}" IsVisible="{Binding HasDataTab}">
+        <DockPanel>
+          <DockPanel DockPanel.Dock="Top" Margin="6,6,6,4">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="8,0,0,0">
+              <TextBlock Text="{Binding Data.PendingText, FallbackValue=''}" VerticalAlignment="Center" FontWeight="SemiBold"
+                         Foreground="{DynamicResource FbsWarningBrush}" />
+              <Button x:Name="DataApply" Command="{Binding Data.ApplyCommand, FallbackValue={x:Null}}" Theme="{DynamicResource SolidButton}" Classes="Primary"
+                      ToolTip.Tip="{x:Static res:Strings.DataApplyTip}">
+                <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="ContentSave" /><TextBlock Text="{x:Static res:Strings.DataApply}" /></StackPanel>
+              </Button>
+              <Button Command="{Binding Data.DiscardCommand, FallbackValue={x:Null}}" Content="{x:Static res:Strings.DataDiscard}" />
+              <Button x:Name="DataNewRow" IsEnabled="{Binding Data.CanEditTable, FallbackValue=False}" ToolTip.Tip="{x:Static res:Strings.DataNewRowTip}">
+                <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="TableRowPlusAfter" /><TextBlock Text="{x:Static res:Strings.DataNewRow}" /></StackPanel>
+              </Button>
+              <Button Command="{Binding Data.CountCommand, FallbackValue={x:Null}}" Content="{x:Static res:Strings.DataCount}" ToolTip.Tip="{x:Static res:Strings.DataCountTip}" />
+              <Button Command="{Binding Data.ReloadCommand, FallbackValue={x:Null}}" ToolTip.Tip="{x:Static res:Strings.ObjectReload}">
+                <mi:MaterialIcon Kind="Refresh" />
+              </Button>
+            </StackPanel>
+            <TextBox x:Name="DataWhere" Text="{Binding Data.ExtraWhere, FallbackValue=''}" PlaceholderText="{x:Static res:Strings.DataWherePlaceholder}"
+                     FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" />
+          </DockPanel>
+          <TextBlock DockPanel.Dock="Bottom" Text="{Binding Data.Status, FallbackValue=''}" Opacity="0.7" FontSize="12" Margin="8,3" TextTrimming="CharacterEllipsis" />
+          <rg:DrawnGrid x:Name="DataGrid" />
+        </DockPanel>
+      </TabItem>
+    </TabControl>
+  </Grid>
+</UserControl>

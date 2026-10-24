@@ -1,0 +1,16 @@
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+TestResults/
+*.log
+artifacts/
+
+# Bases y backups de Firebird: nunca al repositorio
+*.fdb
+*.FDB
+*.fbk
+*.gbk
+*.nbk*

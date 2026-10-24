@@ -1,0 +1,212 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:cm="using:FbStudio.Core.Metadata"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.MaintenanceTabView"
+             x:DataType="vm:MaintenanceTabViewModel"
+             IsVisible="{Binding IsSelected}">
+  <UserControl.Styles>
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+    <Style Selector="Button.tool > StackPanel">
+      <Setter Property="Orientation" Value="Horizontal" />
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+    <Style Selector="TextBlock.note">
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Opacity" Value="0.7" />
+      <Setter Property="Margin" Value="0,4,0,0" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Margin" Value="0,4,0,0" />
+    </Style>
+    <Style Selector="Border.warn">
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsWarningBrush}" />
+      <Setter Property="Background" Value="{DynamicResource FbsWarningBackgroundBrush}" />
+    </Style>
+    <Style Selector="ListBox.tasks ListBoxItem">
+      <Setter Property="Padding" Value="10,8" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="8,8,8,4">
+    <TextBlock DockPanel.Dock="Top" Text="{Binding DatabaseInfo}" Opacity="0.7" Margin="0,0,0,8" TextTrimming="CharacterEllipsis" />
+
+    <ListBox x:Name="TaskList" DockPanel.Dock="Left" Classes="tasks" Width="170" Margin="0,0,10,0"
+             SelectedIndex="{Binding SelectedTaskIndex}" IsEnabled="{Binding !IsRunning}">
+      <ListBoxItem><StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="DatabaseExportOutline" /><TextBlock Text="{x:Static res:Strings.MaintTaskBackup}" /></StackPanel></ListBoxItem>
+      <ListBoxItem><StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="DatabaseImportOutline" /><TextBlock Text="{x:Static res:Strings.MaintTaskRestore}" /></StackPanel></ListBoxItem>
+      <ListBoxItem><StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="DatabasePlusOutline" /><TextBlock Text="{x:Static res:Strings.MaintTaskEmptyCopy}" /></StackPanel></ListBoxItem>
+      <ListBoxItem><StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="DatabaseCheckOutline" /><TextBlock Text="{x:Static res:Strings.MaintTaskValidate}" /></StackPanel></ListBoxItem>
+      <ListBoxItem><StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="Broom" /><TextBlock Text="{x:Static res:Strings.MaintTaskSweep}" /></StackPanel></ListBoxItem>
+      <ListBoxItem><StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="LayersOutline" /><TextBlock Text="{x:Static res:Strings.MaintTaskNBackup}" /></StackPanel></ListBoxItem>
+      <ListBoxItem><StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="TuneVariant" /><TextBlock Text="{x:Static res:Strings.MaintTaskProperties}" /></StackPanel></ListBoxItem>
+    </ListBox>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+      <StackPanel Grid.Row="0" Spacing="6" MaxWidth="900" HorizontalAlignment="Stretch" IsEnabled="{Binding !IsRunning}">
+        <Border Classes="warn" IsVisible="{Binding IsBlockedReadOnly}">
+          <TextBlock Text="{x:Static res:Strings.MaintReadOnlyNote}" TextWrapping="Wrap" />
+        </Border>
+
+        <!-- Backup -->
+        <StackPanel Spacing="6" IsVisible="{Binding IsBackup}">
+          <TextBlock Classes="label" Text="{x:Static res:Strings.MaintBackupFile}" />
+          <TextBox x:Name="BackupFileBox" Text="{Binding BackupFile}" PlaceholderText="{x:Static res:Strings.MaintFileHint}" />
+          <CheckBox Content="{x:Static res:Strings.MaintBackupMetadataOnly}" IsChecked="{Binding BackupMetadataOnly}"
+                    ToolTip.Tip="{x:Static res:Strings.MaintBackupMetadataOnlyTip}" />
+          <CheckBox Content="{x:Static res:Strings.MaintBackupNoGc}" IsChecked="{Binding BackupNoGarbageCollect}" />
+          <CheckBox Content="{x:Static res:Strings.MaintBackupIgnoreChecksums}" IsChecked="{Binding BackupIgnoreChecksums}"
+                    ToolTip.Tip="{x:Static res:Strings.MaintBackupIgnoreChecksumsTip}" />
+          <CheckBox Content="{x:Static res:Strings.MaintBackupNonTransportable}" IsChecked="{Binding BackupNonTransportable}" />
+          <TextBlock Classes="label" Text="{x:Static res:Strings.MaintSkipData}" />
+          <TextBox Text="{Binding BackupSkipData}" PlaceholderText="{x:Static res:Strings.MaintSkipDataHint}" />
+          <TextBlock Classes="note" Text="{x:Static res:Strings.MaintBackupNote}" />
+        </StackPanel>
+
+        <!-- Restore -->
+        <StackPanel Spacing="6" IsVisible="{Binding IsRestore}">
+          <TextBlock Classes="label" Text="{x:Static res:Strings.MaintRestoreSource}" />
+          <TextBox Text="{Binding RestoreSource}" PlaceholderText="{x:Static res:Strings.MaintFileHint}" />
+          <TextBlock Classes="label" Text="{x:Static res:Strings.MaintRestoreTarget}" />
+          <TextBox Text="{Binding RestoreTarget}" PlaceholderText="{x:Static res:Strings.MaintNewDatabaseHint}" />
+          <WrapPanel>
+            <CheckBox Content="{x:Static res:Strings.MaintRestoreReplace}" IsChecked="{Binding RestoreReplace}" Margin="0,0,16,4" />
+            <CheckBox Content="{x:Static res:Strings.MaintRestoreMetadataOnly}" IsChecked="{Binding RestoreMetadataOnly}" Margin="0,0,16,4" />
+            <CheckBox Content="{x:Static res:Strings.MaintRestoreDeactivateIndexes}" IsChecked="{Binding RestoreDeactivateIndexes}" Margin="0,0,16,4" />
+            <CheckBox Content="{x:Static res:Strings.MaintRestoreOneAtATime}" IsChecked="{Binding RestoreOneAtATime}" Margin="0,0,16,4" />
+            <CheckBox Content="{x:Static res:Strings.MaintRestoreNoShadow}" IsChecked="{Binding RestoreNoShadow}" Margin="0,0,16,4" />
+            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
+              <TextBlock Text="{x:Static res:Strings.MaintRestorePageSize}" VerticalAlignment="Center" />
+              <ComboBox ItemsSource="{Binding PageSizeLabels}" SelectedIndex="{Binding RestorePageSizeIndex}" MinWidth="110" />
+            </StackPanel>
+          </WrapPanel>
+          <CheckBox Content="{x:Static res:Strings.MaintRestoreNoValidity}" IsChecked="{Binding RestoreNoValidity}"
+                    ToolTip.Tip="{x:Static res:Strings.MaintRestoreNoValidityTip}" />
+          <TextBlock Classes="note" Text="{x:Static res:Strings.MaintRestoreNoValidityTip}" IsVisible="{Binding RestoreNoValidity}"
+                     Foreground="{DynamicResource FbsWarningBrush}" />
+          <TextBlock Classes="label" Text="{x:Static res:Strings.MaintSkipData}" />
+          <TextBox Text="{Binding RestoreSkipData}" PlaceholderText="{x:Static res:Strings.MaintSkipDataHint}" />
+          <TextBlock Classes="note" Text="{x:Static res:Strings.MaintRestoreNote}" />
+        </StackPanel>
+
+        <!-- Base vacía -->
+        <StackPanel Spacing="6" IsVisible="{Binding IsEmptyCopy}">
+          <TextBlock Classes="label" Text="{x:Static res:Strings.MaintEmptyTarget}" />
+          <TextBox Text="{Binding EmptyTarget}" PlaceholderText="{x:Static res:Strings.MaintNewDatabaseHint}" />
+          <CheckBox Content="{x:Static res:Strings.MaintEmptyGenerators}" IsChecked="{Binding EmptyGeneratorValues}"
+                    ToolTip.Tip="{x:Static res:Strings.MaintEmptyGeneratorsTip}" />
+          <DockPanel Margin="0,4,0,0">
+            <TextBlock DockPanel.Dock="Left" Text="{x:Static res:Strings.MaintEmptyTables}" VerticalAlignment="Center" Margin="0,0,10,0" />
+            <Button DockPanel.Dock="Right" Classes="tool" Command="{Binding ClearTablesCommand}" Content="{x:Static res:Strings.MaintEmptyClear}" Margin="6,0,0,0" />
+            <TextBox Text="{Binding TableFilter}" PlaceholderText="{x:Static res:Strings.MaintEmptyFilter}" />
+          </DockPanel>
+          <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4" Height="180">
+            <Panel>
+              <ListBox ItemsSource="{Binding VisibleTables}" Background="Transparent">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:TableChoice">
+                    <CheckBox IsChecked="{Binding IsChecked}"><TextBlock Text="{Binding Name}" /></CheckBox> <!-- texto: «_» no es tecla de acceso -->
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <TextBlock Text="{x:Static res:Strings.MaintLoadingTables}" IsVisible="{Binding TablesLoading}" Opacity="0.6" Margin="10" />
+            </Panel>
+          </Border>
+          <TextBlock Text="{Binding ChosenText}" Opacity="0.7" />
+          <TextBlock Classes="note" Text="{x:Static res:Strings.MaintEmptyNote}" />
+        </StackPanel>
+
+        <!-- Validación y sweep -->
+        <StackPanel Spacing="6" IsVisible="{Binding IsValidate}">
+          <TextBlock Classes="label" Text="{x:Static res:Strings.MaintValidateTables}" />
+          <TextBox Text="{Binding ValidateTables}" PlaceholderText="{x:Static res:Strings.MaintValidateTablesHint}" />
+          <TextBlock Classes="note" Text="{x:Static res:Strings.MaintValidateNote}" />
+        </StackPanel>
+        <TextBlock Classes="note" IsVisible="{Binding IsSweep}" Text="{x:Static res:Strings.MaintSweepNote}" />
+
+        <!-- Propiedades de la base (F-34) -->
+        <StackPanel Spacing="6" IsVisible="{Binding IsProperties}">
+          <StackPanel Spacing="6" IsEnabled="{Binding PropertiesLoaded}">
+            <Grid ColumnDefinitions="300,Auto" RowDefinitions="Auto,Auto">
+              <TextBlock Classes="label" Text="{x:Static res:Strings.MaintPropSweep}" VerticalAlignment="Center" ToolTip.Tip="{x:Static res:Strings.MaintPropSweepTip}" />
+              <NumericUpDown Grid.Column="1" Value="{Binding PropSweepInterval}" Minimum="0" Maximum="2000000000" Increment="1000" FormatString="N0" Width="180" Margin="0,2" />
+              <TextBlock Grid.Row="1" Classes="label" Text="{x:Static res:Strings.MaintPropPageBuffers}" VerticalAlignment="Center" />
+              <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding PropPageBuffers}" Minimum="0" Maximum="2000000" Increment="256" FormatString="N0" Width="180" Margin="0,2" />
+            </Grid>
+            <CheckBox Content="{x:Static res:Strings.MaintPropForcedWrites}" IsChecked="{Binding PropForcedWrites}" />
+            <Border Classes="warn" IsVisible="{Binding IsForcedWritesOff}">
+              <TextBlock Text="{x:Static res:Strings.MaintPropForcedWritesOff}" TextWrapping="Wrap" />
+            </Border>
+            <CheckBox Content="{x:Static res:Strings.MaintPropReadOnly}" IsChecked="{Binding PropReadOnly}" />
+          </StackPanel>
+          <TextBlock Classes="note" Text="{x:Static res:Strings.MaintPropNote}" />
+        </StackPanel>
+
+        <!-- nbackup: por ahora solo se mira (F-29, paso 1) -->
+        <StackPanel Spacing="6" IsVisible="{Binding IsNBackup}">
+          <Border Classes="warn" IsVisible="{Binding HasNBackupWarning}">
+            <TextBlock Text="{Binding NBackupWarning}" TextWrapping="Wrap" FontWeight="SemiBold" />
+          </Border>
+          <TextBlock Text="{Binding NBackupStateText}" />
+          <TextBlock Text="{Binding NBackupDeltaText}" TextWrapping="Wrap" />
+          <TextBlock Classes="label" Text="{Binding NBackupHistoryTitle}" Margin="0,6,0,0" />
+          <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4" MaxHeight="220" IsVisible="{Binding HasNBackupHistory}">
+            <DockPanel>
+              <Grid DockPanel.Dock="Top" ColumnDefinitions="170,170,*" Margin="10,4">
+                <TextBlock Text="{x:Static res:Strings.MaintNBackupColDate}" Opacity="0.7" FontSize="12" />
+                <TextBlock Grid.Column="1" Text="{x:Static res:Strings.MaintNBackupColLevel}" Opacity="0.7" FontSize="12" />
+                <TextBlock Grid.Column="2" Text="{x:Static res:Strings.MaintNBackupColFile}" Opacity="0.7" FontSize="12" />
+              </Grid>
+              <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding NBackupHistory}" Margin="10,0,10,4">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="cm:NBackupEntry">
+                      <Grid ColumnDefinitions="170,170,*" Margin="0,2">
+                        <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:g}'}" />
+                        <TextBlock Grid.Column="1" Text="{Binding LevelText}" />
+                        <TextBlock Grid.Column="2" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </DockPanel>
+          </Border>
+          <TextBlock Classes="note" Text="{x:Static res:Strings.MaintNBackupNote}" />
+        </StackPanel>
+      </StackPanel>
+
+      <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" Margin="0,12,0,8">
+        <Button Classes="accent" Padding="12,5" Command="{Binding RunCommand}" IsVisible="{Binding !IsNBackup}">
+          <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="Play" Width="16" Height="16" /><TextBlock Text="{Binding RunText}" /></StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding StopCommand}" IsVisible="{Binding IsRunning}" ToolTip.Tip="{x:Static res:Strings.MaintStopTip}">
+          <StackPanel><mi:MaterialIcon Kind="Stop" Width="16" Height="16" Foreground="{DynamicResource FbsDangerBrush}" /><TextBlock Text="{x:Static res:Strings.MaintStop}" /></StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding CheckStateCommand}" IsVisible="{Binding CanCheckState}" ToolTip.Tip="{x:Static res:Strings.MaintCheckStateTip}">
+          <StackPanel><mi:MaterialIcon Kind="Refresh" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.MaintCheckState}" /></StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding RegisterNewCommand}" IsVisible="{Binding CanRegisterNew}" ToolTip.Tip="{x:Static res:Strings.MaintRegisterNewTip}">
+          <StackPanel><mi:MaterialIcon Kind="DatabasePlus" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.MaintRegisterNew}" /></StackPanel>
+        </Button>
+        <Button x:Name="CopyButton" Classes="tool">
+          <StackPanel><mi:MaterialIcon Kind="ContentCopy" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.MaintCopyLog}" /></StackPanel>
+        </Button>
+      </StackPanel>
+
+      <Border Grid.Row="2" BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+        <ae:TextEditor x:Name="LogView" IsReadOnly="True" ShowLineNumbers="False"
+                       FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" Padding="6,4"
+                       HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+      </Border>
+    </Grid>
+  </DockPanel>
+</UserControl>

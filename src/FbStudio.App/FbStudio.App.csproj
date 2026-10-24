@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Ícono propio: base de datos y rayo (tools/icon). -->
+    <ApplicationIcon>Assets/fbstudio.ico</ApplicationIcon>
+    <AssemblyName>FbStudio</AssemblyName>
+    <!-- Los textos base están en español; Strings.en.resx trae el inglés. -->
+    <NeutralLanguage>es</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="FbStudio.App.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\*.icns" /> <!-- el .icns es solo para el paquete de macOS -->
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Textos de la interfaz (F-6): la clase Strings se genera al compilar desde el .resx (español, neutral). -->
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <StronglyTypedFileName>$(IntermediateOutputPath)Strings.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>$(RootNamespace).Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <PackageReference Include="AvaloniaEdit.TextMate" />
+    <PackageReference Include="TextMateSharp.Grammars" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Semi.Avalonia" />
+    <PackageReference Include="Material.Icons.Avalonia" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FbStudio.Core\FbStudio.Core.csproj" />
+    <ProjectReference Include="..\FbStudio.Firebird\FbStudio.Firebird.csproj" />
+    <ProjectReference Include="..\FbStudio.Workspace\FbStudio.Workspace.csproj" />
+  </ItemGroup>
+</Project>

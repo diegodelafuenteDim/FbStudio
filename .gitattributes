@@ -1,0 +1,8 @@
+# Bitácora interna: no va en la versión pública (git archive la deja afuera).
+docs/decisiones.md export-ignore
+docs/pendientes.md export-ignore
+docs/monitoreo/ export-ignore
+docs/comparaciones/ export-ignore
+
+# Scripts de shell: siempre con fin de línea LF (bash en Linux y macOS no acepta CRLF).
+*.sh text eol=lf

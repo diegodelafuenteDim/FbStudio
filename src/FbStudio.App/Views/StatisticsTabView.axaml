@@ -1,0 +1,202 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:rg="using:FbStudio.App.ResultGrid"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.StatisticsTabView"
+             x:DataType="vm:StatisticsTabViewModel"
+             IsVisible="{Binding IsSelected}">
+
+  <UserControl.Styles>
+    <Style Selector="Border.card">
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="Margin" Value="0,0,8,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SemiColorBorder}" />
+      <Setter Property="Background" Value="{DynamicResource SemiColorFill0}" />
+      <Setter Property="MinWidth" Value="120" />
+    </Style>
+    <Style Selector="Border.card TextBlock.caption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Opacity" Value="0.65" />
+    </Style>
+    <Style Selector="Border.card TextBlock.value">
+      <Setter Property="FontSize" Value="18" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.card TextBlock.detail">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Opacity" Value="0.75" />
+    </Style>
+    <Style Selector="Border.card.alert">
+      <Setter Property="Background" Value="{DynamicResource FbsWarningBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsWarningBrush}" />
+    </Style>
+    <Style Selector="Border.card.alert TextBlock.value">
+      <Setter Property="Foreground" Value="{DynamicResource FbsWarningBrush}" />
+    </Style>
+    <Style Selector="Border.warn">
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsWarningBrush}" />
+      <Setter Property="Background" Value="{DynamicResource FbsWarningBackgroundBrush}" />
+    </Style>
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+    <Style Selector="Button.tool > StackPanel">
+      <Setter Property="Orientation" Value="Horizontal" />
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="8,8,8,4">
+    <!-- Acciones -->
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+      <Button Classes="tool" Command="{Binding ReadHeaderCommand}" ToolTip.Tip="{x:Static res:Strings.StatsReadHeaderTip}">
+        <StackPanel><mi:MaterialIcon Kind="Refresh" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.StatsReadHeader}" /><TextBlock Text="F9" Opacity="0.55" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding ReadFullCommand}" ToolTip.Tip="{x:Static res:Strings.StatsReadFullTip}">
+        <StackPanel><mi:MaterialIcon Kind="ChartBar" Width="16" Height="16" /><TextBlock Text="{Binding FullText}" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding CancelReadCommand}" IsVisible="{Binding IsReading}">
+        <StackPanel><mi:MaterialIcon Kind="Stop" Width="16" Height="16" Foreground="{DynamicResource FbsDangerBrush}" /><TextBlock Text="{x:Static res:Strings.Cancel}" /></StackPanel>
+      </Button>
+      <Button x:Name="CopyButton" Classes="tool" ToolTip.Tip="{x:Static res:Strings.StatsCopyTip}">
+        <StackPanel><mi:MaterialIcon Kind="ContentCopy" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.StatsCopy}" /></StackPanel>
+      </Button>
+      <TextBlock Text="{Binding ReadAt}" Opacity="0.6" VerticalAlignment="Center" Margin="8,0,0,0" />
+    </StackPanel>
+
+    <!-- Solo algunas tablas (gstat -t) y comparar con otra base -->
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+      <Button x:Name="TablesButton" Classes="tool" ToolTip.Tip="{x:Static res:Strings.StatsTablesTip}">
+        <StackPanel>
+          <mi:MaterialIcon Kind="TableMultiple" Width="16" Height="16" />
+          <TextBlock Text="{Binding TablesText}" />
+          <mi:MaterialIcon Kind="ChevronDown" Width="14" Height="14" Opacity="0.6" />
+        </StackPanel>
+        <Button.Flyout>
+          <Flyout Placement="BottomEdgeAlignedLeft">
+            <DockPanel Width="340" Height="380">
+              <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                <Button DockPanel.Dock="Right" Classes="tool" Command="{Binding ClearTablesCommand}" Content="{x:Static res:Strings.StatsTablesClear}" Margin="6,0,0,0" />
+                <TextBox Text="{Binding TableFilter}" PlaceholderText="{x:Static res:Strings.StatsTablesFilter}" />
+              </DockPanel>
+              <TextBlock DockPanel.Dock="Bottom" Text="{x:Static res:Strings.StatsTablesNote}" Opacity="0.6" FontSize="11" Margin="0,6,0,0" />
+              <Panel>
+                <ListBox ItemsSource="{Binding VisibleTables}" Background="Transparent">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TableChoice">
+                      <CheckBox IsChecked="{Binding IsChecked}"><TextBlock Text="{Binding Name}" /></CheckBox> <!-- texto: «_» no es tecla de acceso -->
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Text="{x:Static res:Strings.StatsTablesLoading}" IsVisible="{Binding TablesLoading}" Opacity="0.6" Margin="10" />
+              </Panel>
+            </DockPanel>
+          </Flyout>
+        </Button.Flyout>
+      </Button>
+      <TextBlock Text="{x:Static res:Strings.StatsCompareWith}" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.7" />
+      <ComboBox ItemsSource="{Binding CompareChoices}" SelectedIndex="{Binding CompareIndex}" MinWidth="220"
+                ToolTip.Tip="{x:Static res:Strings.StatsCompareTip}" />
+    </StackPanel>
+
+    <!-- Lo importante del encabezado -->
+    <WrapPanel DockPanel.Dock="Top" IsVisible="{Binding HasHeader}">
+      <Border Classes="card" ToolTip.Tip="{x:Static res:Strings.StatsOitTip}">
+        <StackPanel><TextBlock Classes="caption" Text="OIT" /><TextBlock Classes="value" Text="{Binding OitText}" /></StackPanel>
+      </Border>
+      <Border Classes="card" ToolTip.Tip="{x:Static res:Strings.StatsOatTip}">
+        <StackPanel><TextBlock Classes="caption" Text="OAT" /><TextBlock Classes="value" Text="{Binding OatText}" /></StackPanel>
+      </Border>
+      <Border Classes="card" ToolTip.Tip="{x:Static res:Strings.StatsOstTip}">
+        <StackPanel><TextBlock Classes="caption" Text="OST" /><TextBlock Classes="value" Text="{Binding OstText}" /></StackPanel>
+      </Border>
+      <Border Classes="card">
+        <StackPanel><TextBlock Classes="caption" Text="{x:Static res:Strings.StatsNext}" /><TextBlock Classes="value" Text="{Binding NextText}" /></StackPanel>
+      </Border>
+      <Border Classes="card" ToolTip.Tip="{x:Static res:Strings.StatsActiveGapTip}">
+        <StackPanel><TextBlock Classes="caption" Text="{x:Static res:Strings.StatsActiveGap}" /><TextBlock Classes="value" Text="{Binding ActiveGapText}" /></StackPanel>
+      </Border>
+      <Border Classes="card" Classes.alert="{Binding IsSweepDue}" ToolTip.Tip="{x:Static res:Strings.StatsSweepTip}">
+        <StackPanel>
+          <TextBlock Classes="caption" Text="{x:Static res:Strings.StatsSweep}" />
+          <TextBlock Classes="value" Text="{Binding SweepText}" />
+          <TextBlock Classes="detail" Text="{Binding SweepGapText}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="card">
+        <StackPanel><TextBlock Classes="caption" Text="{x:Static res:Strings.StatsPageCaption}" /><TextBlock Classes="value" Text="{Binding PageText}" /></StackPanel>
+      </Border>
+      <Border Classes="card" Classes.alert="{Binding IsForcedWritesOff}" ToolTip.Tip="{x:Static res:Strings.StatsForcedWritesTip}">
+        <StackPanel><TextBlock Classes="caption" Text="{x:Static res:Strings.StatsForcedWrites}" /><TextBlock Classes="value" Text="{Binding ForcedWritesText}" /></StackPanel>
+      </Border>
+    </WrapPanel>
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding IsSweepDue}">
+      <TextBlock Text="{Binding SweepDueText}" TextWrapping="Wrap" />
+    </Border>
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding HasBackupWarning}">
+      <TextBlock Text="{Binding BackupWarning}" TextWrapping="Wrap" FontWeight="SemiBold" />
+    </Border>
+
+    <!-- Todos los datos del encabezado y, a la derecha, el texto de gstat -->
+    <Grid ColumnDefinitions="380,5,*">
+      <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+        <ScrollViewer>
+          <ItemsControl x:Name="HeaderList" ItemsSource="{Binding HeaderRows}" Margin="8,4">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:HeaderRow">
+                <Grid ColumnDefinitions="230,*" Margin="0,3" ToolTip.Tip="{Binding Key}">
+                  <TextBlock Text="{Binding Label}" Opacity="0.7" TextWrapping="Wrap" Margin="0,0,12,0" />
+                  <SelectableTextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Border>
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+      <!-- Tablas e índices de la estadística completa (grillas que se ordenan y filtran) y el texto de gstat -->
+      <TabControl Grid.Column="2" SelectedIndex="{Binding SelectedDetail}" Padding="0,4,0,0">
+        <TabItem Header="{Binding TablesHeader}">
+          <Panel>
+            <rg:DrawnGrid x:Name="TablesGrid" IsVisible="{Binding HasAnalysis}" />
+            <TextBlock IsVisible="{Binding !HasAnalysis}" Text="{x:Static res:Strings.StatsNeedsFull}" TextWrapping="Wrap" Opacity="0.7" Margin="12" />
+          </Panel>
+        </TabItem>
+        <TabItem Header="{Binding IndexesHeader}">
+          <Panel>
+            <rg:DrawnGrid x:Name="IndexesGrid" IsVisible="{Binding HasAnalysis}" />
+            <TextBlock IsVisible="{Binding !HasAnalysis}" Text="{x:Static res:Strings.StatsNeedsFull}" TextWrapping="Wrap" Opacity="0.7" Margin="12" />
+          </Panel>
+        </TabItem>
+        <TabItem Header="{x:Static res:Strings.StatsTextTab}">
+          <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+            <ae:TextEditor x:Name="OutputView" IsReadOnly="True" ShowLineNumbers="False"
+                           FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" Padding="6,4"
+                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+          </Border>
+        </TabItem>
+        <TabItem Header="{Binding CompareTablesHeader}" IsVisible="{Binding HasComparison}">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Text="{Binding CompareLegend}" Opacity="0.7" Margin="2,0,0,6" TextWrapping="Wrap" />
+            <rg:DrawnGrid x:Name="CompareTablesGrid" />
+          </DockPanel>
+        </TabItem>
+        <TabItem Header="{Binding CompareIndexesHeader}" IsVisible="{Binding HasComparison}">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Text="{Binding CompareLegend}" Opacity="0.7" Margin="2,0,0,6" TextWrapping="Wrap" />
+            <rg:DrawnGrid x:Name="CompareIndexesGrid" />
+          </DockPanel>
+        </TabItem>
+      </TabControl>
+    </Grid>
+  </DockPanel>
+</UserControl>

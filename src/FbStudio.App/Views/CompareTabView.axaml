@@ -1,0 +1,119 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.CompareTabView"
+             x:DataType="vm:CompareTabViewModel"
+             IsVisible="{Binding IsSelected}">
+  <UserControl.Styles>
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+    <Style Selector="Button.tool > StackPanel">
+      <Setter Property="Orientation" Value="Horizontal" />
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+    <Style Selector="TextBlock.change">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.change.added">
+      <Setter Property="Foreground" Value="{DynamicResource FbsSuccessBrush}" />
+    </Style>
+    <Style Selector="TextBlock.change.changed">
+      <Setter Property="Foreground" Value="{DynamicResource FbsWarningBrush}" />
+    </Style>
+    <Style Selector="TextBlock.change.extra">
+      <Setter Property="Foreground" Value="{DynamicResource FbsDangerBrush}" />
+    </Style>
+    <Style Selector="ae|TextEditor">
+      <Setter Property="FontFamily" Value="Cascadia Mono,Consolas,Menlo,monospace" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="8,8,8,4">
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+      <TextBlock Text="{Binding Direction}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
+      <Button x:Name="RecompareButton" Classes="tool" IsEnabled="{Binding !IsComparing}">
+        <StackPanel><mi:MaterialIcon Kind="Refresh" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.CompareAgain}" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding BuildScriptCommand}" ToolTip.Tip="{x:Static res:Strings.CompareBuildScriptTip}">
+        <StackPanel><mi:MaterialIcon Kind="ScriptTextPlayOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.CompareBuildScript}" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding OpenInTargetCommand}" ToolTip.Tip="{x:Static res:Strings.CompareOpenInTargetTip}">
+        <StackPanel><mi:MaterialIcon Kind="TabPlus" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.CompareOpenInTarget}" /></StackPanel>
+      </Button>
+      <Button x:Name="SaveButton" Classes="tool" IsEnabled="{Binding Script, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <StackPanel><mi:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.SchemaScriptSave}" /></StackPanel>
+      </Button>
+      <Button Classes="tool" Command="{Binding CancelCompareCommand}" IsVisible="{Binding IsComparing}">
+        <StackPanel><mi:MaterialIcon Kind="Stop" Width="16" Height="16" Foreground="{DynamicResource FbsDangerBrush}" /><TextBlock Text="{x:Static res:Strings.Cancel}" /></StackPanel>
+      </Button>
+      <TextBlock Text="{Binding Summary}" Opacity="0.7" VerticalAlignment="Center" Margin="8,0,0,0" />
+    </StackPanel>
+
+    <Grid ColumnDefinitions="560,5,*">
+      <!-- Diferencias, con su tilde -->
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
+          <Button Content="{x:Static res:Strings.CompareCheckAll}" Command="{Binding CheckAllCommand}" CommandParameter="1" Padding="8,2" />
+          <Button Content="{x:Static res:Strings.CompareCheckNone}" Command="{Binding CheckAllCommand}" CommandParameter="0" Padding="8,2" />
+        </StackPanel>
+        <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+          <Panel>
+            <ListBox x:Name="Differences" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:CompareItem">
+                  <Grid ColumnDefinitions="Auto,104,*,Auto" ToolTip.Tip="{Binding Summary}">
+                    <CheckBox IsChecked="{Binding IsChecked}" IsEnabled="{Binding CanInclude}" Margin="0,0,6,0" />
+                    <TextBlock Grid.Column="1" Text="{Binding KindLabel}" Opacity="0.7" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Summary}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="3" Classes="change" Classes.added="{Binding IsAdded}" Classes.changed="{Binding IsChanged}" Classes.extra="{Binding IsExtra}"
+                               Text="{Binding ChangeLabel}" Margin="8,0,4,0" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock IsVisible="{Binding !HasDifferences}" Text="{Binding Summary}" Margin="12" Opacity="0.7" TextWrapping="Wrap" />
+          </Panel>
+        </Border>
+      </DockPanel>
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+
+      <!-- La diferencia elegida (origen y destino) y el script para igualar -->
+      <TabControl Grid.Column="2" SelectedIndex="{Binding SelectedDetail}" Padding="0,4,0,0">
+        <TabItem Header="{x:Static res:Strings.CompareDifferenceTab}">
+          <DockPanel>
+            <SelectableTextBlock DockPanel.Dock="Top" Text="{Binding SelectedDetails}" TextWrapping="Wrap" Margin="4,0,4,8" />
+            <Grid ColumnDefinitions="*,6,*" RowDefinitions="Auto,*">
+              <TextBlock Text="{x:Static res:Strings.CompareSourceDdl}" Opacity="0.7" Margin="2,0,0,4" />
+              <TextBlock Grid.Column="2" Text="{x:Static res:Strings.CompareTargetDdl}" Opacity="0.7" Margin="2,0,0,4" />
+              <Border Grid.Row="1" BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+                <ae:TextEditor x:Name="SourceView" IsReadOnly="True" Padding="6,4" HorizontalScrollBarVisibility="Auto" />
+              </Border>
+              <Border Grid.Row="1" Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+                <ae:TextEditor x:Name="TargetView" IsReadOnly="True" Padding="6,4" HorizontalScrollBarVisibility="Auto" />
+              </Border>
+            </Grid>
+          </DockPanel>
+        </TabItem>
+        <TabItem Header="{x:Static res:Strings.CompareScriptTab}">
+          <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+            <Panel>
+              <ae:TextEditor x:Name="ScriptView" IsReadOnly="True" ShowLineNumbers="True" Padding="6,4" HorizontalScrollBarVisibility="Auto" />
+              <TextBlock IsVisible="{Binding Script, Converter={x:Static StringConverters.IsNullOrEmpty}}" Text="{x:Static res:Strings.CompareScriptHint}"
+                         Margin="12" Opacity="0.7" TextWrapping="Wrap" />
+            </Panel>
+          </Border>
+        </TabItem>
+      </TabControl>
+    </Grid>
+  </DockPanel>
+</UserControl>

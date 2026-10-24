@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:views="using:FbStudio.App.Views"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.SearchTabView"
+             x:DataType="vm:SearchTabViewModel"
+             IsVisible="{Binding IsSelected}">
+
+  <UserControl.Styles>
+    <Style Selector="ListBox#HitsList ListBoxItem">
+      <Setter Property="Padding" Value="6,2" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="10,8">
+    <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
+      <DockPanel>
+        <Button x:Name="SearchButton" DockPanel.Dock="Right" Command="{Binding SearchCommand}" Margin="8,0,0,0"
+                Theme="{DynamicResource SolidButton}" Classes="Primary">
+          <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="Magnify" /><TextBlock Text="{x:Static res:Strings.ToolSearch}" /></StackPanel>
+        </Button>
+        <TextBox x:Name="SearchBox" Text="{Binding SearchText}"
+                 PlaceholderText="{x:Static res:Strings.SearchPlaceholder}" />
+      </DockPanel>
+      <WrapPanel>
+        <CheckBox IsChecked="{Binding InSources}" Content="{x:Static res:Strings.SearchInSources}" Margin="0,0,16,0" />
+        <CheckBox IsChecked="{Binding InNames}" Content="{x:Static res:Strings.SearchInNames}" Margin="0,0,16,0" />
+        <CheckBox IsChecked="{Binding InColumns}" Content="{x:Static res:Strings.SearchInColumns}" Margin="0,0,16,0" />
+        <CheckBox IsChecked="{Binding InDescriptions}" Content="{x:Static res:Strings.SearchInDescriptions}" />
+        <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasAreas}" Margin="16,0,0,0">
+          <TextBlock Text="{x:Static res:Strings.SearchAreaLabel}" VerticalAlignment="Center" />
+          <ComboBox ItemsSource="{Binding AreaChoices}" SelectedIndex="{Binding AreaIndex}" ToolTip.Tip="{x:Static res:Strings.SearchAreaTip}" MinWidth="170" />
+        </StackPanel>
+      </WrapPanel>
+      <TextBlock Text="{Binding Summary}" Opacity="0.7" />
+    </StackPanel>
+
+    <ListBox x:Name="HitsList" ItemsSource="{Binding Items}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:SearchListItem">
+          <StackPanel Orientation="Horizontal" Spacing="6" Margin="{Binding Indent, Converter={x:Static views:Converters.IndentMargin}}">
+            <TextBlock Text="{Binding Glyph}" Width="12" FontSize="11" Opacity="0.7" VerticalAlignment="Center" />
+            <mi:MaterialIcon Kind="{Binding Icon}" Width="15" Height="15" IsVisible="{Binding HasIcon}" />
+            <TextBlock Text="{Binding Caption}" FontWeight="{Binding CaptionWeight}" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Count}" Opacity="0.6" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Where}" Opacity="0.6" MinWidth="70" VerticalAlignment="Center" IsVisible="{Binding HasSnippet}" />
+            <StackPanel Orientation="Horizontal" IsVisible="{Binding HasSnippet}" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Before}" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" />
+              <TextBlock Text="{Binding Match}" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" FontWeight="Bold"
+                         Background="{DynamicResource FbsMatchBackgroundBrush}" Foreground="{DynamicResource FbsMatchForegroundBrush}" />
+              <TextBlock Text="{Binding After}" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" />
+            </StackPanel>
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </DockPanel>
+</UserControl>

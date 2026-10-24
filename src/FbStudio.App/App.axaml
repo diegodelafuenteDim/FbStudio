@@ -1,0 +1,73 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:semi="https://irihi.tech/semi"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.App"
+             RequestedThemeVariant="Default">
+  <!-- Colores con significado, uno por tema: el oscuro usa tonos más claros para que se lean sobre fondo oscuro. -->
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="FbsMutedBrush" Color="#5F6B7A" />
+          <SolidColorBrush x:Key="FbsSuccessBrush" Color="#2E7D32" />
+          <SolidColorBrush x:Key="FbsWarningBrush" Color="#B26A00" />
+          <SolidColorBrush x:Key="FbsDangerBrush" Color="#C62828" />
+          <SolidColorBrush x:Key="FbsAccentBrush" Color="#1E88E5" />
+          <SolidColorBrush x:Key="FbsMatchBackgroundBrush" Color="#FFF0A8" />
+          <SolidColorBrush x:Key="FbsMatchForegroundBrush" Color="#5A4300" />
+          <SolidColorBrush x:Key="FbsWarningBackgroundBrush" Color="#FFF3DC" />
+          <SolidColorBrush x:Key="FbsDangerBackgroundBrush" Color="#FDE7E7" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="FbsMutedBrush" Color="#9AA5B1" />
+          <SolidColorBrush x:Key="FbsSuccessBrush" Color="#66BB6A" />
+          <SolidColorBrush x:Key="FbsWarningBrush" Color="#FFB74D" />
+          <SolidColorBrush x:Key="FbsDangerBrush" Color="#EF5350" />
+          <SolidColorBrush x:Key="FbsAccentBrush" Color="#64B5F6" />
+          <SolidColorBrush x:Key="FbsMatchBackgroundBrush" Color="#5C4B00" />
+          <SolidColorBrush x:Key="FbsMatchForegroundBrush" Color="#FFE58A" />
+          <SolidColorBrush x:Key="FbsWarningBackgroundBrush" Color="#3A2C10" />
+          <SolidColorBrush x:Key="FbsDangerBackgroundBrush" Color="#3D1C1C" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <!-- Semi Design (MIT): controles más prolijos y densos que el Fluent por defecto. -->
+    <semi:SemiTheme />
+    <mi:MaterialIconStyles />
+    <!-- Estilos del editor SQL (los de AvaloniaEdit, MIT) con los colores de Semi: ver Themes/EditorTheme.axaml. -->
+    <StyleInclude Source="/Themes/EditorTheme.axaml" />
+    <!-- Ícono propio en todas las ventanas (principal, registro de bases y diálogos). -->
+    <Style Selector="Window">
+      <Setter Property="Icon" Value="avares://FbStudio/Assets/fbstudio.ico" />
+    </Style>
+    <!-- Íconos y bordes con tono (ver ViewModels/Tone.cs): Classes="tone" más success / warning / danger. -->
+    <Style Selector="mi|MaterialIcon.tone">
+      <Setter Property="Foreground" Value="{DynamicResource FbsMutedBrush}" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.tone.success">
+      <Setter Property="Foreground" Value="{DynamicResource FbsSuccessBrush}" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.tone.warning">
+      <Setter Property="Foreground" Value="{DynamicResource FbsWarningBrush}" />
+    </Style>
+    <Style Selector="mi|MaterialIcon.tone.danger">
+      <Setter Property="Foreground" Value="{DynamicResource FbsDangerBrush}" />
+    </Style>
+    <Style Selector="Border.tone">
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsMutedBrush}" />
+    </Style>
+    <Style Selector="Border.tone.success">
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsSuccessBrush}" />
+    </Style>
+    <Style Selector="Border.tone.warning">
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsWarningBrush}" />
+    </Style>
+    <Style Selector="Border.tone.danger">
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsDangerBrush}" />
+    </Style>
+  </Application.Styles>
+</Application>

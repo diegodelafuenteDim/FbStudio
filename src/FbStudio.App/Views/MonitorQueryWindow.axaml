@@ -1,0 +1,67 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="using:FbStudio.App.Resources"
+        xmlns:vm="using:FbStudio.App.ViewModels"
+        xmlns:ae="using:AvaloniaEdit"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="FbStudio.App.Views.MonitorQueryWindow"
+        x:DataType="vm:MonitorQueryEditorViewModel"
+        Title="{Binding Title}"
+        Width="860" Height="640" MinWidth="640" MinHeight="480"
+        WindowStartupLocation="CenterOwner">
+  <Window.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,4,12,4" />
+    </Style>
+    <Style Selector="TextBlock.note">
+      <Setter Property="Opacity" Value="0.65" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+  </Window.Styles>
+
+  <DockPanel Margin="14">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Margin="0,0,0,8">
+      <TextBlock Classes="label" Text="{x:Static res:Strings.MonQueryName}" />
+      <TextBox Grid.Column="1" x:Name="NameBox" Text="{Binding Name}" PlaceholderText="{x:Static res:Strings.MonQueryNamePlaceholder}" />
+    </Grid>
+
+    <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,10,0,0">
+      <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowDefinitions="Auto">
+        <TextBlock Classes="label" Text="{x:Static res:Strings.MonQueryAttachmentColumn}" />
+        <ComboBox Grid.Column="1" x:Name="AttachmentBox" IsEditable="True" ItemsSource="{Binding Columns}" Text="{Binding AttachmentColumn}"
+                  HorizontalAlignment="Stretch" PlaceholderText="{x:Static res:Strings.MonQueryAutoDetect}" />
+        <TextBlock Grid.Column="2" Classes="label" Margin="12,4,12,4" Text="{x:Static res:Strings.MonQueryStatementColumn}" />
+        <ComboBox Grid.Column="3" IsEditable="True" ItemsSource="{Binding Columns}" Text="{Binding StatementColumn}"
+                  HorizontalAlignment="Stretch" PlaceholderText="{x:Static res:Strings.MonQueryAutoDetect}" />
+        <TextBlock Grid.Column="4" Classes="label" Margin="12,4,12,4" Text="{x:Static res:Strings.MonQuerySqlColumn}" />
+        <ComboBox Grid.Column="5" IsEditable="True" ItemsSource="{Binding Columns}" Text="{Binding SqlColumn}"
+                  HorizontalAlignment="Stretch" PlaceholderText="{x:Static res:Strings.MonQueryAutoDetect}" />
+      </Grid>
+      <TextBlock Classes="note" Text="{x:Static res:Strings.MonQueryColumnsNote}" />
+      <DockPanel>
+        <Button DockPanel.Dock="Left" x:Name="TestButton" Command="{Binding TestCommand}" Margin="0,0,10,0">
+          <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="Play" Foreground="{DynamicResource FbsSuccessBrush}" /><TextBlock Text="{x:Static res:Strings.MonQueryTest}" /></StackPanel>
+        </Button>
+        <TextBlock Text="{Binding TestResult}" VerticalAlignment="Center" TextWrapping="Wrap" Classes.failed="{Binding TestFailed}">
+          <TextBlock.Styles>
+            <Style Selector="TextBlock.failed"><Setter Property="Foreground" Value="{DynamicResource FbsDangerBrush}" /></Style>
+          </TextBlock.Styles>
+        </TextBlock>
+      </DockPanel>
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding Error}" Foreground="{DynamicResource FbsDangerBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <Button x:Name="SaveButton" Content="{x:Static res:Strings.ProfilesSave}" Theme="{DynamicResource SolidButton}" Classes="Primary" MinWidth="90" />
+          <Button x:Name="CancelButton" Content="{x:Static res:Strings.Cancel}" IsCancel="True" />
+        </StackPanel>
+      </Grid>
+    </StackPanel>
+
+    <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+      <ae:TextEditor x:Name="SqlEditor" ShowLineNumbers="True" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="13"
+                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+    </Border>
+  </DockPanel>
+</Window>
