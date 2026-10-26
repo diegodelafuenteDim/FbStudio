@@ -18,7 +18,7 @@ public class ImportSchemaTests
 
     [Fact]
     public void La_tabla_se_llama_como_el_archivo() =>
-        Assert.Equal("PACIENTES_2026", ImportSchema.TableName(@"C:\datos\Pacientes 2026.xlsx"));
+        Assert.Equal("PACIENTES_2026", ImportSchema.TableName(Path.Combine("datos", "Pacientes 2026.xlsx"))); // con el separador de cada sistema
 
     [Theory]
     [InlineData("INTEGER", "1", "-20", "300", "")]
