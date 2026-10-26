@@ -288,6 +288,12 @@ public sealed partial class DatabaseTreeViewModel : ObservableObject, IAsyncDisp
         ConnectionsChanged?.Invoke();
     }
 
+    /// <summary>Vuelve a leer los objetos de una base conectada (p. ej. después de crear una tabla); si no está conectada, nada.</summary>
+    public Task RefreshDatabaseAsync(Guid profileId) =>
+        Flatten(_roots, all: true).FirstOrDefault(n => n.Kind == TreeNodeKind.Database && n.Profile!.Id == profileId) is { } db
+            ? RefreshDatabaseAsync(db)
+            : Task.CompletedTask;
+
     public async Task RefreshDatabaseAsync(TreeNode db)
     {
         if (db.Kind != TreeNodeKind.Database || !IsConnected(db.Profile!.Id)) return;

@@ -39,6 +39,39 @@ public sealed class DiagramTests
     }
 
     [Fact]
+    public void Mermaid_con_las_columnas_a_la_vista_y_las_relaciones_logicas_punteadas()
+    {
+        var g = Graph();
+        var scene = DiagramScene.Build(g, g.Around(["TURNOS"], 1), DiagramColumnsMode.Keys, Measure);
+        var text = DiagramMermaid.Write(scene, "Diagrama · TURNOS").Replace("\r", "");
+        Assert.StartsWith("---\ntitle: Diagrama · TURNOS\n---\nerDiagram\n", text);
+        Assert.Contains("    TURNOS {\n        INTEGER ID PK\n        INTEGER ID_PACIENTE FK\n        INTEGER ID_MEDICO FK\n    }\n", text);
+        Assert.Contains("    TURNOS_DET }o--|| TURNOS : \"FK_TURNOS_DET_ID_TURNO\"\n", text);
+        Assert.Contains("    INFORMES }o..|| TURNOS : \"FK_INFORMES_ID_TURNO\"\n", text);          // la lógica, punteada
+        // Nombres y tipos que Mermaid no acepta tal cual.
+        var odd = new SchemaGraph([new DiagramTable("RDB$X", false, [new DiagramColumn("MONTO", "NUMERIC(12,2)", false, false), new DiagramColumn("V", "DOUBLE PRECISION", false, false)])], []);
+        var mermaid = DiagramMermaid.Write(DiagramScene.Build(odd, odd.Around(["RDB$X"], 1), DiagramColumnsMode.All, Measure), "x");
+        Assert.Contains("RDB_X {", mermaid);
+        Assert.Contains("NUMERIC(12_2) MONTO", mermaid);
+        Assert.Contains("DOUBLE_PRECISION V", mermaid);
+    }
+
+    [Fact]
+    public void El_camino_mas_corto_entre_dos_tablas_evita_las_comodines_si_puede()
+    {
+        var g = Graph();
+        Assert.Equal(["TURNOS_DET", "TURNOS", "MEDICOS"], g.Path("TURNOS_DET", "MEDICOS"));
+        Assert.Equal(["MEDICOS", "TURNOS", "TURNOS_DET"], g.Path("MEDICOS", "TURNOS_DET"));          // la dirección de la FK no importa
+        Assert.Equal(["TURNOS_DET", "TURNOS", "INFORMES"], g.Path("TURNOS_DET", "INFORMES"));         // por la lógica
+        // Sin las lógicas, INFORMES solo se alcanza por las comodines: igual se encuentra, pasando por ellas.
+        Assert.Equal(["TURNOS_DET", "TURNOS", "PACIENTES", "CAJA", "USUARIOS", "INFORMES"], g.Path("TURNOS_DET", "INFORMES", logical: false));
+        Assert.Equal(["CAJA", "PACIENTES", "LAB"], g.Path("CAJA", "LAB"));                            // solo por comodines
+        Assert.Equal(["TURNOS"], g.Path("TURNOS", "TURNOS"));
+        Assert.Null(g.Path("SUELTA", "TURNOS"));
+        Assert.Null(g.Path("TURNOS", "NO_EXISTE"));
+    }
+
+    [Fact]
     public void Lee_las_FK_logicas_de_los_comentarios()
     {
         var link = LogicalForeignKeys.Parse("TURNOS", "PACIENTE", "#Required# #FK_%PACIENTES,%CODIGO,%NOMBRE,I#")!;

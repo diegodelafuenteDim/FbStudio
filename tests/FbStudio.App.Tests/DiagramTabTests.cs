@@ -71,6 +71,87 @@ public sealed class DiagramTabTests(FirebirdFixture fb, HeadlessFixture ui) : IA
     private static IEnumerable<string> Names(DiagramTabViewModel tab) => tab.Scene!.Nodes.Select(n => n.Name);
 
     [Fact]
+    public Task Se_guarda_con_sus_posiciones_y_lo_movido_a_mano_no_se_desacomoda() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        var profile = vm.Profiles.Single();
+        var tab = vm.OpenDiagram(profile, new DiagramSource("TURNOS"))!;
+        await tab.Loading;
+        await Settle();
+
+        // Mover una tabla a mano y sumar las vecinas de otra: la movida queda donde estaba.
+        var moved = tab.Scene!.Node("DIAG_TUR")!;
+        (moved.X, moved.Y) = (moved.X + 400, moved.Y + 300);
+        tab.NodeMovedByHand();
+        var at = (moved.X, moved.Y);
+        tab.SelectedNode = tab.Scene.Node("DIAG_TUR");
+        tab.ExpandSelectedCommand.Execute(null);
+        Assert.Contains("DIAG_PAC", Names(tab));
+        var again = tab.Scene!.Node("DIAG_TUR")!;
+        Assert.Equal(at, (again.X, again.Y));
+        foreach (var a in tab.Scene.Nodes)
+            foreach (var b in tab.Scene.Nodes.Where(b => b != a))
+                Assert.False(a.X < b.X + b.Width && b.X < a.X + a.Width && a.Y < b.Y + b.Height && b.Y < a.Y + a.Height, $"{a.Name} pisa a {b.Name}");
+
+        // Guardar y abrir: las mismas tablas, opciones y lugares.
+        tab.ColumnsIndex = 1;
+        Directory.CreateDirectory(_folder);
+        var path = Path.Combine(_folder, "turnos.fbsdiagram");
+        tab.Save(path);
+        Assert.StartsWith("Diagrama guardado: turnos.fbsdiagram", tab.Status);
+        var saved = tab.Scene!.Positions();
+        var opened = vm.OpenDiagramFile(path, profile)!;
+        Assert.NotSame(tab, opened);
+        await opened.Loading;
+        await Settle();
+        Assert.Equal(Names(tab).Order(), Names(opened).Order());
+        Assert.Equal(1, opened.ColumnsIndex);
+        Assert.All(opened.Scene!.Nodes, n => Assert.Equal(saved[n.Name], new Core.Diagrams.DiagramPosition(n.X, n.Y)));
+
+        // «Reacomodar» vuelve a acomodar todo; un archivo que no es un diagrama se dice.
+        opened.RelayoutCommand.Execute(null);
+        var junk = Path.Combine(_folder, "otra.fbsdiagram");
+        File.WriteAllText(junk, "no es json");
+        Assert.Null(vm.OpenDiagramFile(junk, profile));
+        Assert.Equal("otra.fbsdiagram no es un diagrama de FbStudio (o está dañado).", vm.SelectedTab!.Status);
+        w.Close();
+        await vm.DisposeAsync();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Camino_hasta_otra_tabla_suma_las_del_medio_y_lo_resalta() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        var profile = vm.Profiles.Single();
+        var tab = vm.OpenDiagram(profile, new DiagramSource("TURNOS_DET"))!;
+        await tab.Loading;
+        await Settle();
+        Assert.DoesNotContain("DIAG_PAC", Names(tab));
+
+        // Desde la tabla del diagrama hasta DIAG_PAC: por TURNOS y DIAG_TUR (la última, por la FK lógica).
+        string? asked = null;
+        vm.AskTextAsync = p => { asked = p.Message; return Task.FromResult<string?>("diag_pac"); };
+        await tab.PathToCommand.ExecuteAsync(null);
+        Assert.Equal("¿Hasta qué tabla, desde TURNOS_DET?", asked);
+        Assert.Equal(["TURNOS_DET", "TURNOS", "DIAG_TUR", "DIAG_PAC"], tab.PathShown);
+        Assert.Equal("Camino: TURNOS_DET → TURNOS → DIAG_TUR → DIAG_PAC (3 relaciones).", tab.Status);
+        Assert.Contains("DIAG_PAC", Names(tab));
+        Assert.Equal("DIAG_PAC", tab.SelectedNode?.Name);
+        Assert.True(tab.Scene!.IsOnPath(tab.Scene.Edges.Single(e => e is { From.Name: "DIAG_TUR", To.Name: "DIAG_PAC" })));
+        await Settle();
+
+        // Sin las lógicas no hay camino físico; una tabla que no existe se dice.
+        tab.ShowLogical = false;
+        await tab.PathToCommand.ExecuteAsync(null);
+        Assert.Equal("TURNOS_DET y DIAG_PAC no están unidas por FK físicas (probá con las lógicas).", tab.Status);
+        vm.AskTextAsync = _ => Task.FromResult<string?>("NO_EXISTE");
+        await tab.PathToCommand.ExecuteAsync(null);
+        Assert.Contains("NO_EXISTE", tab.Status);
+        w.Close();
+        await vm.DisposeAsync();
+    }, CancellationToken.None);
+
+    [Fact]
     public Task Diagrama_de_una_tabla_y_de_un_area() => ui.Session.DispatchAsync(async () =>
     {
         var (w, vm) = Open();

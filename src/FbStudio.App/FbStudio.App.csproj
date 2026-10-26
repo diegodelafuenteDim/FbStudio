@@ -18,6 +18,8 @@
   <ItemGroup>
     <!-- El registro de cambios va adentro de la app, para Ayuda → Novedades (D-81). -->
     <EmbeddedResource Include="..\..\CHANGELOG.md" LogicalName="FbStudio.CHANGELOG.md" />
+    <!-- El manual va adentro: Ayuda › Manual y F1 lo abren sin internet. -->
+    <EmbeddedResource Include="..\..\docs\manual\**\*.md" LogicalName="FbStudio.manual.%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <!-- Textos de la interfaz (F-6): la clase Strings se genera al compilar desde el .resx (español, neutral). -->

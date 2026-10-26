@@ -47,8 +47,11 @@ public partial class App : Application
                     settings,
                     AppServices.CreateMonitorQueryStore(),
                     AppServices.CreateGridLayoutStore(),
-                    AppServices.CreateAreaStore()),
+                    AppServices.CreateAreaStore(),
+                    AppServices.CreateSessionStore()),
             };
+            // Las consultas que quedaron abiertas la última vez.
+            (desktop.MainWindow.DataContext as MainWindowViewModel)?.RestoreSession();
             // Solo en la app de verdad (las pruebas arman la ventana sin esto): las novedades de una versión nueva, una vez.
             if (desktop.MainWindow is MainWindow main)
             {

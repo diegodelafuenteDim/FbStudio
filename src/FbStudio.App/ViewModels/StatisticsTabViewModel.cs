@@ -218,6 +218,21 @@ public sealed partial class StatisticsTabViewModel : EditorTabViewModel
     }
 
     /// <summary>«Todas»: quita la elección.</summary>
+    /// <summary>Las áreas de la base, para tildar de una vez sus tablas.</summary>
+    public IReadOnlyList<string> AreaNames => Profile is { } p ? Owner.AreaStore.Areas(p).Select(a => a.Name).ToList() : [];
+
+    public bool HasAreas => AreaNames.Count > 0;
+
+    /// <summary>Tilda las tablas de un área (además de las que ya estaban tildadas).</summary>
+    public async Task ChooseAreaAsync(string areaName)
+    {
+        if (Profile is not { } profile || Owner.AreaStore.Areas(profile).FirstOrDefault(a => a.Name == areaName) is not { } area) return;
+        await LoadTablesAsync();
+        var members = await Owner.AreaMembersAsync(profile, area);
+        foreach (var t in _allTables.Where(t => members.Contains(t.Name))) t.IsChecked = true;
+        Status = string.Format(Strings.StatsAreaChosen, _allTables.Count(t => members.Contains(t.Name)), area.Name);
+    }
+
     [RelayCommand]
     private void ClearTables()
     {

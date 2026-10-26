@@ -52,6 +52,15 @@
       <Button Classes="tool" Command="{Binding AddTableCommand}" Margin="0,0,6,4">
         <StackPanel><mi:MaterialIcon Kind="TablePlus" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DiagramAddTable}" /></StackPanel>
       </Button>
+      <Button Classes="tool" Command="{Binding PathToCommand}" ToolTip.Tip="{x:Static res:Strings.DiagramPathTip}" Margin="0,0,6,4">
+        <StackPanel><mi:MaterialIcon Kind="Routes" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DiagramPath}" /></StackPanel>
+      </Button>
+      <Button x:Name="SaveButton" Classes="tool" ToolTip.Tip="{x:Static res:Strings.DiagramSaveTip}" Margin="0,0,6,4">
+        <StackPanel><mi:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DiagramSave}" /></StackPanel>
+      </Button>
+      <Button x:Name="CopyMermaidButton" Classes="tool" ToolTip.Tip="{x:Static res:Strings.DiagramCopyMermaidTip}" Margin="0,0,6,4">
+        <StackPanel><mi:MaterialIcon Kind="ContentCopy" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DiagramCopyMermaid}" /></StackPanel>
+      </Button>
       <Button x:Name="ExportButton" Classes="tool" ToolTip.Tip="{x:Static res:Strings.DiagramExportTip}" Margin="0,0,6,4">
         <StackPanel><mi:MaterialIcon Kind="ImageOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DiagramExport}" /></StackPanel>
       </Button>
@@ -79,6 +88,7 @@
                   <Button Classes="tool" Command="{Binding OpenSelectedCommand}" Content="{x:Static res:Strings.DiagramOpen}" Margin="0,0,6,6" />
                   <Button Classes="tool" Command="{Binding ExpandSelectedCommand}" Content="{x:Static res:Strings.DiagramExpand}" Margin="0,0,6,6" />
                   <Button Classes="tool" Command="{Binding RemoveSelectedCommand}" Content="{x:Static res:Strings.DiagramRemove}" Margin="0,0,6,6" />
+                  <Button Classes="tool" Command="{Binding PathToCommand}" Content="{x:Static res:Strings.DiagramPath}" Margin="0,0,6,6" />
                 </WrapPanel>
               </StackPanel>
             </Panel>

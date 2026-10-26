@@ -23,13 +23,29 @@ public sealed partial class ImportColumnChoice(DbColumn column) : ObservableObje
     public string Detail => (Column.Type + (Column.NotNull ? " NOT NULL" : "") + (Column.IsPrimaryKey ? " · PK" : "")).Trim();
 
     [ObservableProperty] private int _fileIndex;
+
+    /// <summary>«Actualizar o agregar»: la columna es parte de la clave con la que se busca la fila (de entrada, la PK).</summary>
+    [ObservableProperty] private bool _isKey = column.IsPrimaryKey;
+}
+
+/// <summary>Una columna de la tabla nueva (importar a una tabla nueva): de qué columna del archivo sale, su nombre y su tipo.</summary>
+public sealed partial class ImportNewColumn(string header, int fileIndex, string name, string type) : ObservableObject
+{
+    public string Header { get; } = header;
+    public int FileIndex { get; } = fileIndex;
+
+    [ObservableProperty] private bool _include = true;
+    [ObservableProperty] private string _name = name;
+    [ObservableProperty] private string _type = type;
 }
 
 /// <summary>
 /// Pestaña «Importar · TABLA» (F-26): un CSV o un Excel a una tabla. Las columnas que se llaman igual se relacionan
 /// solas y se pueden cambiar; se ve una vista previa del archivo y, al importar, todo va en una transacción (si una fila
-/// falla se deshace todo, o se saltea, según se elija). En producción pregunta; vaciar la tabla antes pide escribir su
-/// nombre; con un registro de solo lectura no se ofrece.
+/// falla se deshace todo, o se saltea, según se elija). Agrega las filas o, si se elige, actualiza las que ya están con
+/// la misma clave y agrega las demás. Sin tabla, arma una nueva desde el archivo (nombres y tipos que se pueden cambiar)
+/// y después importa. En producción pregunta; vaciar la tabla antes pide escribir su nombre; con un registro de solo
+/// lectura no se ofrece.
 /// </summary>
 public sealed partial class ImportTabViewModel : EditorTabViewModel
 {
@@ -39,16 +55,32 @@ public sealed partial class ImportTabViewModel : EditorTabViewModel
     private CancellationTokenSource? _cts;
     private bool _disposed;
 
-    public ImportTabViewModel(MainWindowViewModel owner, ConnectionProfile profile, string table)
-        : base(owner, profile, string.Format(Strings.ImportTabTitle, table))
+    /// <param name="table">null: importar a una tabla nueva, que se arma desde el archivo.</param>
+    public ImportTabViewModel(MainWindowViewModel owner, ConnectionProfile profile, string? table)
+        : base(owner, profile, table is null ? Strings.ImportNewTableTabTitle : string.Format(Strings.ImportTabTitle, table))
     {
-        Table = table;
-        Status = profile.ReadOnly ? Strings.ImportReadOnly : Strings.ImportIntro;
+        Table = table ?? "";
+        _isNewTable = table is null;
+        Status = profile.ReadOnly ? Strings.ImportReadOnly : table is null ? Strings.ImportNewTableIntro : Strings.ImportIntro;
     }
 
     public override MaterialIconKind Icon => MaterialIconKind.DatabaseImportOutline;
 
-    public string Table { get; }
+    public string Table { get; private set; }
+
+    /// <summary>Importar a una tabla nueva (todavía no creada). Al crearla, la pestaña sigue como la de esa tabla.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RunText))]
+    private bool _isNewTable;
+
+    /// <summary>El nombre de la tabla nueva (de entrada, el del archivo).</summary>
+    [ObservableProperty] private string _newTableName = "";
+
+    /// <summary>Las columnas de la tabla nueva, una por columna del archivo, con el tipo según lo que trae.</summary>
+    public ObservableCollection<ImportNewColumn> NewColumns { get; } = [];
+
+    /// <summary>Actualizar las filas que ya están (por la clave) y agregar las demás, en vez de agregarlas todas.</summary>
+    [ObservableProperty] private bool _upsert;
 
     public bool IsReadOnlyProfile => Profile?.ReadOnly == true;
 
@@ -80,7 +112,9 @@ public sealed partial class ImportTabViewModel : EditorTabViewModel
     [NotifyPropertyChangedFor(nameof(RunText))]
     private long? _rowCount;
 
-    public string RunText => RowCount is { } n ? string.Format(Strings.ImportRun, n) : Strings.ImportRunNoCount;
+    public string RunText => IsNewTable
+        ? RowCount is { } rows ? string.Format(Strings.ImportRunNewTable, rows) : Strings.ImportRunNewTableNoCount
+        : RowCount is { } n ? string.Format(Strings.ImportRun, n) : Strings.ImportRunNoCount;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(StopCommand))]
@@ -91,6 +125,11 @@ public sealed partial class ImportTabViewModel : EditorTabViewModel
 
     /// <summary>La última operación (para las pruebas).</summary>
     public Task Working { get; private set; } = Task.CompletedTask;
+
+    partial void OnUpsertChanged(bool value)
+    {
+        if (value) EmptyTableFirst = false; // vaciar y actualizar no van juntos
+    }
 
     partial void OnHasHeaderChanged(bool value) => Reload();
     partial void OnDelimiterIndexChanged(int value) => Reload();
@@ -142,15 +181,42 @@ public sealed partial class ImportTabViewModel : EditorTabViewModel
             ShowPreview();
             RowCount = null;
             var file = _file;
-            Status = string.Format(Strings.ImportReading, Path.GetFileName(FilePath));
-            // Contar las filas recorre el archivo entero: aparte, para no frenar la pantalla.
-            _ = Task.Run(() => file.Rows().LongCount()).ContinueWith(t =>
+            var culture = CultureInfo.CurrentCulture;
+            var newTable = IsNewTable;
+            if (newTable)
+            {
+                NewColumns.Clear();
+                if (NewTableName.Length == 0 || NewTableName == _suggestedName) NewTableName = _suggestedName = ImportSchema.TableName(FilePath);
+            }
+            Status = string.Format(newTable ? Strings.ImportAnalyzing : Strings.ImportReading, Path.GetFileName(FilePath));
+            var reading = Status;
+            // Contar las filas (y, para una tabla nueva, ver qué tipo va en cada columna) recorre el archivo entero: aparte,
+            // para no frenar la pantalla.
+            _ = Task.Run(() =>
+            {
+                long count = 0;
+                var counted = file.Rows().Select(r => { count++; return r; });
+                var columns = newTable ? ImportSchema.Infer(file.Headers, counted, culture) : null;
+                if (!newTable) count = counted.LongCount();
+                return (count, columns);
+            }).ContinueWith(t =>
             {
                 if (t.IsCompletedSuccessfully && ReferenceEquals(file, _file)) Dispatcher.UIThread.Post(() =>
                 {
-                    RowCount = t.Result;
-                    Status = string.Format(Strings.ImportRead, Path.GetFileName(FilePath), t.Result, file.Headers.Count,
-                        Columns.Count(c => c.FileIndex > 0), Columns.Count);
+                    RowCount = t.Result.count;
+                    // Si mientras tanto se importó (o pasó otra cosa), su resultado no se tapa con «leído».
+                    var untouched = Status == reading;
+                    if (t.Result.columns is { } inferred)
+                    {
+                        NewColumns.Clear();
+                        foreach (var c in inferred) NewColumns.Add(new ImportNewColumn(file.Headers[c.FileIndex], c.FileIndex, c.Name, c.Type));
+                        if (untouched) Status = string.Format(Strings.ImportNewTableRead, Path.GetFileName(FilePath), t.Result.count, file.Headers.Count);
+                    }
+                    else if (untouched)
+                    {
+                        Status = string.Format(Strings.ImportRead, Path.GetFileName(FilePath), t.Result.count, file.Headers.Count,
+                            Columns.Count(c => c.FileIndex > 0), Columns.Count);
+                    }
                 });
             }, TaskScheduler.Default);
         }
@@ -160,6 +226,8 @@ public sealed partial class ImportTabViewModel : EditorTabViewModel
             Status = string.Format(Strings.ImportReadFailed, ex.Message);
         }
     }
+
+    private string _suggestedName = "";
 
     private char? Delimiter() => DelimiterIndex switch { 1 => ';', 2 => ',', 3 => '\t', 4 => '|', _ => null };
 
@@ -200,7 +268,45 @@ public sealed partial class ImportTabViewModel : EditorTabViewModel
     private async Task RunCoreAsync()
     {
         if (Profile is not { } profile || _file is not { } file) return;
-        var chosen = Columns.Where(c => c.FileIndex > 0).ToList();
+        // Lo que se importa: (columna de la tabla, columna del archivo, tipo).
+        List<(string Name, int FileIndex, string Type)> chosen;
+        string table, ddl = "";
+        IReadOnlyList<string>? keys = null;
+        if (IsNewTable)
+        {
+            if (RowCount is null)
+            {
+                Status = string.Format(Strings.ImportAnalyzing, Path.GetFileName(FilePath));
+                return;
+            }
+            table = NewTableName.Trim();
+            chosen = NewColumns.Where(c => c.Include).Select(c => (c.Name.Trim(), c.FileIndex, c.Type.Trim())).ToList();
+            if (NewTableProblem(table, chosen) is { } problem)
+            {
+                Status = problem;
+                return;
+            }
+            if (await Owner.WithExplorerAsync(profile, e => e.FindObjectAsync(table)) is { } existing)
+            {
+                Status = string.Format(Strings.ImportNewTableExists, table, DbObjectKinds.Singular(existing.Kind).ToLowerInvariant());
+                return;
+            }
+            ddl = ImportSchema.CreateTableSql(table, chosen.Select(c => new NewTableColumn(c.Name, c.Type, c.FileIndex)).ToList());
+        }
+        else
+        {
+            table = Table;
+            chosen = Columns.Where(c => c.FileIndex > 0).Select(c => (c.Name, c.FileIndex - 1, c.Column.Type)).ToList();
+            if (Upsert)
+            {
+                keys = Columns.Where(c => c.FileIndex > 0 && c.IsKey).Select(c => c.Name).ToList();
+                if (keys.Count == 0)
+                {
+                    Status = Strings.ImportNoKey;
+                    return;
+                }
+            }
+        }
         if (chosen.Count == 0)
         {
             Status = Core.Resources.CoreStrings.ImportNoColumns;
@@ -212,36 +318,41 @@ public sealed partial class ImportTabViewModel : EditorTabViewModel
             return;
         }
         var count = RowCount ?? await Task.Run(() => file.Rows().LongCount());
+        var emptyFirst = EmptyTableFirst && !Upsert && !IsNewTable;
         if (profile.IsProduction && !await Owner.ConfirmActionAsync(new ConfirmPrompt(
-                [string.Format(Strings.ImportProduction, count, Table, profile.Name)], Strings.ImportRunNoCount, Strings.Cancel, Strings.ImportProductionTitle)))
+                [string.Format(IsNewTable ? Strings.ImportNewTableProduction : Strings.ImportProduction, count, table, profile.Name)],
+                Strings.ImportRunNoCount, Strings.Cancel, Strings.ImportProductionTitle)))
             return;
-        if (EmptyTableFirst && !await Owner.ConfirmTypedAsync(new TypedConfirm(Strings.ImportEmptyTitle,
-                [string.Format(Strings.ImportEmptyConfirm, Table, profile.Name)], Table, Strings.ImportRunNoCount)))
+        if (emptyFirst && !await Owner.ConfirmTypedAsync(new TypedConfirm(Strings.ImportEmptyTitle,
+                [string.Format(Strings.ImportEmptyConfirm, table, profile.Name)], table, Strings.ImportRunNoCount)))
             return;
 
         IsImporting = true;
         _cts = new CancellationTokenSource();
         var culture = CultureInfo.CurrentCulture;
         var emptyIsNull = EmptyIsNull;
-        var indexes = chosen.Select(c => c.FileIndex - 1).ToArray();
-        var types = chosen.Select(c => c.Column.Type).ToArray();
+        var indexes = chosen.Select(c => c.FileIndex).ToArray();
+        var types = chosen.Select(c => c.Type).ToArray();
+        var creating = IsNewTable;
         IEnumerable<(long, object?[])> Rows() => file.Rows().Select((r, i) => ((long)(file.FirstDataRow + i),
             indexes.Select((f, k) => ImportMapping.Convert(f < r.Length ? r[f] : null, types[k], culture, emptyIsNull)).ToArray()));
-        Log(string.Format(Strings.ImportStart, Table, Path.GetFileName(FilePath)));
+        Log(string.Format(Strings.ImportStart, table, Path.GetFileName(FilePath)));
+        if (creating) Log(ddl);
         Status = string.Format(Strings.ImportRunning, 0);
         var progress = new Progress<long>(n => Status = string.Format(Strings.ImportRunning, n));
         try
         {
-            var result = await Task.Run(() => DataImporter.ImportAsync(profile, password, Table, chosen.Select(c => c.Name).ToList(), Rows(),
-                new ImportOptions(StopOnError, EmptyTableFirst), progress, _cts.Token));
+            var result = await Task.Run(() => DataImporter.ImportAsync(profile, password, table, chosen.Select(c => c.Name).ToList(), Rows(),
+                new ImportOptions(StopOnError, emptyFirst, keys, creating ? ddl : null), progress, _cts.Token));
             foreach (var e in result.Errors) Log(string.Format(Strings.ImportErrorLine, e.Row, e.Message));
             Status = !result.Committed && result.Errors.Count > 0
-                ? string.Format(Strings.ImportRolledBack, result.Errors[0].Row, result.Errors[0].Message)
+                ? string.Format(creating ? Strings.ImportNewTableRolledBack : Strings.ImportRolledBack, result.Errors[0].Row, result.Errors[0].Message)
                 : result.FailedRows > 0
-                    ? string.Format(Strings.ImportDoneWithErrors, result.Inserted, result.Elapsed.TotalSeconds, result.FailedRows)
-                    : string.Format(Strings.ImportDone, result.Inserted, result.Elapsed.TotalSeconds);
+                    ? string.Format(keys is null ? Strings.ImportDoneWithErrors : Strings.ImportUpsertDoneWithErrors, result.Inserted, result.Elapsed.TotalSeconds, result.FailedRows)
+                    : string.Format(keys is null ? Strings.ImportDone : Strings.ImportUpsertDone, result.Inserted, result.Elapsed.TotalSeconds);
             if (result.Committed && result.Deleted > 0) Status += " " + string.Format(Strings.ImportDoneDeleted, result.Deleted);
-            if (result.Committed && result.Inserted > 0) Owner.InvalidateCatalog(profile.Id);
+            if (result.TableCreated) await BecomeTableAsync(profile, table);
+            else if (result.Committed && result.Inserted > 0) Owner.InvalidateCatalog(profile.Id);
         }
         catch (OperationCanceledException)
         {
@@ -258,6 +369,30 @@ public sealed partial class ImportTabViewModel : EditorTabViewModel
             _cts.Dispose();
             _cts = null;
         }
+    }
+
+    /// <summary>Lo que impide crear la tabla nueva (sin nombre, columnas sin nombre o repetidas, tipo vacío), o null.</summary>
+    private static string? NewTableProblem(string table, IReadOnlyList<(string Name, int FileIndex, string Type)> columns)
+    {
+        if (table.Length == 0) return Strings.ImportNewTableNoName;
+        if (columns.Any(c => c.Name.Length == 0 || c.Type.Length == 0)) return Strings.ImportNewTableEmptyColumn;
+        if (columns.GroupBy(c => c.Name, StringComparer.OrdinalIgnoreCase).FirstOrDefault(g => g.Count() > 1) is { } repeated)
+            return string.Format(Strings.ImportNewTableRepeated, repeated.Key);
+        return null;
+    }
+
+    /// <summary>La tabla nueva quedó creada con lo importado: la pestaña pasa a ser la de esa tabla y el árbol la muestra.</summary>
+    private async Task BecomeTableAsync(ConnectionProfile profile, string table)
+    {
+        Status += " " + string.Format(Strings.ImportNewTableCreated, table);
+        Table = table;
+        OnPropertyChanged(nameof(Table));
+        BaseTitle = string.Format(Strings.ImportTabTitle, table);
+        IsNewTable = false;
+        NewColumns.Clear();
+        Owner.InvalidateCatalog(profile.Id);
+        await LoadTableCoreAsync();
+        await Owner.Tree.RefreshDatabaseAsync(profile.Id);
     }
 
     private bool CanStop() => IsImporting;

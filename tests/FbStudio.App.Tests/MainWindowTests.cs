@@ -65,6 +65,137 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         Assert.Contains("TURNOS_FECHA", vm.SelectedTab!.Plan);
         Assert.Contains("TURNOS", vm.SelectedTab!.Stats);
         Assert.True(w.ResultsGrid.CellsDrawnLastFrame > 0, "la grilla no dibujó celdas");
+
+        // Ctrl+Shift+E: el plan sin ejecutar (no trae filas ni toca la grilla); con parámetros también.
+        var rowsBefore = vm.SelectedTab!.Rows.Count;
+        w.Editor.Text = "SELECT * FROM TURNOS WHERE OBS = :OBS";
+        w.Editor.CaretOffset = 3;
+        await w.ShowPlanOnlyAsync();
+        Assert.Contains("TURNOS", vm.SelectedTab.Plan);
+        Assert.Equal(EditorTabViewModel.PlanTab, vm.SelectedTab.SelectedResultTab);
+        Assert.StartsWith("Plan sin ejecutar", vm.SelectedTab.Status);
+        Assert.Contains("lectura completa", vm.SelectedTab.Status);                  // OBS no tiene índice
+        Assert.Equal(rowsBefore, vm.SelectedTab.Rows.Count);
+        w.Editor.Text = "CREATE TABLE X (A INTEGER)";
+        await w.ShowPlanOnlyAsync();
+        Assert.StartsWith("El plan es para", vm.SelectedTab.Status);
+
+        // Ctrl+F con la grilla elegida busca en los resultados (sin mayúsculas ni acentos) y va a cada coincidencia.
+        vm.SelectedTab.SelectedResultTab = 0;                                          // de vuelta a Resultados
+        Pump();
+        var grid = w.ResultsGrid;
+        grid.SelectCell(0, 0);
+        grid.FocusCells();
+        Pump();
+        w.KeyPress(Avalonia.Input.Key.F, Avalonia.Input.RawInputModifiers.Control, Avalonia.Input.PhysicalKey.F, null);
+        Pump();
+        Assert.True(grid.IsSearchOpen);
+        Assert.False(w.CurrentView.FindBar.IsVisible);                                 // no abre la búsqueda del editor
+        var id = vm.SelectedTab!.Rows[5][0]!.ToString()!;
+        grid.SearchText = id;
+        Assert.True(grid.SearchMatchCount >= 1);
+        Assert.StartsWith("1 de ", grid.SearchCount);
+        Assert.Contains(grid.CurrentRow!, v => v?.ToString()?.Contains(id) == true);
+        grid.SearchText = "texto que no está en ningún turno";
+        Assert.Equal("Sin coincidencias", grid.SearchCount);
+        grid.CloseSearch();
+        Assert.False(grid.IsSearchOpen);
+
+        // Los valores de una columna como «COL IN (…)», para pegar en otra consulta.
+        var inList = grid.InListText(0, [0, 1, 2, 1])!;
+        Assert.Equal($"ID IN ({vm.SelectedTab!.Rows[0][0]}, {vm.SelectedTab.Rows[1][0]}, {vm.SelectedTab.Rows[2][0]})", inList);
+
+        // La fila en vertical se recorre con ◀ ▶ (de a una, sin pasarse).
+        var record = w.ResultsGrid.ShowRow(0)!;
+        record.Go(1);
+        Assert.Equal((1, "Fila 2 de 10000"), (record.Position, record.Title));
+        Assert.Equal(vm.SelectedTab!.Rows[1][0], record.Grid.Rows[0][2]);
+        record.Go(-5);
+        Assert.Equal(0, record.Position);
+        record.Close();
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Ver_el_valor_de_una_celda_texto_largo_json_e_imagen() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        w.Editor.Text = "SELECT CAST('{\"turno\":1,\"obs\":\"señal\"}' AS BLOB SUB_TYPE TEXT) AS J, x'0001FF' AS B, CAST(NULL AS VARCHAR(5)) AS N FROM RDB$DATABASE";
+        await w.RunAsync();
+        Pump();
+        Assert.Single(vm.SelectedTab!.Rows);
+
+        // El JSON se ve con sangría y también tal cual; el binario, en hexadecimal; NULL, como NULL.
+        var json = w.ResultsGrid.ShowValue(0, 0)!;
+        Assert.Equal(["Con sangría", "Texto"], json.Views);
+        Assert.Equal("{\n  \"turno\": 1,\n  \"obs\": \"señal\"\n}", json.ShownText!.Replace("\r\n", "\n"));
+        Assert.Equal("Valor de J", json.Title);
+        json.SelectView("Texto");
+        Assert.Equal("{\"turno\":1,\"obs\":\"señal\"}", json.ShownText);
+        json.Close();
+        var binary = w.ResultsGrid.ShowValue(0, 1)!;
+        Assert.Equal(["Hexadecimal"], binary.Views);
+        Assert.StartsWith("00000000  00 01 FF", binary.ShownText);
+        binary.Close();
+        var empty = w.ResultsGrid.ShowValue(0, 2)!;
+        Assert.Equal("NULL", empty.ShownText);
+        empty.Close();
+
+        // La fila en vertical: un renglón por columna (con su tipo); NULL queda NULL y el binario se puede ver entero.
+        var record = w.ResultsGrid.ShowRow(0)!;
+        Pump();
+        Assert.Equal(3, record.Grid.Rows.Count);
+        Assert.Equal(["J", "B", "N"], record.Grid.Rows.Select(r => (string)r[0]));
+        Assert.IsType<byte[]>(record.Grid.Rows[1][2]);
+        Assert.Equal(DBNull.Value, record.Grid.Rows[2][2]);
+        Assert.Equal("Fila 1 de 1", record.Title);
+        record.Close();
+
+        // La fila como tabla de Markdown (para pegar en un ticket) y el resultado a JSON (el binario, en base64).
+        var markdown = w.ResultsGrid.MarkdownText([0]).Split('\n');
+        Assert.Equal(["| J | B | N |", "| --- | --- | --- |"], markdown[..2]);
+        Assert.StartsWith("| {\"turno\":1,\"obs\":\"señal\"} | ", markdown[2]);
+        Assert.EndsWith(" | NULL |", markdown[2]);
+        var jsonPath = Path.Combine(Path.GetTempPath(), $"fbstudio-{Guid.NewGuid():N}.json");
+        await vm.SelectedTab!.ExportAsync(jsonPath, false, new FbStudio.Core.Export.JsonExporter());
+        Assert.Contains("\"B\": \"AAH/\"", File.ReadAllText(jsonPath));
+        File.Delete(jsonPath);
+
+        // Una imagen se dibuja (y se puede ver en hexadecimal).
+        var png = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
+        var image = new ValueViewerWindow("FOTO", "BLOB", png);
+        image.Show(w);
+        Pump();
+        Assert.Equal(["Imagen", "Hexadecimal"], image.Views);
+        Assert.Null(image.ShownText);
+        Assert.Contains(Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(image), v => v is Avalonia.Controls.Image { Source: not null });
+        image.Close();
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Grafico_rapido_de_un_resultado() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        w.Editor.Text = "SELECT 'A' AS GRUPO, 3 AS N FROM RDB$DATABASE UNION ALL SELECT 'B', 5 FROM RDB$DATABASE UNION ALL SELECT 'A', 2 FROM RDB$DATABASE";
+        await w.RunAsync();
+        Pump();
+        var chart = w.ResultsGrid.ShowChart()!;
+        Pump();
+        // Propone X = la columna de texto e Y = la numérica, y suma por cada X.
+        Assert.Equal([new ChartPoint("A", 5), new ChartPoint("B", 5)], chart.Chart.Points);
+        Assert.Equal("N por GRUPO", chart.Title);
+        Assert.Equal("2 puntos", chart.Info);
+        Assert.Equal(2, chart.Chart.MarksDrawnLastFrame);
+        chart.Choose("GRUPO", null);                                                 // la cantidad de filas
+        Assert.Equal([2d, 1d], chart.Chart.Points.Select(p => p.Value));
+        Assert.Equal("Cantidad de filas por GRUPO", chart.Title);
+        chart.Chart.HoverAt(new Avalonia.Point(chart.Chart.Bounds.Width - 30, 100));
+        Assert.Equal(1, chart.Chart.Hover);                                            // la franja de la segunda
+        chart.Chart.Kind = FbStudio.App.ResultGrid.ChartKind.Line;
+        Pump();
+        Assert.Equal(2, chart.Chart.MarksDrawnLastFrame);
+        chart.Close();
         w.Close();
     }, CancellationToken.None);
 
@@ -255,6 +386,286 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         await WaitFor(() => !tab.IsRunning && tab.Status.Contains("sin grilla"));
         Assert.Contains("SELECT: 5 filas (sin grilla no se muestran)", tab.Messages);
         Assert.Equal(3, tab.Rows.Count);
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Al_cerrar_recuerda_las_consultas_y_al_abrir_las_vuelve_a_abrir() => ui.Session.DispatchAsync(() =>
+    {
+        var store = AppServices.CreateProfileStore(_folder);
+        store.Upsert(fb.Profile, fb.Password);
+        var session = new SessionStore(null, null);
+        var settings = AppServices.CreateSettingsStore(_folder);
+        var first = new MainWindowViewModel(store, AppServices.CreateHistoryStore(_folder), settings, session: session);
+        var profile = first.Profiles.Single();
+        first.NewQueryTab(profile, "SELECT ID FROM TURNOS");
+        first.NewQueryTab(profile);                                                    // vacía: no se guarda
+        Directory.CreateDirectory(_folder);
+        var path = Path.Combine(_folder, "guardada.sql");
+        File.WriteAllText(path, "SELECT 1 FROM RDB$DATABASE");
+        var fileTab = first.OpenSqlFile(path)!;
+        fileTab.Document.Insert(0, "-- sin guardar\n");                                 // lo no guardado se descartó al salir
+        var numbered = first.NewQueryTab(profile, "SELECT 2 FROM RDB$DATABASE");
+        first.SelectedTab = fileTab;
+        first.SaveSession();
+
+        var second = new MainWindowViewModel(store, AppServices.CreateHistoryStore(_folder), settings, session: session);
+        second.RestoreSession();
+        Assert.Equal(3, second.Tabs.Count);
+        Assert.Equal(("SELECT ID FROM TURNOS", profile.Id), (second.Tabs[0].Document.Text, second.Tabs[0].Profile!.Id));
+        Assert.Equal((path, "SELECT 1 FROM RDB$DATABASE"), (second.Tabs[1].FilePath, second.Tabs[1].Document.Text));
+        Assert.Same(second.Tabs[1], second.SelectedTab);
+        Assert.Equal(numbered.BaseTitle, second.Tabs[2].BaseTitle);
+        Assert.StartsWith("Se volvieron a abrir 3 consultas", second.SelectedTab!.Status);
+        var next = second.NewQueryTab(profile);
+        Assert.NotEqual(numbered.BaseTitle, next.BaseTitle);                            // sigue numerando desde la mayor
+
+        // Con la opción apagada, al cerrar se olvida y al abrir no se reabre nada.
+        second.SaveSettings(second.Options with { RestoreTabs = false });
+        second.SaveSession();
+        Assert.Null(session.Load());
+        return Task.CompletedTask;
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Renombrar_duplicar_y_reabrir_la_pestana_cerrada() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        var tab = vm.SelectedTab!;
+        tab.Document.Text = "SELECT ID FROM TURNOS";
+        tab.Rename("Turnos del día");
+        Assert.Equal("Turnos del día", tab.BaseTitle);
+        var menu = w.BuildTabMenu(vm, tab).ItemsSource!.OfType<Avalonia.Controls.MenuItem>().Select(m => ((string?)m.Header, m.IsEnabled)).ToList();
+        Assert.Equal([("Renombrar…", true), ("Duplicar", true), ("Reabrir la pestaña cerrada (Ctrl+Shift+T)", false)], menu.Take(3));
+
+        var copy = vm.DuplicateTab(tab);
+        Assert.Equal(("SELECT ID FROM TURNOS", tab.Profile?.Id), (copy.Document.Text, copy.Profile?.Id));
+        Assert.NotEqual(tab.BaseTitle, copy.BaseTitle);
+        await vm.CloseTabAsync(tab);
+        Assert.DoesNotContain(tab, vm.Tabs);
+        Assert.True(vm.CanReopenClosedTab);
+
+        // Ctrl+Shift+T la vuelve a abrir con su nombre y su texto.
+        w.KeyPress(Avalonia.Input.Key.T, Avalonia.Input.RawInputModifiers.Control | Avalonia.Input.RawInputModifiers.Shift, Avalonia.Input.PhysicalKey.T, null);
+        Pump();
+        var reopened = vm.SelectedTab!;
+        Assert.Equal(("Turnos del día", "SELECT ID FROM TURNOS"), (reopened.BaseTitle, reopened.Document.Text));
+        Assert.False(vm.CanReopenClosedTab);
+        Assert.Null(vm.ReopenClosedTab());
+        Assert.StartsWith("No hay consultas cerradas", vm.SelectedTab!.Status);
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Comandos_de_edicion_del_editor() => ui.Session.DispatchAsync(() =>
+    {
+        var (w, vm) = Open();
+        w.Editor.Text = "SELECT ID\nFROM turnos\nWHERE ID > 1";
+        w.Editor.CaretOffset = "SELECT ID\nFROM tur".Length;
+        w.Editor.TextArea.Focus();
+        Pump();
+        Assert.True(w.Editor.IsKeyboardFocusWithin);
+        void Press(Avalonia.Input.Key key, Avalonia.Input.RawInputModifiers modifiers, Avalonia.Input.PhysicalKey physical)
+        {
+            w.KeyPress(key, modifiers, physical, null);
+            Pump();
+        }
+
+        // Ctrl+Shift+U: la palabra del cursor en mayúsculas; Ctrl+D duplica el renglón; Alt+↑ lo sube.
+        Press(Avalonia.Input.Key.U, Avalonia.Input.RawInputModifiers.Control | Avalonia.Input.RawInputModifiers.Shift, Avalonia.Input.PhysicalKey.U);
+        Assert.Equal("SELECT ID\nFROM TURNOS\nWHERE ID > 1", w.Editor.Text);
+        Press(Avalonia.Input.Key.D, Avalonia.Input.RawInputModifiers.Control, Avalonia.Input.PhysicalKey.D);
+        Assert.Equal("SELECT ID\nFROM TURNOS\nFROM TURNOS\nWHERE ID > 1", w.Editor.Text);
+        Assert.Equal(3, w.Editor.Document.GetLineByOffset(w.Editor.CaretOffset).LineNumber);
+        Press(Avalonia.Input.Key.Down, Avalonia.Input.RawInputModifiers.Alt, Avalonia.Input.PhysicalKey.ArrowDown);
+        Assert.Equal("SELECT ID\nFROM TURNOS\nWHERE ID > 1\nFROM TURNOS", w.Editor.Text);
+
+        // Ctrl+/ (en el teclado español, la tecla «-» de esa posición) comenta y descomenta; cada uno, un solo Ctrl+Z.
+        w.Editor.Select(0, "SELECT ID\nFROM TURNOS".Length);
+        Press(Avalonia.Input.Key.OemMinus, Avalonia.Input.RawInputModifiers.Control, Avalonia.Input.PhysicalKey.Slash);
+        Assert.Equal("-- SELECT ID\n-- FROM TURNOS\nWHERE ID > 1\nFROM TURNOS", w.Editor.Text);
+        Assert.Equal("-- SELECT ID\n-- FROM TURNOS", w.Editor.SelectedText);
+        Press(Avalonia.Input.Key.OemQuestion, Avalonia.Input.RawInputModifiers.Control, Avalonia.Input.PhysicalKey.Slash);
+        Assert.Equal("SELECT ID\nFROM TURNOS\nWHERE ID > 1\nFROM TURNOS", w.Editor.Text);
+        w.Editor.Undo();
+        Assert.Equal("-- SELECT ID\n-- FROM TURNOS\nWHERE ID > 1\nFROM TURNOS", w.Editor.Text);
+
+        // Los bloques de varios renglones se pliegan (marcas en el margen); con la opción apagada, no hay marcas.
+        w.Editor.Text = "SELECT *\nFROM T\nWHERE ID IN (\n  SELECT ID\n  FROM U\n)";
+        var setup = w.CurrentView.EditorSetup!;
+        setup.UpdateFoldings();
+        var block = Assert.Single(setup.Foldings);
+        Assert.Equal("\n  SELECT ID\n  FROM U\n", w.Editor.Text[block.Start..block.End]);
+        vm.SaveSettings(vm.Options with { ShowFolding = false });
+        Assert.False(setup.Folding);
+        vm.SaveSettings(vm.Options with { ShowFolding = true });
+        Assert.True(setup.Folding);
+
+        // Los mismos comandos están en Consulta › Editar el texto.
+        var menu = Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(w).OfType<Avalonia.Controls.MenuItem>().Single(m => (string?)m.Header == "Editar el texto");
+        Assert.Equal(7, menu.Items.Count);
+        w.Close();
+        return Task.CompletedTask;
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Buscar_y_reemplazar_en_el_editor() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        w.Editor.Text = "SELECT ID FROM TURNOS\nWHERE TURNOS.ID > 1\n-- turnos de hoy\nAND TURNOS_DET.ID = 2";
+        w.Editor.CaretOffset = 0;
+        w.Editor.Focus();
+        Pump();
+
+        // Ctrl+F abre la barra; las coincidencias se cuentan y se elige la primera.
+        w.KeyPress(Avalonia.Input.Key.F, Avalonia.Input.RawInputModifiers.Control, Avalonia.Input.PhysicalKey.F, null);
+        Pump();
+        var bar = w.CurrentView.FindBar;
+        Assert.True(bar.IsVisible);
+        bar.FindText = "turnos";
+        Pump();
+        Assert.Equal(4, bar.Matches.Count);
+        Assert.Equal("1 de 4", bar.CountText);
+        Assert.Equal("TURNOS", w.Editor.SelectedText);
+        bar.Go(1);
+        Assert.Equal("2 de 4", bar.CountText);
+        bar.Go(-1);
+        bar.Go(-1);                                                                   // da la vuelta: la última
+        Assert.Equal("4 de 4", bar.CountText);
+        bar.WholeWord = true;
+        Assert.Equal(3, bar.Matches.Count);                                           // TURNOS_DET ya no
+        bar.MatchCase = true;
+        Assert.Equal(1, bar.Matches.Count);                                           // con mayúsculas: solo la del comentario
+
+        // Reemplazar todo con los grupos de una expresión regular: un solo Ctrl+Z lo vuelve atrás.
+        var before = w.Editor.Text;
+        bar.WholeWord = false;
+        bar.MatchCase = true;
+        bar.UseRegex = true;
+        bar.FindText = @"TURNOS(_DET)?\.ID";
+        bar.ReplaceText = "X$1.ID";
+        Assert.Equal(2, bar.ReplaceAll());
+        Assert.Contains("WHERE X.ID > 1", w.Editor.Text);
+        Assert.Contains("AND X_DET.ID = 2", w.Editor.Text);
+        Assert.Equal("2 reemplazos", bar.CountText);
+        w.Editor.Undo();
+        Assert.Equal(before, w.Editor.Text);
+
+        bar.FindText = "([";
+        Assert.Equal("Expresión no válida", bar.CountText);
+
+        // Con Ctrl+H, Tab y Mayús+Tab van y vienen entre buscar y reemplazar.
+        bar.UseRegex = false;
+        w.Editor.Focus();
+        w.KeyPress(Avalonia.Input.Key.H, Avalonia.Input.RawInputModifiers.Control, Avalonia.Input.PhysicalKey.H, null);
+        Pump();
+        Assert.True(bar.FindHasFocus || bar.ReplaceHasFocus);
+        var startedInFind = bar.FindHasFocus;
+        w.KeyPress(Avalonia.Input.Key.Tab, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.Tab, null);
+        Pump();
+        Assert.Equal(startedInFind, bar.ReplaceHasFocus);
+        w.KeyPress(Avalonia.Input.Key.Tab, Avalonia.Input.RawInputModifiers.Shift, Avalonia.Input.PhysicalKey.Tab, null);
+        Pump();
+        Assert.Equal(startedInFind, bar.FindHasFocus);
+        bar.Close();
+        Assert.False(bar.IsVisible);
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Abrir_y_guardar_archivos_sql_con_aviso_de_cambios_sin_guardar() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        var first = vm.SelectedTab!;
+        Directory.CreateDirectory(_folder);
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        var latin1 = System.Text.Encoding.GetEncoding(1252);
+        var path = Path.Combine(_folder, "consulta de prueba.sql");
+        File.WriteAllText(path, "-- Pacientes con turno\nSELECT * FROM TURNOS WHERE OBS = 'revisión';\n", latin1);
+
+        // La consulta vacía que estaba elegida se usa para el archivo; el título es su nombre.
+        var tab = vm.OpenSqlFile(path)!;
+        Assert.Same(first, tab);
+        Assert.Equal(("consulta de prueba.sql", path), (tab.BaseTitle, tab.FilePath));
+        Assert.Contains("'revisión'", tab.Document.Text);
+        Assert.False(tab.IsModified);
+        Assert.Equal([path], vm.RecentFiles);
+        Assert.Same(tab, vm.OpenSqlFile(path));                                  // ya abierto: va a su pestaña
+
+        // Cambios sin guardar: «*» en el título, aviso al cerrar y al salir.
+        tab.Document.Insert(tab.Document.TextLength, "-- más\n");
+        Assert.True(tab.IsModified);
+        Assert.Contains(" *", tab.TitleText);
+        Assert.Contains(vm.ExitWarnings(), m => m.Contains("«consulta de prueba.sql»"));
+        DiscardPrompt? asked = null;
+        vm.ConfirmDiscardAsync = p => { asked = p; return Task.FromResult(false); };
+        await vm.CloseTabAsync(tab);
+        Assert.Equal("«consulta de prueba.sql» tiene cambios sin guardar. Si cerrás la pestaña, se pierden.", asked!.Message);
+        Assert.Contains(tab, vm.Tabs);
+
+        // Guardar: en el mismo archivo y con la misma codificación (Windows-1252).
+        tab.SaveFile(path);
+        Assert.False(tab.IsModified);
+        Assert.StartsWith("Guardado: ", tab.Status);
+        Assert.Equal(tab.Document.Text, File.ReadAllText(path, latin1));
+        Assert.Contains((byte)0xF3, File.ReadAllBytes(path));                   // la «ó» en un byte, como en 1252
+
+        // Guardar como: otro nombre, y queda primero en los recientes; un emoji no entra en 1252 → UTF-8.
+        var other = Path.Combine(_folder, "otra.sql");
+        tab.Document.Insert(0, "-- ✓ revisado\n");
+        w.SaveCurrentTabTo(other);
+        Assert.Equal(("otra.sql", other), (tab.BaseTitle, tab.FilePath));
+        Assert.Contains("UTF-8", tab.Status);
+        Assert.StartsWith("-- ✓ revisado", File.ReadAllText(other, System.Text.Encoding.UTF8));
+        Assert.Equal([other, path], vm.RecentFiles);
+
+        // Otro archivo con la consulta ya ocupada: va a una pestaña nueva; uno que ya no está sale de los recientes.
+        var count = vm.Tabs.Count;
+        var second = vm.OpenSqlFile(path)!;
+        Assert.NotSame(tab, second);
+        Assert.Equal(count + 1, vm.Tabs.Count);
+        var gone = Path.Combine(_folder, "borrado.sql");
+        vm.RememberFile(gone);
+        Assert.Null(vm.OpenSqlFile(gone));
+        Assert.DoesNotContain(gone, vm.RecentFiles);
+        Assert.StartsWith("Ya no está el archivo", vm.SelectedTab!.Status);
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Un_script_de_un_archivo_corre_sin_pasar_por_el_editor() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        var tab = vm.SelectedTab!;
+        w.Editor.Text = "-- lo que había";
+        vm.SaveSettings(vm.Options with { ScriptStopOnError = false });
+
+        // Un .sql en Windows-1252 (con tilde), con un comentario arriba y la sentencia 151 con error.
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        var sql = new System.Text.StringBuilder("-- Corrección de observaciones\n");
+        for (var i = 0; i < 300; i++)
+            sql.Append(i == 150 ? "UPDATE TURNOS SET NO_EXISTE = 1 WHERE ID = 1;\n" : $"UPDATE TURNOS SET OBS = 'revisión' WHERE ID = {i + 1000};\n");
+        Directory.CreateDirectory(_folder);
+        var path = Path.Combine(_folder, "arreglo.sql");
+        File.WriteAllText(path, sql.ToString(), System.Text.Encoding.GetEncoding(1252));
+
+        await tab.RunFileAsync(path);
+        Assert.StartsWith("Script: 299 de 300 sentencias", tab.Status);
+        Assert.Contains("1 con error (línea 152)", tab.Status);                 // el renglón del archivo
+        Assert.Contains("desde el archivo arreglo.sql", tab.Status);
+        Assert.Contains("✗ línea 152 · UPDATE", tab.Messages);
+        Assert.Equal("-- lo que había", w.Editor.Text);                          // el editor no se tocó
+        Assert.True(tab.InTransaction);
+        Assert.Equal("-- Script del archivo arreglo.sql (300 sentencias)", vm.HistoryItems[0].Sql);
+
+        w.Editor.Text = "SELECT OBS FROM TURNOS WHERE ID = 1000";                // en la misma transacción
+        await w.RunAsync();
+        Assert.Equal("revisión", tab.Rows[0][0]);
+        await tab.RollbackCommand.ExecuteAsync(null);
+
+        File.WriteAllText(path, "-- solo un comentario\n");
+        await tab.RunFileAsync(path);
+        Assert.Equal("arreglo.sql no tiene sentencias para ejecutar.", tab.Status);
         w.Close();
     }, CancellationToken.None);
 
@@ -562,14 +973,16 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
             (items ?? []).OfType<Avalonia.Controls.MenuItem>().Single(m => (string)m.Header! == header);
 
         var menu = w.BuildTreeMenu(db)!;
-        Assert.Equal(["Conectar", "Consulta nueva en esta base", "Buscar en metadatos…", "─", "Herramientas", "Mantenimiento", "Script y comparar", "─", "Registro"],
+        Assert.Equal(["Conectar", "Consulta nueva en esta base", "Buscar en metadatos…", "Importar a una tabla nueva (CSV o Excel)…", "─", "Herramientas",
+                "Mantenimiento", "Script y comparar", "─", "Registro"],
             Headers(menu.ItemsSource?.Cast<object>()));
-        Assert.Equal(["Monitoreo (conexiones y transacciones)", "Trace (sentencias en vivo)", "Estadísticas", "Usuarios y permisos…", "Áreas…", "Datos del servidor…"],
+        Assert.Equal(["Monitoreo (conexiones y transacciones)", "Trace (sentencias en vivo)", "Estadísticas", "Usuarios y permisos…", "Áreas…",
+                "Abrir diagrama guardado…", "Datos del servidor…"],
             Headers(Find(menu.ItemsSource?.Cast<object>(), "Herramientas").ItemsSource?.Cast<object>()));
         Assert.Equal(["Backup", "Restore", "nbackup", "Validación", "Sweep", "Base vacía", "Propiedades"],
             Headers(Find(menu.ItemsSource?.Cast<object>(), "Mantenimiento").ItemsSource?.Cast<object>()));
         // Con una sola base registrada no hay con qué comparar.
-        Assert.Equal(["Script de la base…"], Headers(Find(menu.ItemsSource?.Cast<object>(), "Script y comparar").ItemsSource?.Cast<object>()));
+        Assert.Equal(["Script de la base…", "Documentación en HTML…"], Headers(Find(menu.ItemsSource?.Cast<object>(), "Script y comparar").ItemsSource?.Cast<object>()));
         Assert.Equal(["Editar registro…", "Clonar registro… (y abrir sus propiedades)", "Mover a carpeta…", "Exportar este registro…"],
             Headers(Find(menu.ItemsSource?.Cast<object>(), "Registro").ItemsSource?.Cast<object>()));
 
@@ -586,6 +999,57 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         var maint = Assert.IsType<MaintenanceTabViewModel>(vm.SelectedTab);
         Assert.Equal(MaintenanceTask.NBackup, maint.CurrentTask);
         await maint.Working;
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Generar_SQL_de_una_tabla_desde_el_arbol() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        var tree = vm.Tree;
+        var db = Assert.Single(tree.Rows, n => n.Kind == TreeNodeKind.Database);
+        await tree.ActivateAsync(db);
+        var tables = tree.Rows.Single(n => n.Kind == TreeNodeKind.Category && n.Category == DbObjectKind.Table);
+        await tree.ToggleAsync(tables);
+        var turnos = tree.Rows.Single(n => n.Kind == TreeNodeKind.Object && n.Text == "TURNOS");
+
+        // El submenú: de una tabla, las cinco; de una vista, solo el SELECT.
+        var group = w.BuildTreeMenu(turnos)!.Items.OfType<Avalonia.Controls.MenuItem>().Single(m => (string?)m.Header == "Generar SQL");
+        Assert.Equal(["SELECT con todas las columnas", "INSERT", "UPDATE por la clave primaria", "DELETE por la clave primaria", "UPDATE OR INSERT"],
+            group.Items.OfType<Avalonia.Controls.MenuItem>().Select(m => (string?)m.Header));
+        var views = tree.Rows.Single(n => n.Kind == TreeNodeKind.Category && n.Category == DbObjectKind.View);
+        await tree.ToggleAsync(views);
+        var view = tree.Rows.Single(n => n.Kind == TreeNodeKind.Object && n.Text == "V_TURNOS");
+        Assert.Single(w.BuildTreeMenu(view)!.Items.OfType<Avalonia.Controls.MenuItem>().Single(m => (string?)m.Header == "Generar SQL").Items.OfType<Avalonia.Controls.MenuItem>());
+
+        // Cada una va a una consulta nueva de esa base, sin ejecutar.
+        var update = (await vm.GenerateTableSqlAsync(db.Profile!, turnos.Object!, FbStudio.Core.Sql.TableSqlKind.Update))!;
+        Assert.Same(update, vm.SelectedTab);
+        Assert.Equal(db.Profile!.Id, update.Profile!.Id);
+        Assert.Equal("UPDATE TURNOS\nSET FECHA = :FECHA,\n    PACIENTE = :PACIENTE,\n    OBS = :OBS,\n    IMPORTE = :IMPORTE\nWHERE ID = :ID", update.Document.Text);
+        Assert.False(update.IsRunning);
+        var select = (await vm.GenerateTableSqlAsync(db.Profile, view.Object!, FbStudio.Core.Sql.TableSqlKind.Select))!;
+        Assert.Equal("SELECT ID, FECHA\nFROM V_TURNOS", select.Document.Text);
+
+        // De un procedimiento y una función: la llamada con sus parámetros (SELECT solo si devuelve algo).
+        var profile = db.Profile;
+        Assert.Equal("SELECT *\nFROM P_TURNOS_DESDE(:DESDE, :HASTA)",
+            (await vm.GenerateRoutineSqlAsync(profile, new DbObject(DbObjectKind.Procedure, "P_TURNOS_DESDE"), select: true))!.Document.Text);
+        Assert.Equal("EXECUTE PROCEDURE P_TURNOS_DESDE(:DESDE, :HASTA)",
+            (await vm.GenerateRoutineSqlAsync(profile, new DbObject(DbObjectKind.Procedure, "P_TURNOS_DESDE"), select: false))!.Document.Text);
+        Assert.Equal("SELECT F_DOBLE(:X)\nFROM RDB$DATABASE",
+            (await vm.GenerateRoutineSqlAsync(profile, new DbObject(DbObjectKind.Function, "F_DOBLE"), select: true))!.Document.Text);
+        var procedures = tree.Rows.Single(n => n.Kind == TreeNodeKind.Category && n.Category == DbObjectKind.Procedure);
+        await tree.ToggleAsync(procedures);
+        var contar = tree.Rows.Single(n => n.Kind == TreeNodeKind.Object && n.Text == "P_CONTAR");
+        Assert.Equal(["SELECT * FROM …", "EXECUTE PROCEDURE …"], w.BuildTreeMenu(contar)!.Items.OfType<Avalonia.Controls.MenuItem>()
+            .Single(m => (string?)m.Header == "Generar SQL").Items.OfType<Avalonia.Controls.MenuItem>().Select(m => (string?)m.Header));
+
+        // Si el objeto ya no está, avisa y no abre nada.
+        var count = vm.Tabs.Count;
+        Assert.Null(await vm.GenerateTableSqlAsync(db.Profile, new DbObject(DbObjectKind.Table, "NO_EXISTE"), FbStudio.Core.Sql.TableSqlKind.Select));
+        Assert.Equal(count, vm.Tabs.Count);
+        Assert.StartsWith("No se encontraron las columnas de NO_EXISTE", vm.SelectedTab!.Status);
         w.Close();
     }, CancellationToken.None);
 
@@ -630,6 +1094,14 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         var cols = tree.Rows.Where(n => n.Kind == TreeNodeKind.Column).ToList();
         Assert.Equal(5, cols.Count);
         Assert.Equal("INTEGER PK NOT NULL", cols[0].Detail);
+
+        // «¿Dónde se usa?» de una columna: la lista de lo que la usa.
+        var idColumn = cols.Single(c => c.Column!.Name == "ID");
+        Assert.Contains(w.BuildTreeMenu(idColumn)!.Items.OfType<Avalonia.Controls.MenuItem>(), m => (string?)m.Header == "¿Dónde se usa?…");
+        var usage = (await w.ShowColumnUsageAsync(vm, db.Profile!, "TURNOS", "ID"))!;
+        Assert.Equal("¿Dónde se usa TURNOS.ID?", usage.Title);
+        Assert.Contains(usage.Lines, l => l.StartsWith("La usa · Vista V_TURNOS", StringComparison.Ordinal));
+        usage.Close();
 
         // Arrastrar la tabla y una columna al editor: escriben su nombre donde se sueltan.
         Assert.Equal("TURNOS", DatabaseTreeViewModel.EditorText(turnos));
@@ -1087,6 +1559,32 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         await tree.ActivateAsync(tree.Rows.Single(n => n.Kind == TreeNodeKind.Object && n.Text == "TURNOS"));
         await WaitFor(() => vm.SelectedTab!.IsObjectTab && vm.SelectedTab.BaseTitle == "TURNOS");
         Assert.False(vm.SelectedTab!.IsCompilable);
+        Assert.StartsWith("CREATE TABLE TURNOS (", w.Editor.Text);
+
+        // Desde la pestaña de una tabla no se ejecuta nada (correr su DDL intentaría crearla de nuevo, con sus claves,
+        // índices, triggers y permisos): F9, F5, Ctrl+Enter, Ctrl+F9 y el plan se niegan, y el DDL no se edita.
+        var table = vm.SelectedTab;
+        Assert.True(table.IsReadOnlyObject);
+        Assert.True(w.Editor.IsReadOnly);
+        w.Editor.TextArea.Focus();
+        Pump();
+        foreach (var (key, modifiers, physical) in new[]
+        {
+            (Avalonia.Input.Key.F9, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.F9),
+            (Avalonia.Input.Key.F5, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.F5),
+            (Avalonia.Input.Key.Enter, Avalonia.Input.RawInputModifiers.Control, Avalonia.Input.PhysicalKey.Enter),
+            (Avalonia.Input.Key.F9, Avalonia.Input.RawInputModifiers.Control, Avalonia.Input.PhysicalKey.F9),
+            (Avalonia.Input.Key.E, Avalonia.Input.RawInputModifiers.Control | Avalonia.Input.RawInputModifiers.Shift, Avalonia.Input.PhysicalKey.E),
+        })
+        {
+            table.Status = "";
+            w.KeyPress(key, modifiers, physical, null);
+            await WaitFor(() => !table.IsRunning);
+            Pump();
+            Assert.StartsWith("No se ejecuta: la pestaña de TURNOS muestra su DDL", table.Status);
+            Assert.False(table.InTransaction);
+        }
+        Assert.Null(await table.RunAsync("DROP TABLE TURNOS"));                       // ni desde el código
         Assert.StartsWith("CREATE TABLE TURNOS (", w.Editor.Text);
         w.Close();
     }, CancellationToken.None);

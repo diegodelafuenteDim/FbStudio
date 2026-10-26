@@ -53,6 +53,9 @@ public sealed record SchemaCompareOptions
 
     /// <summary>Dejar las columnas en el mismo orden que en el origen (ALTER … POSITION).</summary>
     public bool ColumnPositions { get; init; } = true;
+
+    /// <summary>Comparar solo un área del origen (F-9), con sus reglas aplicadas a las dos bases; null, todo.</summary>
+    public string? Area { get; init; }
 }
 
 /// <summary>

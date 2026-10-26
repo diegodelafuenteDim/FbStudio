@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -13,6 +14,8 @@ public partial class DiagramTabView : UserControl
     private static readonly FilePickerFileType Png = new(Strings.DiagramFilePng) { Patterns = ["*.png"] };
     private static readonly FilePickerFileType Svg = new(Strings.DiagramFileSvg) { Patterns = ["*.svg"] };
     private static readonly FilePickerFileType Drawio = new(Strings.DiagramFileDrawio) { Patterns = ["*.drawio"] };
+    private static readonly FilePickerFileType Saved = new(Strings.DiagramFileSaved) { Patterns = ["*" + Core.Diagrams.DiagramFile.Extension] };
+    private static readonly FilePickerFileType Mermaid = new(Strings.DiagramFileMermaid) { Patterns = ["*.mmd", "*.md"] };
 
     public DiagramTabView()
     {
@@ -26,6 +29,14 @@ public partial class DiagramTabView : UserControl
         Canvas.NodeActivated += async node =>
         {
             if (Tab is { } tab) await tab.OpenAsync(node);
+        };
+        Canvas.NodeMoved += _ => Tab?.NodeMovedByHand();
+        SaveButton.Click += async (_, _) => await SaveAsync();
+        CopyMermaidButton.Click += async (_, _) =>
+        {
+            if (Tab is not { MermaidText: { } text } tab || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) return;
+            await clipboard.SetTextAsync(text);
+            tab.Status = Strings.DiagramMermaidCopied;
         };
     }
 
@@ -63,8 +74,22 @@ public partial class DiagramTabView : UserControl
             Title = Strings.DiagramExport.TrimEnd('…'),
             SuggestedFileName = string.Format(Strings.DiagramFileName, tab.Source.Name),
             DefaultExtension = "png",
-            FileTypeChoices = [Png, Svg, Drawio],
+            FileTypeChoices = [Png, Svg, Drawio, Mermaid, Saved],
         });
         if (file?.TryGetLocalPath() is { } path) tab.Export(path);
+    }
+
+    /// <summary>«Guardar diagrama…»: un .fbsdiagram para abrirlo después tal como quedó.</summary>
+    private async Task SaveAsync()
+    {
+        if (Tab is not { } tab || TopLevel.GetTopLevel(this)?.StorageProvider is not { } storage) return;
+        var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = Strings.DiagramSave.TrimEnd('…'),
+            SuggestedFileName = string.Format(Strings.DiagramFileName, tab.Source.Name),
+            DefaultExtension = Core.Diagrams.DiagramFile.Extension.TrimStart('.'),
+            FileTypeChoices = [Saved],
+        });
+        if (file?.TryGetLocalPath() is { } path) tab.Save(path);
     }
 }

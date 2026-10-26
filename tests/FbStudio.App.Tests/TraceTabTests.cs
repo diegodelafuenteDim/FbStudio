@@ -97,6 +97,23 @@ public sealed class TraceTabTests(FirebirdFixture fb, HeadlessFixture ui) : IDis
         Assert.Contains(trace.Events, e => e.Sql?.Contains("PACIENTE 7") == true);
         Assert.StartsWith("Log abierto:", trace.Status);
 
+        // Comparar con un período guardado (acá, el mismo log): todo igual; se elige una fila y se quita.
+        trace.CompareWith(log);
+        Assert.True(trace.HasBaseline);
+        Assert.Equal("traza.log", trace.BaselineName);
+        Assert.Equal(trace.Groups.Count, trace.Changes.Count);
+        Assert.All(trace.Changes, c => Assert.Equal(Core.Trace.TraceChangeKind.Same, c.Kind));
+        Assert.Contains("0 más lentas, 0 más rápidas, 0 nuevas, 0 ya no aparecen", trace.ComparisonSummary);
+        Pump();
+        Assert.Equal(trace.Changes.Count, view.Comparison.Rows.Count);
+        trace.SelectChange(view.Comparison.Rows[0]);
+        Assert.StartsWith("igual", trace.Detail);
+        Assert.Contains("Antes: ", trace.Detail);
+        Assert.Contains("Ahora: ", trace.Detail);
+        trace.ClearBaselineCommand.Execute(null);
+        Assert.False(trace.HasBaseline);
+        Assert.Empty(trace.Changes);
+
         // El análisis, a Excel: las consultas que se ven, con las mismas columnas.
         var xlsx = Path.Combine(_folder, "analisis.xlsx");
         Assert.Equal(view.Analysis.VisibleRowIndexes().Count, view.ExportAnalysisTo(xlsx));

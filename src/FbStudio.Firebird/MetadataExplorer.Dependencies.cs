@@ -152,6 +152,76 @@ public sealed partial class MetadataExplorer
         return KindOf(type, Int(r, 8) == 1) is { } kind ? new DbDependency(DependencyDirection.UsedBy, kind, name, field) : null;
     }
 
+    /// <summary>
+    /// ¿Dónde se usa una columna? Lo que hay que mirar antes de cambiarla o borrarla: vistas, procedimientos, funciones y
+    /// triggers que la nombran (RDB$DEPENDENCIES por columna), sus índices y claves, las FK de otras tablas que la apuntan,
+    /// la FK de la columna misma y las FK lógicas de los comentarios («#FK_%TABLA,%COLUMNA») que la apuntan.
+    /// </summary>
+    public Task<IReadOnlyList<DbDependency>> ColumnUsageAsync(string table, string column, CancellationToken ct = default) =>
+        WithTransactionAsync(async (connection, tx) =>
+        {
+            var q = new MetaQuery(connection, tx, ct);
+            var found = new List<DbDependency>();
+            found.AddRange((await q.ListAsync("""
+                SELECT TRIM(d.RDB$DEPENDENT_NAME), d.RDB$DEPENDENT_TYPE, TRIM(d.RDB$FIELD_NAME),
+                       TRIM(rf.RDB$RELATION_NAME), TRIM(rf.RDB$FIELD_NAME),
+                       COALESCE(t.RDB$SYSTEM_FLAG, 0), TRIM(t.RDB$RELATION_NAME), TRIM(cc.RDB$CONSTRAINT_NAME),
+                       IIF(r.RDB$VIEW_BLR IS NULL, 0, 1)
+                FROM RDB$DEPENDENCIES d
+                LEFT JOIN RDB$RELATION_FIELDS rf ON d.RDB$DEPENDENT_TYPE = 3 AND rf.RDB$FIELD_SOURCE = d.RDB$DEPENDENT_NAME
+                LEFT JOIN RDB$TRIGGERS t ON d.RDB$DEPENDENT_TYPE = 2 AND t.RDB$TRIGGER_NAME = d.RDB$DEPENDENT_NAME
+                LEFT JOIN RDB$CHECK_CONSTRAINTS cc ON cc.RDB$TRIGGER_NAME = t.RDB$TRIGGER_NAME
+                LEFT JOIN RDB$RELATIONS r ON d.RDB$DEPENDENT_TYPE IN (0, 1) AND r.RDB$RELATION_NAME = d.RDB$DEPENDENT_NAME
+                WHERE d.RDB$DEPENDED_ON_NAME = @name AND d.RDB$DEPENDED_ON_TYPE IN (0, 1) AND d.RDB$FIELD_NAME = @col
+                """, UsedByRow, ("@name", table), ("@col", column))).OfType<DbDependency>());
+            // Los índices que la tienen (y la clave que respaldan, si es una).
+            found.AddRange(await q.ListAsync("""
+                SELECT TRIM(i.RDB$INDEX_NAME), TRIM(rc.RDB$CONSTRAINT_NAME), TRIM(rc.RDB$CONSTRAINT_TYPE)
+                FROM RDB$INDEX_SEGMENTS s
+                JOIN RDB$INDICES i ON i.RDB$INDEX_NAME = s.RDB$INDEX_NAME
+                LEFT JOIN RDB$RELATION_CONSTRAINTS rc ON rc.RDB$INDEX_NAME = i.RDB$INDEX_NAME
+                WHERE i.RDB$RELATION_NAME = @name AND s.RDB$FIELD_NAME = @col
+                """, r => new DbDependency(DependencyDirection.UsedBy, DbObjectKind.Index, Str(r, 0) ?? "",
+                    Str(r, 2) is { } type ? $"{type} {Str(r, 1)}" : null), ("@name", table), ("@col", column)));
+            // Las FK de otras tablas que la apuntan, y la FK de la columna misma.
+            found.AddRange(await q.ListAsync("""
+                SELECT TRIM(fk.RDB$RELATION_NAME), TRIM(fk.RDB$CONSTRAINT_NAME), TRIM(fs.RDB$FIELD_NAME)
+                FROM RDB$RELATION_CONSTRAINTS uq
+                JOIN RDB$INDEX_SEGMENTS us ON us.RDB$INDEX_NAME = uq.RDB$INDEX_NAME AND us.RDB$FIELD_NAME = @col
+                JOIN RDB$REF_CONSTRAINTS ref ON ref.RDB$CONST_NAME_UQ = uq.RDB$CONSTRAINT_NAME
+                JOIN RDB$RELATION_CONSTRAINTS fk ON fk.RDB$CONSTRAINT_NAME = ref.RDB$CONSTRAINT_NAME
+                JOIN RDB$INDEX_SEGMENTS fs ON fs.RDB$INDEX_NAME = fk.RDB$INDEX_NAME AND fs.RDB$FIELD_POSITION = us.RDB$FIELD_POSITION
+                WHERE uq.RDB$RELATION_NAME = @name
+                """, r => new DbDependency(DependencyDirection.UsedBy, DbObjectKind.Table, Str(r, 0) ?? "", $"{ForeignKeyLabel(Str(r, 1))} ({Str(r, 2)})"),
+                ("@name", table), ("@col", column)));
+            found.AddRange(await q.ListAsync("""
+                SELECT TRIM(uq.RDB$RELATION_NAME), TRIM(fk.RDB$CONSTRAINT_NAME)
+                FROM RDB$RELATION_CONSTRAINTS fk
+                JOIN RDB$INDEX_SEGMENTS fs ON fs.RDB$INDEX_NAME = fk.RDB$INDEX_NAME AND fs.RDB$FIELD_NAME = @col
+                JOIN RDB$REF_CONSTRAINTS ref ON ref.RDB$CONSTRAINT_NAME = fk.RDB$CONSTRAINT_NAME
+                JOIN RDB$RELATION_CONSTRAINTS uq ON uq.RDB$CONSTRAINT_NAME = ref.RDB$CONST_NAME_UQ
+                WHERE fk.RDB$RELATION_NAME = @name AND fk.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY'
+                """, r => new DbDependency(DependencyDirection.Uses, DbObjectKind.Table, Str(r, 0) ?? "", ForeignKeyLabel(Str(r, 1))), ("@name", table), ("@col", column)));
+            // Las FK lógicas de los comentarios que apuntan a esta columna.
+            found.AddRange((await q.ListAsync("""
+                SELECT TRIM(rf.RDB$RELATION_NAME), TRIM(rf.RDB$FIELD_NAME), CAST(SUBSTRING(rf.RDB$DESCRIPTION FROM 1 FOR 1000) AS VARCHAR(1000))
+                FROM RDB$RELATION_FIELDS rf
+                WHERE rf.RDB$DESCRIPTION CONTAINING '#FK_'
+                """, r => Core.Diagrams.LogicalForeignKeys.Parse(Str(r, 0) ?? "", Str(r, 1) ?? "", Str(r, 2)) is { } link
+                          && link.Referenced == table && link.ReferencedColumns[0] == column
+                    ? new DbDependency(DependencyDirection.UsedBy, DbObjectKind.Table, link.Table, string.Format(CoreStrings.DependencyLogicalFk, link.Columns[0]))
+                    : null)).OfType<DbDependency>());
+            return (IReadOnlyList<DbDependency>)found
+                .Where(d => !(d.Direction == DependencyDirection.UsedBy && d.Kind == DbObjectKind.Table && d.Name == table && d.Detail is null))
+                .GroupBy(d => (d.Direction, d.Kind, d.Name))
+                .Select(g => g.First() with
+                {
+                    Detail = string.Join(", ", g.Select(d => d.Detail).Where(s => !string.IsNullOrEmpty(s)).Distinct()) is { Length: > 0 } detail ? detail : null,
+                })
+                .OrderBy(d => d.Direction).ThenBy(d => d.Kind).ThenBy(d => d.Name, StringComparer.Ordinal)
+                .ToList();
+        }, ct);
+
     /// <summary>"FK_DET_TURNO" tal cual; un nombre que no dice que es una FK (p. ej. INTEG_45) lleva "FK " adelante.</summary>
     private static string ForeignKeyLabel(string? constraint) =>
         constraint is null ? "FK" : constraint.StartsWith("FK", StringComparison.OrdinalIgnoreCase) ? constraint : "FK " + constraint;

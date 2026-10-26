@@ -15,6 +15,9 @@ public sealed record ChangeLogVersion(string Version, string? Date, IReadOnlyLis
         language == "es" ? (Spanish.Count > 0 ? Spanish : English) : (English.Count > 0 ? English : Spanish);
 }
 
+/// <summary>Un cambio para mostrar: título (lo de antes de «:», o el nombre entre «…» del principio), el resto, y si es una corrección.</summary>
+public sealed record ChangeLogEntry(string? Title, string Body, bool IsFix);
+
 /// <summary>
 /// CHANGELOG.md (D-81): «## [versión] - fecha» y adentro «### English» y «### Español», con un renglón «- …» por cambio
 /// (un cambio largo sigue en los renglones de abajo, con sangría). Lo muestra Ayuda → Novedades y el trabajo de Release
@@ -73,4 +76,34 @@ public static partial class ChangeLog
 
     /// <summary>Sin las marcas de Markdown que se usan en los renglones (negrita y código).</summary>
     public static string Plain(string text) => text.Replace("**", "").Replace("`", "");
+
+    /// <summary>
+    /// Parte un cambio para la ventana de Novedades: «Corregido:» / «Fixed:» lo marca como corrección; el título es lo de
+    /// antes del primer «:» que no esté entre «…» (si está cerca del principio) o, si no, el nombre entre «…» con que
+    /// empieza; sin ninguno de los dos, todo es el cuerpo.
+    /// </summary>
+    public static ChangeLogEntry Split(string change)
+    {
+        var text = Plain(change).Trim();
+        var isFix = false;
+        foreach (var prefix in new[] { "Corregido:", "Fixed:" })
+            if (text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                isFix = true;
+                text = text[prefix.Length..].Trim();
+            }
+        var quoted = 0;
+        for (var i = 0; i < text.Length && i <= 90; i++)
+        {
+            if (text[i] == '«') quoted++;
+            else if (text[i] == '»') quoted--;
+            else if (text[i] == ':' && quoted == 0 && i > 0)
+                return new ChangeLogEntry(text[..i].Trim(), Capitalize(text[(i + 1)..].Trim()), isFix);
+        }
+        if (text.StartsWith('«') && text.IndexOf('»') is var close and > 0 && close < text.Length - 1)
+            return new ChangeLogEntry(text[..(close + 1)], Capitalize(text[(close + 1)..].Trim()), isFix);
+        return new ChangeLogEntry(null, Capitalize(text), isFix);
+    }
+
+    private static string Capitalize(string text) => text.Length == 0 ? text : char.ToUpper(text[0], System.Globalization.CultureInfo.CurrentCulture) + text[1..];
 }

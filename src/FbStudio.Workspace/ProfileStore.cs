@@ -64,4 +64,6 @@ public sealed class ProfileStore(string folder, ISecretStore secrets)
 [JsonSerializable(typeof(ProfileBackupFile))]
 [JsonSerializable(typeof(ProfileBackupContent))]
 [JsonSerializable(typeof(FbStudio.Core.Metadata.SchemaAreaFile))]
+[JsonSerializable(typeof(FbStudio.Core.Diagrams.DiagramFile))]
+[JsonSerializable(typeof(SessionFile))]
 internal sealed partial class WorkspaceJsonContext : JsonSerializerContext;

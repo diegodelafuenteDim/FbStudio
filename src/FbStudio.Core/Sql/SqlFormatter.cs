@@ -9,9 +9,11 @@ public sealed record SqlFormatOptions(bool UppercaseKeywords = true, int IndentS
 
 /// <summary>
 /// Formatea las consultas de un texto (F-32): cada cláusula (SELECT, FROM, JOIN, WHERE, GROUP BY…) en su renglón, las
-/// condiciones del WHERE una por renglón, las listas largas un elemento por renglón y las subconsultas sangradas. Solo
-/// toca SELECT, WITH, INSERT, UPDATE, DELETE, MERGE y UPDATE OR INSERT: el DDL, los bloques PSQL, SET TERM y lo que hay
-/// entre sentencias queda tal cual. Los textos, los identificadores entre comillas y los comentarios no se cambian.
+/// condiciones del WHERE una por renglón, las listas largas un elemento por renglón, un CASE largo con un WHEN por
+/// renglón y las subconsultas sangradas. Toca SELECT, WITH, INSERT, UPDATE, DELETE, MERGE y UPDATE OR INSERT, y los
+/// bloques PSQL (procedimientos, funciones, triggers y EXECUTE BLOCK, ver <see cref="PsqlFormatter"/>); el resto del DDL,
+/// SET TERM y lo que hay entre sentencias queda tal cual. Los textos, los identificadores entre comillas y los
+/// comentarios no se cambian.
 /// </summary>
 public static class SqlFormatter
 {
@@ -34,7 +36,14 @@ public static class SqlFormatter
         "LOWER", "LPAD", "MAXVALUE", "MINVALUE", "MOD", "NULLIF", "OCTET_LENGTH", "OVERLAY", "PLACING", "POSITION", "POWER",
         "RAND", "RANK", "REPLACE", "REVERSE", "ROUND", "ROW_NUMBER", "RPAD", "SIGN", "SQRT", "SUBSTRING", "TRIM", "TRUNC",
         "UPPER", "UUID_TO_CHAR", "CHAR_TO_UUID", "RDB$GET_CONTEXT", "RDB$SET_CONTEXT", "RDB$DB_KEY",
+        // PSQL
+        "SUSPEND", "EXIT", "EXCEPTION", "LEAVE", "CONTINUE", "DECLARE", "VARIABLE", "CURSOR", "OPEN", "CLOSE", "RETURN",
+        "POST_EVENT", "STATEMENT", "IF", "WHILE", "DO", "AUTONOMOUS", "TRANSACTION", "NEW", "OLD", "INSERTING", "UPDATING",
+        "DELETING", "ROW_COUNT", "SQLCODE", "GDSCODE", "SQLSTATE", "RETURNING_VALUES",
     };
+
+    /// <summary>Una palabra clave o función de Firebird (la que se pasa a mayúsculas).</summary>
+    internal static bool IsKeyword(string word) => Keywords.Contains(word);
 
     // Después de estas palabras va un espacio antes de «(»; después de un nombre de función, no.
     private static readonly HashSet<string> SpaceBeforeParen = new(StringComparer.OrdinalIgnoreCase)
@@ -58,8 +67,13 @@ public static class SqlFormatter
         var result = new StringBuilder(sql);
         foreach (var span in SqlScriptSplitter.Split(sql).Reverse())
         {
-            if (StatementClassifier.Classify(span.Text).Kind is not (StatementKind.Select or StatementKind.Dml)) continue;
-            result.Remove(span.Start, span.Length).Insert(span.Start, FormatStatement(span.Text, options));
+            var formatted = StatementClassifier.Classify(span.Text).Kind switch
+            {
+                StatementKind.Select or StatementKind.Dml => FormatStatement(span.Text, options),
+                StatementKind.Ddl or StatementKind.Execute => PsqlFormatter.Format(span.Text, options),
+                _ => null,
+            };
+            if (formatted is not null) result.Remove(span.Start, span.Length).Insert(span.Start, formatted);
         }
         return result.ToString();
     }
@@ -335,7 +349,7 @@ public static class SqlFormatter
                 }
                 kind = word switch
                 {
-                    "SELECT" or "GROUP" or "ORDER" or "SET" or "RETURNING" or "FROM" or "WITH" => ClauseKind.List,
+                    "SELECT" or "GROUP" or "ORDER" or "SET" or "RETURNING" or "FROM" or "WITH" or "INTO" => ClauseKind.List,
                     "WHERE" or "HAVING" => ClauseKind.Conditions,
                     _ => ClauseKind.Plain,
                 };
@@ -354,6 +368,8 @@ public static class SqlFormatter
             {
                 "SELECT" or "WHERE" or "HAVING" or "UNION" or "VALUES" or "RETURNING" or "PLAN" or "MATCHING" or "SET" or "ROWS"
                     or "OFFSET" or "FETCH" or "GROUP" or "ORDER" or "DELETE" or "MERGE" => true,
+                // SELECT … INTO :a, :b de PSQL (INSERT INTO y MERGE INTO ya se lo llevaron en el encabezado).
+                "INTO" => previous is not null,
                 // DELETE FROM y «IS [NOT] DISTINCT FROM» no cortan; FROM dentro de funciones va en paréntesis y no llega acá.
                 "FROM" => !(previous is { } p && (p.IsWord("DELETE") || (p.IsWord("DISTINCT") && beforePrevious is { } b && (b.IsWord("IS") || b.IsWord("NOT"))))),
                 "INSERT" => !(previous is { } p && p.IsWord("OR")),
@@ -454,7 +470,8 @@ public static class SqlFormatter
         /// </summary>
         private string Item(List<Node> nodes, int level)
         {
-            if (Inline(nodes) is { } inline) return inline;
+            if (Inline(nodes) is { } inline)
+                return level * options.IndentSize + inline.Length > options.MaxLineLength && CaseItem(nodes, level) is { } split ? split : inline;
             var sb = new StringBuilder();
             Node? previous = null;
             var newLine = false;
@@ -481,6 +498,50 @@ public static class SqlFormatter
                 previous = node;
             }
             return sb.ToString().TrimEnd('\n');
+        }
+
+        /// <summary>
+        /// Un elemento largo con un CASE en su nivel: lo de antes, «CASE», un WHEN (y el ELSE) por renglón un nivel
+        /// adentro, y «END» con lo que sigue (p. ej. el alias). null si no tiene un CASE en su nivel.
+        /// </summary>
+        private string? CaseItem(List<Node> nodes, int level)
+        {
+            var start = nodes.FindIndex(n => n is Leaf { Token: var t } && t.IsWord("CASE"));
+            if (start < 0) return null;
+            var depth = 0;
+            var end = -1;
+            for (var i = start; i < nodes.Count && end < 0; i++)
+            {
+                if (nodes[i] is not Leaf { Token: var t }) continue;
+                if (t.IsWord("CASE")) depth++;
+                else if (t.IsWord("END") && --depth == 0) end = i;
+            }
+            if (end < 0) return null;
+            // Lo de adentro: el operando de un CASE simple y después cada WHEN y el ELSE (sin partir los CASE de adentro).
+            var parts = new List<List<Node>> { new() };
+            depth = 0;
+            for (var i = start + 1; i < end; i++)
+            {
+                if (nodes[i] is Leaf { Token: var t })
+                {
+                    if (t.IsWord("CASE")) depth++;
+                    else if (t.IsWord("END")) depth--;
+                    else if (depth == 0 && (t.IsWord("WHEN") || t.IsWord("ELSE")) && parts[^1].Count > 0) parts.Add([]);
+                }
+                parts[^1].Add(nodes[i]);
+            }
+            var operand = parts[0] is [Leaf { Token: var w }, ..] && (w.IsWord("WHEN") || w.IsWord("ELSE")) ? null : parts[0];
+            var sb = new StringBuilder();
+            var before = nodes[..start];
+            if (before.Count > 0) sb.Append(Item(before, level)).Append(' ');
+            sb.Append(((Leaf)nodes[start]).Token.Text);
+            if (operand is not null) sb.Append(' ').Append(Item(operand, level));
+            foreach (var part in operand is null ? parts : parts.Skip(1))
+                sb.Append('\n').Append(Indent(level + 1)).Append(Item(part, level + 1));
+            sb.Append('\n').Append(Indent(level)).Append(((Leaf)nodes[end]).Token.Text);
+            var after = nodes[(end + 1)..];
+            if (after.Count > 0) sb.Append(after[0] is Leaf { Token: var a } && (a.IsSymbol(",") || a.IsSymbol(")")) ? "" : " ").Append(Item(after, level));
+            return sb.ToString();
         }
 
         private static bool SpaceBeforeGroup(Node previous, Group group) => previous switch

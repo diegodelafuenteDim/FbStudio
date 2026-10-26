@@ -46,6 +46,8 @@ public sealed partial class TraceTabViewModel : EditorTabViewModel
     private readonly List<TraceEvent> _events = [];
     private readonly Dictionary<object[], TraceEvent> _eventRows = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<object[], TraceQueryGroup> _groupRows = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<object[], TraceQueryChange> _changeRows = new(ReferenceEqualityComparer.Instance);
+    private List<TraceEvent>? _baseline;
     private readonly DispatcherTimer _flush;
     private readonly DispatcherTimer _autoStop;
     private TraceParser _parser = new();
@@ -82,6 +84,52 @@ public sealed partial class TraceTabViewModel : EditorTabViewModel
     [ObservableProperty] private bool _unifyValues = true;
 
     partial void OnUnifyValuesChanged(bool value) => Rebuild();
+
+    /// <summary>Comparar dos períodos: el log guardado con que se compara lo de ahora (el «antes»).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBaseline))]
+    [NotifyCanExecuteChangedFor(nameof(ClearBaselineCommand))]
+    private string _baselineName = "";
+
+    public bool HasBaseline => BaselineName.Length > 0;
+
+    /// <summary>«Comparando con antes.log (35 consultas) · 4 más lentas, 2 nuevas, 1 ya no aparece».</summary>
+    [ObservableProperty] private string _comparisonSummary = "";
+
+    /// <summary>La comparación por consulta (para las pruebas y para elegir una fila).</summary>
+    public IReadOnlyList<TraceQueryChange> Changes { get; private set; } = [];
+
+    /// <summary>Cambió la comparación: la vista arma su grilla.</summary>
+    public event Action<ColumnInfo[], AvaloniaList<object[]>>? ComparisonChanged;
+
+    /// <summary>
+    /// «Comparar con un log…»: otro período (un log guardado antes, de FbStudio o de fbtracemgr) contra lo de ahora,
+    /// consulta por consulta: cuáles están más lentas, más rápidas, cuáles son nuevas y cuáles ya no aparecen.
+    /// </summary>
+    public void CompareWith(string path)
+    {
+        try
+        {
+            _baseline = TraceParser.Parse(File.ReadLines(path)).Where(e => e.Kind is not ("TRACE_INIT" or "TRACE_FINI")).ToList();
+            BaselineName = Path.GetFileName(path);
+            Rebuild();
+            Status = ComparisonSummary;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FormatException or ArgumentException)
+        {
+            Status = string.Format(Strings.TraceFailed, ex.Message);
+        }
+    }
+
+    private bool CanClearBaseline() => HasBaseline;
+
+    [RelayCommand(CanExecute = nameof(CanClearBaseline))]
+    private void ClearBaseline()
+    {
+        _baseline = null;
+        BaselineName = "";
+        Rebuild();
+    }
 
     /// <summary>El detalle de lo elegido en una grilla: SQL, plan, parámetros, tablas.</summary>
     [ObservableProperty] private string _detail = "";
@@ -341,6 +389,62 @@ public sealed partial class TraceTabViewModel : EditorTabViewModel
             eventRows.Add(row);
         }
         GridsChanged?.Invoke(groupColumns, groupRows, eventColumns, eventRows);
+        RebuildComparison();
+    }
+
+    /// <summary>La grilla de la comparación con el log de antes (vacía si no hay con qué comparar).</summary>
+    private void RebuildComparison()
+    {
+        _changeRows.Clear();
+        Changes = _baseline is null ? [] : TraceComparison.Compare(TraceAnalysis.Group(_baseline, UnifyValues), Groups);
+        ColumnInfo[] columns =
+        [
+            new(0, Strings.TraceColChange, "VARCHAR"), new(1, Strings.TraceColQuery, "VARCHAR"), new(2, Strings.TraceColCountBefore, "BIGINT"),
+            new(3, Strings.TraceColCountNow, "BIGINT"), new(4, Strings.TraceColAvgBefore, "NUMERIC"), new(5, Strings.TraceColAvgNow, "NUMERIC"),
+            new(6, Strings.TraceColAvgChange, "NUMERIC"), new(7, Strings.TraceColTotalBefore, "BIGINT"), new(8, Strings.TraceColTotalNow, "BIGINT"),
+            new(9, Strings.TraceColTotalDifference, "BIGINT"), new(10, Strings.TraceColReadsBefore, "NUMERIC"), new(11, Strings.TraceColReadsNow, "NUMERIC"),
+        ];
+        var rows = new AvaloniaList<object[]>();
+        foreach (var c in Changes)
+        {
+            var row = new object[]
+            {
+                ChangeLabel(c.Kind), OneLine(c.Key), Count(c.Before), Count(c.After), Avg(c.Before?.AverageMs), Avg(c.After?.AverageMs),
+                c.AverageChange is { } change ? Math.Round((decimal)change * 100, 0) : DBNull.Value,
+                c.Before is { } b ? b.TotalMs : DBNull.Value, c.After is { } a ? a.TotalMs : DBNull.Value, c.TotalDifference,
+                ReadsPerRun(c.Before), ReadsPerRun(c.After),
+            };
+            _changeRows[row] = c;
+            rows.Add(row);
+        }
+        ComparisonSummary = _baseline is null ? "" : string.Format(Strings.TraceComparisonSummary, BaselineName, Changes.Count(c => c.Before is not null),
+            Changes.Count(c => c.After is not null), Changes.Count(c => c.Kind == TraceChangeKind.Slower), Changes.Count(c => c.Kind == TraceChangeKind.Faster),
+            Changes.Count(c => c.Kind == TraceChangeKind.New), Changes.Count(c => c.Kind == TraceChangeKind.Gone));
+        ComparisonChanged?.Invoke(columns, rows);
+
+        static object Count(TraceQueryGroup? g) => g is null ? DBNull.Value : (long)g.Count;
+        static object Avg(double? ms) => ms is { } v ? Math.Round((decimal)v, 1) : DBNull.Value;
+        static object ReadsPerRun(TraceQueryGroup? g) => g is { Count: > 0 } x ? Math.Round((decimal)x.Reads / x.Count, 0) : DBNull.Value;
+    }
+
+    public static string ChangeLabel(TraceChangeKind kind) => kind switch
+    {
+        TraceChangeKind.New => Strings.TraceChangeNew,
+        TraceChangeKind.Gone => Strings.TraceChangeGone,
+        TraceChangeKind.Slower => Strings.TraceChangeSlower,
+        TraceChangeKind.Faster => Strings.TraceChangeFaster,
+        _ => Strings.TraceChangeSame,
+    };
+
+    /// <summary>Fila elegida en la comparación: los números de antes y de ahora, y la ejecución más lenta de ahora (o de antes).</summary>
+    public void SelectChange(object[]? row)
+    {
+        if (row is null || !_changeRows.TryGetValue(row, out var c)) return;
+        string Line(string label, TraceQueryGroup? g) => g is null
+            ? string.Format(Strings.TraceDetailPeriodMissing, label)
+            : string.Format(CultureInfo.CurrentCulture, Strings.TraceDetailPeriod, label, g.Count, g.TotalMs, g.AverageMs, g.MaxMs);
+        Detail = ChangeLabel(c.Kind) + Environment.NewLine + Line(Strings.TraceBefore, c.Before) + Environment.NewLine + Line(Strings.TraceNow, c.After)
+                 + Environment.NewLine + Describe((c.After ?? c.Before)!.Slowest);
     }
 
     /// <summary>Fila elegida en el análisis: el resumen y la ejecución más lenta.</summary>

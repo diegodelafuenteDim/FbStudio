@@ -22,16 +22,16 @@ public sealed record AppSettings
     public static IReadOnlyList<int> RowLimits { get; } = [1_000, 10_000, 100_000, 1_000_000];
 
     /// <summary>Días que se guardan las sentencias en el historial (se purga al abrir y al cambiar la opción).</summary>
-    public int HistoryRetentionDays { get; init; } = 90;
+    public int HistoryRetentionDays { get; set; } = 90;
 
     /// <summary>Filas que trae un SELECT de entrada (la barra de herramientas lo cambia para la sesión).</summary>
-    public int DefaultRowLimit { get; init; } = 10_000;
+    public int DefaultRowLimit { get; set; } = 10_000;
 
     /// <summary>
     /// Pestaña Datos: «Aplicar» muestra antes los comandos (para ejecutarlos, copiarlos o llevarlos a una pestaña de
     /// consulta) en vez de ejecutarlos directamente.
     /// </summary>
-    public bool PreviewDataChanges { get; init; } = true;
+    public bool PreviewDataChanges { get; set; } = true;
 
     /// <summary>
     /// El script de los cambios de la pestaña Datos (para copiarlo o llevarlo a una consulta) termina con COMMIT. Se
@@ -39,31 +39,34 @@ public sealed record AppSettings
     /// </summary>
     public bool DataScriptWithCommit { get; init; }
 
+    /// <summary>Pestaña Datos: con un filtro o un WHERE, cuenta solas las filas que coinciden (SELECT COUNT en el servidor).</summary>
+    public bool DataCountOnFilter { get; init; }
+
     /// <summary>Un script se detiene en el primer error; false = sigue con la siguiente sentencia.</summary>
-    public bool ScriptStopOnError { get; init; } = true;
+    public bool ScriptStopOnError { get; set; } = true;
 
     /// <summary>Monitoreo: la OAT abierta hace más de estos minutos se pinta en ámbar…</summary>
-    public int OatWarnMinutes { get; init; } = 2;
+    public int OatWarnMinutes { get; set; } = 2;
 
     /// <summary>…y pasados estos, en rojo.</summary>
-    public int OatDangerMinutes { get; init; } = 10;
+    public int OatDangerMinutes { get; set; } = 10;
 
     /// <summary>Si la OAT es de un backup o un sweep (gbak, gfix, nbackup), se informa sin alarma.</summary>
-    public bool OatIgnoreMaintenance { get; init; } = true;
+    public bool OatIgnoreMaintenance { get; set; } = true;
 
     /// <summary>
     /// Una transacción de escritura abierta en una pestaña hace más de estos minutos se marca en ámbar… (con varias
     /// personas, una olvidada traba la OAT y la recolección de basura del servidor).
     /// </summary>
-    public int TransactionWarnMinutes { get; init; } = 5;
+    public int TransactionWarnMinutes { get; set; } = 5;
 
     /// <summary>…y pasados estos, en rojo, con un aviso.</summary>
-    public int TransactionDangerMinutes { get; init; } = 15;
+    public int TransactionDangerMinutes { get; set; } = 15;
 
     /// <summary>Cuánto espera una escritura un registro bloqueado por otra transacción antes de dar error.</summary>
-    public int LockTimeoutSeconds { get; init; } = 10;
+    public int LockTimeoutSeconds { get; set; } = 10;
 
-    public AppTheme Theme { get; init; } = AppTheme.System;
+    public AppTheme Theme { get; set; } = AppTheme.System;
 
     /// <summary>Color propio de cada entorno (F-20), de la paleta; sin entrada (o null), el de siempre.</summary>
     public Dictionary<ProfileEnvironment, string>? EnvironmentColors { get; init; }
@@ -72,7 +75,7 @@ public sealed record AppSettings
     public Dictionary<string, string>? FolderColors { get; init; }
 
     /// <summary>Idioma de la interfaz: "" igual que Windows, "es" o "en". Se aplica al volver a abrir FbStudio.</summary>
-    public string Language { get; init; } = "";
+    public string Language { get; set; } = "";
 
     /// <summary>
     /// La última versión de FbStudio que se abrió en este equipo (D-85): con una nueva, Ayuda → Novedades se abre sola
@@ -80,21 +83,30 @@ public sealed record AppSettings
     /// </summary>
     public string? LastSeenVersion { get; init; }
 
-    public string EditorFontFamily { get; init; } = DefaultFont;
-    public double EditorFontSize { get; init; } = 14;
-    public int TabSize { get; init; } = 4;
-    public bool ConvertTabsToSpaces { get; init; } = true;
-    public bool ShowLineNumbers { get; init; } = true;
-    public bool HighlightCurrentLine { get; init; } = true;
+    public string EditorFontFamily { get; set; } = DefaultFont;
+    public double EditorFontSize { get; set; } = 14;
+    public int TabSize { get; set; } = 4;
+    public bool ConvertTabsToSpaces { get; set; } = true;
+    public bool ShowLineNumbers { get; set; } = true;
+    public bool HighlightCurrentLine { get; set; } = true;
 
     /// <summary>Poder bajar más allá de la última línea.</summary>
-    public bool ScrollPastEnd { get; init; } = true;
+    public bool ScrollPastEnd { get; set; } = true;
 
     /// <summary>Ctrl+rueda del mouse agranda o achica la letra del editor (Ctrl+0 la vuelve a la elegida acá).</summary>
-    public bool ZoomWithCtrlWheel { get; init; } = true;
+    public bool ZoomWithCtrlWheel { get; set; } = true;
+
+    /// <summary>Marcas en el margen para plegar bloques (BEGIN…END, CASE…END, paréntesis y comentarios largos).</summary>
+    public bool ShowFolding { get; set; } = true;
 
     /// <summary>«Formatear SQL» pasa las palabras clave a mayúsculas (si no, quedan como se escribieron).</summary>
-    public bool FormatUppercaseKeywords { get; init; } = true;
+    public bool FormatUppercaseKeywords { get; set; } = true;
+
+    /// <summary>Al cerrar, guardar las pestañas de consulta (con su texto y su base) para volver a abrirlas la próxima vez.</summary>
+    public bool RestoreTabs { get; set; } = true;
+
+    /// <summary>Los últimos archivos .sql abiertos o guardados, el más reciente primero; null si ninguno.</summary>
+    public IReadOnlyList<string>? RecentFiles { get; init; }
 
     /// <summary>Las plantillas del editor; null = las de fábrica (así, si mejoran, se ven sin tocar nada).</summary>
     public IReadOnlyList<FbStudio.Core.Sql.SqlTemplate>? Templates { get; init; }
@@ -122,10 +134,14 @@ public sealed record AppSettings
         EditorFontFamily = string.IsNullOrWhiteSpace(EditorFontFamily) ? DefaultFont : EditorFontFamily.Trim(),
         EditorFontSize = Math.Clamp(EditorFontSize, 8, 40),
         TabSize = Math.Clamp(TabSize, 1, 16),
+        RecentFiles = RecentFiles?.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase).Take(MaxRecentFiles).ToList() is { Count: > 0 } recent ? recent : null,
         Templates = Templates?.Where(t => !string.IsNullOrWhiteSpace(t.Abbreviation) && t.Text is not null)
             .Select(t => t with { Abbreviation = t.Abbreviation.Trim(), Name = t.Name?.Trim() ?? "" })
             .DistinctBy(t => t.Abbreviation, StringComparer.OrdinalIgnoreCase).ToList(),
     };
+
+    public const int MaxRecentFiles = 10;
 
     // Sin colores propios queda null: así las opciones de fábrica siguen siendo iguales a new AppSettings().
     private static Dictionary<TKey, string>? NullIfEmpty<TKey>(Dictionary<TKey, string> d) where TKey : notnull => d.Count > 0 ? d : null;

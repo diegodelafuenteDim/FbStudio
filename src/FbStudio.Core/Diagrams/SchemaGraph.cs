@@ -153,6 +153,42 @@ public sealed class SchemaGraph
         return new DiagramSelection(tables, outside, links, hubs);
     }
 
+    /// <summary>
+    /// El camino más corto por FK entre dos tablas, sin importar hacia dónde apunta cada una: sin pasar por comodines si
+    /// se puede (un camino por USUARIOS casi nunca es el que se busca) y si no, por donde haga falta. null si no están
+    /// conectadas. Entre caminos igual de cortos, el de nombres primeros en orden alfabético (siempre el mismo).
+    /// </summary>
+    public IReadOnlyList<string>? Path(string from, string to, bool logical = true)
+    {
+        if (!Contains(from) || !Contains(to)) return null;
+        if (from == to) return [from];
+        return ShortestPath(from, to, logical, avoidHubs: true) ?? ShortestPath(from, to, logical, avoidHubs: false);
+    }
+
+    private List<string>? ShortestPath(string from, string to, bool logical, bool avoidHubs)
+    {
+        var previous = new Dictionary<string, string>(StringComparer.Ordinal) { [from] = from };
+        var queue = new Queue<string>([from]);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            foreach (var next in Neighbors(current, logical).Order(StringComparer.Ordinal))
+            {
+                if (previous.ContainsKey(next) || (avoidHubs && next != to && IsHub(next, logical))) continue;
+                previous[next] = current;
+                if (next == to)
+                {
+                    var path = new List<string> { to };
+                    while (path[^1] != from) path.Add(previous[path[^1]]);
+                    path.Reverse();
+                    return path;
+                }
+                queue.Enqueue(next);
+            }
+        }
+        return null;
+    }
+
     /// <summary>Las de partida primero, después las demás por nombre.</summary>
     private static List<string> Ordered(HashSet<string> chosen, List<string> starts) =>
         [.. starts, .. chosen.Except(starts).Order(StringComparer.Ordinal)];

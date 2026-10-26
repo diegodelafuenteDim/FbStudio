@@ -14,7 +14,8 @@ public sealed record CompareChoice(ConnectionProfile Source, ConnectionProfile T
 /// <summary>«Comparar bases…»: origen (el modelo, p. ej. desarrollo), destino (el que se iguala) y opciones.</summary>
 public sealed class CompareDialog : Window
 {
-    public CompareDialog(IReadOnlyList<ConnectionProfile> profiles, ConnectionProfile? source)
+    /// <param name="areasOf">Las áreas de una base: se puede comparar solo un área del origen.</param>
+    public CompareDialog(IReadOnlyList<ConnectionProfile> profiles, ConnectionProfile? source, Func<ConnectionProfile, IReadOnlyList<string>>? areasOf = null)
     {
         Title = Strings.CompareDialogTitle;
         Width = 560;
@@ -34,6 +35,19 @@ public sealed class CompareDialog : Window
         to.SelectedIndex = sorted.FindIndex(p => p.Id != sorted[from.SelectedIndex].Id && p.IsProduction) is var prod and >= 0
             ? prod
             : sorted.FindIndex(p => p.Id != sorted[from.SelectedIndex].Id);
+        // Toda la base o un área del origen (sus reglas se aplican también al destino).
+        IReadOnlyList<string> areas = [];
+        var scope = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+        ToolTip.SetTip(scope, Strings.CompareAreaTip);
+        void FillAreas()
+        {
+            areas = from.SelectedIndex >= 0 && areasOf is not null ? areasOf(sorted[from.SelectedIndex]) : [];
+            scope.ItemsSource = new[] { Strings.SchemaScriptWholeDatabase }.Concat(areas.Select(a => string.Format(Strings.SchemaScriptOnlyArea, a))).ToList();
+            scope.SelectedIndex = 0;
+            scope.IsVisible = areas.Count > 0;
+        }
+        FillAreas();
+        from.SelectionChanged += (_, _) => FillAreas();
         var drop = new CheckBox { Content = Strings.CompareDropExtra };
         var privileges = new CheckBox { Content = Strings.ComparePrivileges, IsChecked = true };
         var positions = new CheckBox { Content = Strings.ComparePositions, IsChecked = true };
@@ -54,6 +68,7 @@ public sealed class CompareDialog : Window
                 DropExtra = drop.IsChecked == true,
                 Privileges = privileges.IsChecked == true,
                 ColumnPositions = positions.IsChecked == true,
+                Area = scope.SelectedIndex > 0 ? areas[scope.SelectedIndex - 1] : null,
             }));
         };
         cancel.Click += (_, _) => Close(null);
@@ -68,6 +83,7 @@ public sealed class CompareDialog : Window
                 from,
                 new TextBlock { Text = Strings.CompareTargetLabel, Margin = new Thickness(0, 6, 0, 0) },
                 to,
+                scope,
                 new TextBlock { Text = Strings.CompareDialogNote, TextWrapping = TextWrapping.Wrap, Opacity = 0.7, FontSize = 12, Margin = new Thickness(0, 4) },
                 privileges,
                 positions,

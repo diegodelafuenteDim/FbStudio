@@ -116,6 +116,20 @@ public sealed class DiagramScene
     public IReadOnlyList<DiagramNode> Nodes { get; }
     public IReadOnlyList<DiagramEdge> Edges { get; }
 
+    /// <summary>Un camino entre dos tablas («Camino hasta…»), para resaltarlo: sus tablas en orden.</summary>
+    public IReadOnlyList<string> Path { get; set; } = [];
+
+    /// <summary>La tabla es parte del camino resaltado.</summary>
+    public bool IsOnPath(DiagramNode node) => Path.Contains(node.Name);
+
+    /// <summary>La línea une dos tablas seguidas del camino resaltado.</summary>
+    public bool IsOnPath(DiagramEdge edge)
+    {
+        for (var i = 1; i < Path.Count; i++)
+            if ((Path[i - 1] == edge.From.Name && Path[i] == edge.To.Name) || (Path[i - 1] == edge.To.Name && Path[i] == edge.From.Name)) return true;
+        return false;
+    }
+
     public DiagramNode? Node(string name) => Nodes.FirstOrDefault(n => n.Name == name);
 
     /// <summary>La caja que está en ese punto (la de arriba si se superponen).</summary>
@@ -169,6 +183,26 @@ public sealed class DiagramScene
             .ToList();
         return new DiagramScene(nodes, edges);
     }
+
+    /// <summary>
+    /// Pone las tablas que tienen lugar guardado (o que se movieron a mano) donde estaban; las demás conservan su
+    /// acomodo entre ellas pero van todas juntas a la derecha de las primeras, así no se pisan.
+    /// </summary>
+    public void Place(IReadOnlyDictionary<string, DiagramPosition> positions, double gap = 60)
+    {
+        var kept = Nodes.Where(n => positions.ContainsKey(n.Name)).ToList();
+        if (kept.Count == 0) return;
+        foreach (var n in kept) (n.X, n.Y) = (positions[n.Name].X, positions[n.Name].Y);
+        var others = Nodes.Where(n => !positions.ContainsKey(n.Name)).ToList();
+        if (others.Count == 0) return;
+        var right = kept.Max(n => n.X + n.Width);
+        var top = kept.Min(n => n.Y);
+        var (dx, dy) = (right + gap - others.Min(n => n.X), top - others.Min(n => n.Y));
+        foreach (var n in others) (n.X, n.Y) = (n.X + dx, n.Y + dy);
+    }
+
+    /// <summary>Dónde está cada tabla (para guardar el diagrama o conservar lo movido a mano).</summary>
+    public Dictionary<string, DiagramPosition> Positions() => Nodes.ToDictionary(n => n.Name, n => new DiagramPosition(n.X, n.Y));
 
     /// <summary>«+ 12 columnas»; el texto lo pone quien dibuja (está traducido).</summary>
     public static Func<int, string> MoreText { get; set; } = n => $"+ {n}";

@@ -48,6 +48,16 @@ public sealed class CompareTabTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         tab.SelectedItem = procedure;
         Assert.Contains("N = 1", tab.SelectedTargetDdl);
         Assert.Contains("SELECT COUNT(*)", tab.SelectedSourceDdl);
+        // Los renglones que cambian se marcan en los dos lados (solo esos).
+        Pump();
+        var view = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(w).OfType<CompareTabView>().Single();
+        var sourceLines = tab.SelectedSourceDdl.Replace("\r\n", "\n").Split('\n');
+        var targetLines = tab.SelectedTargetDdl.Replace("\r\n", "\n").Split('\n');
+        Assert.NotEmpty(view.SourceChangedLines);
+        Assert.Contains(view.SourceChangedLines, l => sourceLines[l - 1].Contains("COUNT(*)"));
+        Assert.Contains(view.TargetChangedLines, l => targetLines[l - 1].Contains("N = 1"));
+        Assert.True(view.SourceChangedLines.Count < sourceLines.Length);                // el encabezado igual no se marca
+        Assert.DoesNotContain(view.SourceChangedLines, l => sourceLines[l - 1].StartsWith("CREATE OR ALTER PROCEDURE"));
 
         // Solo el índice: el procedimiento se destilda.
         procedure.IsChecked = false;
@@ -68,6 +78,63 @@ public sealed class CompareTabTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         vm.SelectedTab = tab;
         await tab.CompareAsync();
         Assert.Equal("P_CONTAR", Assert.Single(tab.Items).Name);
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Comparar_datos_de_una_tabla_entre_dos_bases_y_llevar_el_script_al_destino() => ui.Session.DispatchAsync(async () =>
+    {
+        // Dos copias con la misma tabla y datos distintos: en el origen la 3 es nueva y la 2 cuesta 20; en el destino sobra la 4.
+        const string table = "CREATE TABLE PRECIOS (ID INTEGER NOT NULL PRIMARY KEY, NOMBRE VARCHAR(30), IMPORTE NUMERIC(10,2)";
+        var source = (await CopySchemaAsync("/firebird/data/copia_datos_a.fdb", table + ", SOLO_A INTEGER); COMMIT; "
+            + "INSERT INTO PRECIOS (ID, NOMBRE, IMPORTE) VALUES (1, 'Ecografía', 10); INSERT INTO PRECIOS (ID, NOMBRE, IMPORTE) VALUES (2, 'Rayos', 20); "
+            + "INSERT INTO PRECIOS (ID, NOMBRE, IMPORTE) VALUES (3, 'Nueva', NULL); COMMIT;")) with { Name = "copia-a" };
+        var target = (await CopySchemaAsync("/firebird/data/copia_datos_b.fdb", table + "); COMMIT; "
+            + "INSERT INTO PRECIOS (ID, NOMBRE, IMPORTE) VALUES (1, 'Ecografía', 10.00); INSERT INTO PRECIOS (ID, NOMBRE, IMPORTE) VALUES (2, 'Rayos', 25); "
+            + "INSERT INTO PRECIOS (ID, NOMBRE, IMPORTE) VALUES (4, 'Sobra', 1); COMMIT;")) with { Name = "copia-b" };
+        var store = AppServices.CreateProfileStore(_folder);
+        store.Upsert(fb.Profile, fb.Password);
+        store.Upsert(source, fb.Password);
+        store.Upsert(target, fb.Password);
+        var vm = new MainWindowViewModel(store);
+        var w = new MainWindow { DataContext = vm, Width = 1400, Height = 900 };
+        w.Show();
+        Pump();
+
+        var tab = vm.OpenDataCompare(source, "PRECIOS");
+        Assert.Same(tab, vm.OpenDataCompare(source, "PRECIOS"));                            // una por tabla y base
+        Assert.Equal(["copia-b", "docker-fb3"], tab.Targets.Select(p => p.Name));
+        tab.Target = tab.Targets.Single(p => p.Id == target.Id);
+        await tab.CompareCommand.ExecuteAsync(null);
+        Pump();
+        Assert.Equal("1 faltan en el destino, 1 distintas, 1 sobran y 1 iguales · columnas solo en el origen (no se comparan): SOLO_A", tab.Summary);
+        Assert.Equal([("2", "Distinta"), ("3", "Falta en el destino"), ("4", "Sobra en el destino")], tab.Items.Select(i => (i.Key, i.ChangeLabel)));
+        Assert.Equal("IMPORTE: 25 → 20", tab.Items[0].Details);
+        Assert.Contains("UPDATE PRECIOS SET IMPORTE = 20 WHERE ID = 2;", tab.Script);
+        Assert.Contains("INSERT INTO PRECIOS (ID, NOMBRE, IMPORTE) VALUES (3, 'Nueva', NULL);", tab.Script);
+        Assert.DoesNotContain("DELETE", tab.Script);
+        tab.DeleteExtra = true;
+        Assert.Contains("DELETE FROM PRECIOS WHERE ID = 4;", tab.Script);
+
+        // El script va a una consulta del destino, sin ejecutar; con F9 y confirmar, quedan iguales.
+        tab.OpenInTargetCommand.Execute(null);
+        var query = vm.SelectedTab!;
+        Assert.Equal(target.Id, query.Profile!.Id);
+        Assert.False(query.IsRunning);
+        Pump();
+        await w.RunAsync();
+        Assert.True(query.InTransaction, query.Status);
+        await query.CommitCommand.ExecuteAsync(null);
+        vm.SelectedTab = tab;
+        await tab.CompareCommand.ExecuteAsync(null);
+        Assert.Empty(tab.Items);
+        Assert.StartsWith("Son iguales: 3 filas.", tab.Summary);
+
+        // Sin clave primaria no se compara.
+        var other = vm.OpenDataCompare(source, "RDB$DATABASE");
+        other.Target = other.Targets.Single(p => p.Id == target.Id);
+        await other.CompareCommand.ExecuteAsync(null);
+        Assert.StartsWith("La tabla RDB$DATABASE no tiene clave primaria", other.Summary);
         w.Close();
     }, CancellationToken.None);
 

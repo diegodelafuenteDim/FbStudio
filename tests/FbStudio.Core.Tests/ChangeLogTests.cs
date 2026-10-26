@@ -60,4 +60,21 @@ public class ChangeLogTests
         Assert.Equal(["Only in English."], only.In("es"));
         Assert.Empty(ChangeLog.Parse("sin versiones"));
     }
+
+    [Fact]
+    public void Cada_cambio_con_su_titulo_para_la_ventana_de_novedades()
+    {
+        Assert.Equal(new ChangeLogEntry("Pestaña Datos", "«Contar al filtrar» cuenta las filas.", false), ChangeLog.Split("Pestaña Datos: «Contar al filtrar» cuenta las filas."));
+        // El «:» de adentro de un nombre entre «…» no corta; el del final del nombre sí.
+        Assert.Equal("Consulta → «Ejecutar script: desde archivo…»", ChangeLog.Split("Consulta → «Ejecutar script: desde archivo…»: corre un .sql.").Title);
+        // Sin «:» cerca del principio: el nombre entre «…» con que empieza, o nada.
+        Assert.Equal(new ChangeLogEntry("«Ver el valor…»", "En la grilla muestra la celda.", false), ChangeLog.Split("«Ver el valor…» en la grilla muestra la celda."));
+        Assert.Equal(new ChangeLogEntry(null, "Importar puede actualizar las filas.", false), ChangeLog.Split("Importar puede actualizar las filas."));
+        var long_ = ChangeLog.Split("Después de JOIN, el autocompletado sugiere primero las tablas relacionadas por una FK con las que ya están en el FROM, con el ON armado: «T t ON …».");
+        Assert.Null(long_.Title);
+        // Las correcciones.
+        Assert.Equal(new ChangeLogEntry(null, "Las opciones nuevas llegaban apagadas.", true), ChangeLog.Split("Corregido: las opciones nuevas llegaban apagadas."));
+        Assert.True(ChangeLog.Split("Fixed: new options came in turned off.").IsFix);
+        Assert.Equal("Cambio con negrita", ChangeLog.Split("Cambio con **negrita**").Body);
+    }
 }

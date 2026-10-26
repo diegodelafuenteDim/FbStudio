@@ -34,12 +34,19 @@ public sealed partial class DiagramTabViewModel : EditorTabViewModel
     private readonly HashSet<string> _shownHubs = new(StringComparer.Ordinal);
     private readonly List<string> _added = [];
     private readonly HashSet<string> _removed = new(StringComparer.Ordinal);
+    private IReadOnlyList<string> _path = [];
     private bool _loaded;
+    private bool _applying;
 
-    public DiagramTabViewModel(MainWindowViewModel owner, ConnectionProfile profile, DiagramSource source)
+    // Lo movido a mano (o lo leído de un diagrama guardado) se conserva al sumar o sacar tablas, hasta «Reacomodar».
+    private bool _movedByHand;
+    private DiagramFile? _file;
+
+    public DiagramTabViewModel(MainWindowViewModel owner, ConnectionProfile profile, DiagramSource source, DiagramFile? file = null)
         : base(owner, profile, string.Format(source.IsArea ? Strings.DiagramTitleArea : Strings.DiagramTitleTable, source.Name))
     {
         Source = source;
+        _file = file;
         DiagramScene.MoreText = n => Count(n, Strings.DiagramMoreColumnOne, Strings.DiagramMoreColumns);
     }
 
@@ -123,11 +130,80 @@ public sealed partial class DiagramTabViewModel : EditorTabViewModel
                     .Where(o => DbObjectKinds.IsRelation(o.Kind)).Select(o => o.Name).ToList();
             }
             _loaded = true;
-            Rebuild();
+            if (_file is { } file)
+            {
+                _file = null;
+                Apply(file);
+            }
+            else Rebuild();
         }
         catch (Exception ex)
         {
             Status = string.Format(Strings.DiagramLoadFailed, ex.Message.Split('\n')[0]);
+        }
+    }
+
+    /// <summary>Lo de un diagrama guardado: las opciones, las tablas sumadas y sacadas, el camino y dónde estaba cada una.</summary>
+    private void Apply(DiagramFile file)
+    {
+        _applying = true;
+        try
+        {
+            HopIndex = Math.Clamp(file.Hops - 1, 0, HopChoices.Count - 1);
+            HideHubs = file.HideHubs;
+            ShowLogical = file.ShowLogical;
+            ColumnsIndex = Math.Clamp(file.Columns, 0, ColumnChoices.Count - 1);
+            ShowOutside = file.ShowOutside;
+            LayoutIndex = Math.Clamp(file.Layout, 0, LayoutChoices.Count - 1);
+            _added.Clear();
+            _added.AddRange(file.Added);
+            _removed.Clear();
+            _removed.UnionWith(file.Removed);
+            _shownHubs.Clear();
+            _shownHubs.UnionWith(file.ShownHubs);
+            _path = file.Path;
+        }
+        finally
+        {
+            _applying = false;
+        }
+        Rebuild(file.Positions);
+        _movedByHand = file.Positions.Count > 0;
+        Status = file.Database is { } db && db != Profile?.Name
+            ? string.Format(Strings.DiagramOpenedFromOther, db, Summary)
+            : Summary;
+    }
+
+    /// <summary>Se movió una tabla a mano: desde acá, sumar o sacar tablas no desacomoda las que ya están.</summary>
+    public void NodeMovedByHand() => _movedByHand = true;
+
+    /// <summary>Guarda el diagrama (.fbsdiagram) con sus opciones y dónde quedó cada tabla.</summary>
+    public void Save(string path)
+    {
+        try
+        {
+            Workspace.DiagramFiles.Write(path, new DiagramFile
+            {
+                Database = Profile?.Name,
+                Source = Source.Name,
+                Area = Source.Area,
+                Hops = HopIndex + 1,
+                HideHubs = HideHubs,
+                ShowLogical = ShowLogical,
+                Columns = ColumnsIndex,
+                ShowOutside = ShowOutside,
+                Layout = LayoutIndex,
+                Added = [.. _added],
+                Removed = [.. _removed.Order(StringComparer.Ordinal)],
+                ShownHubs = [.. _shownHubs.Order(StringComparer.Ordinal)],
+                Path = _path,
+                Positions = Scene?.Positions() ?? [],
+            });
+            Status = string.Format(Strings.DiagramSaved, Path.GetFileName(path));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Status = string.Format(Strings.DiagramExportFailed, ex.Message);
         }
     }
 
@@ -140,9 +216,11 @@ public sealed partial class DiagramTabViewModel : EditorTabViewModel
     partial void OnHiddenHubsChanged(IReadOnlyList<HiddenHubRow> value) => OnPropertyChanged(nameof(HasHiddenHubs));
 
     /// <summary>Elige qué tablas van, arma las cajas y las acomoda.</summary>
-    private void Rebuild()
+    /// <param name="positions">Dónde poner las tablas (de un diagrama guardado); si no, lo movido a mano se conserva.</param>
+    private void Rebuild(IReadOnlyDictionary<string, DiagramPosition>? positions = null)
     {
-        if (!_loaded || _graph is not { } g) return;
+        if (!_loaded || _applying || _graph is not { } g) return;
+        positions ??= _movedByHand ? Scene?.Positions() : null;
         if (!IsArea && !g.Contains(Source.Name))
         {
             Status = string.Format(Strings.DiagramTableMissing, Source.Name);
@@ -158,7 +236,9 @@ public sealed partial class DiagramTabViewModel : EditorTabViewModel
         var selection = g.Compose(tables, outside, HideHubs, _shownHubs, ShowLogical);
         var mode = ColumnsIndex switch { 1 => DiagramColumnsMode.All, 2 => DiagramColumnsMode.None, _ => DiagramColumnsMode.Keys };
         var scene = DiagramScene.Build(g, selection, mode, DiagramPainter.Measure, ShowLogical);
+        scene.Path = _path;
         DiagramLayout.Arrange(scene, (DiagramLayoutKind)LayoutIndex);
+        if (positions is not null) scene.Place(positions);
         SelectedNode = null;
         Scene = scene;
         HiddenHubs = selection.HiddenHubs.Select(h => new HiddenHubRow(h)).ToList();
@@ -187,6 +267,7 @@ public sealed partial class DiagramTabViewModel : EditorTabViewModel
     [RelayCommand]
     private void Relayout()
     {
+        _movedByHand = false;
         if (Scene is null) return;
         DiagramLayout.Arrange(Scene, (DiagramLayoutKind)LayoutIndex);
         Rearranged?.Invoke();
@@ -254,6 +335,49 @@ public sealed partial class DiagramTabViewModel : EditorTabViewModel
         Rebuild();
     }
 
+    /// <summary>
+    /// «Camino hasta…»: la cadena de FK más corta desde la tabla elegida (o la del diagrama) hasta otra. Se suman las
+    /// tablas del medio (también una comodín, si el camino pasa por ella) y el camino queda resaltado.
+    /// </summary>
+    [RelayCommand]
+    private async Task PathToAsync()
+    {
+        if (_graph is not { } g) return;
+        if ((SelectedNode?.Name ?? (IsArea ? null : Source.Name)) is not { } from)
+        {
+            Status = Strings.DiagramPathPickFirst;
+            return;
+        }
+        if (await Owner.AskTextAsync(new TextPrompt(Strings.DiagramPathTitle, string.Format(Strings.DiagramPathPrompt, from))) is not { } text) return;
+        var name = text.Trim().Trim('"');
+        if ((g.Table(name) ?? g.Table(name.ToUpperInvariant())) is not { } target)
+        {
+            Status = string.Format(Strings.DiagramTableMissing, name);
+            return;
+        }
+        if (g.Path(from, target.Name, ShowLogical) is not { } path)
+        {
+            Status = string.Format(ShowLogical ? Strings.DiagramNoPath : Strings.DiagramNoPathPhysical, from, target.Name);
+            return;
+        }
+        foreach (var t in path)
+        {
+            _removed.Remove(t);
+            if (t != Source.Name && !_added.Contains(t)) _added.Add(t);
+            if (g.IsHub(t, ShowLogical)) _shownHubs.Add(t);
+        }
+        _path = path;
+        Rebuild();
+        SelectedNode = Scene?.Node(target.Name);
+        Status = string.Format(path.Count == 2 ? Strings.DiagramPathDirect : Strings.DiagramPathFound, string.Join(" → ", path), path.Count - 1);
+    }
+
+    /// <summary>El diagrama como texto de Mermaid, para «Copiar como Mermaid».</summary>
+    public string? MermaidText => Scene is { } scene ? DiagramMermaid.Write(scene, BaseTitle) : null;
+
+    /// <summary>El camino resaltado (para las pruebas).</summary>
+    public IReadOnlyList<string> PathShown => Scene?.Path ?? [];
+
     [RelayCommand(CanExecute = nameof(CanUseSelected))]
     private Task OpenSelectedAsync() => SelectedNode is { } n ? OpenAsync(n) : Task.CompletedTask;
 
@@ -263,14 +387,23 @@ public sealed partial class DiagramTabViewModel : EditorTabViewModel
             ? Owner.OpenObjectAsync(profile, new DbObject(node.IsView ? DbObjectKind.View : DbObjectKind.Table, node.Name))
             : Task.CompletedTask;
 
-    /// <summary>Guarda el diagrama como PNG, SVG o draw.io, según la extensión (con lo que se movió a mano).</summary>
+    /// <summary>Guarda el diagrama como PNG, SVG, draw.io o .fbsdiagram (para abrirlo después), según la extensión.</summary>
     public void Export(string path)
     {
         if (Scene is not { } scene) return;
+        if (path.EndsWith(DiagramFile.Extension, StringComparison.OrdinalIgnoreCase))
+        {
+            Save(path);
+            return;
+        }
         try
         {
             if (path.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
                 File.WriteAllText(path, DiagramSvg.Write(scene, BaseTitle));
+            else if (path.EndsWith(".mmd", StringComparison.OrdinalIgnoreCase))
+                File.WriteAllText(path, DiagramMermaid.Write(scene, BaseTitle));
+            else if (path.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                File.WriteAllText(path, "```mermaid\n" + DiagramMermaid.Write(scene, BaseTitle) + "```\n");
             else if (path.EndsWith(".drawio", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
                 File.WriteAllText(path, DiagramDrawio.Write(scene, BaseTitle));
             else

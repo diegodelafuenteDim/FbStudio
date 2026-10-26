@@ -41,10 +41,13 @@
         </StackPanel>
       </DockPanel>
     </Border>
-    <ae:TextEditor x:Name="Editor" Grid.Row="1"
-                   ShowLineNumbers="True"
-                   FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="14"
-                   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+    <DockPanel Grid.Row="1">
+      <ContentControl x:Name="FindHost" DockPanel.Dock="Top" />
+      <ae:TextEditor x:Name="Editor"
+                     ShowLineNumbers="True"
+                     FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="14"
+                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+    </DockPanel>
     <GridSplitter Grid.Row="2" ResizeDirection="Rows" />
     <TabControl Grid.Row="3" Padding="0" SelectedIndex="{Binding SelectedResultTab}">
       <TabItem Header="{x:Static res:Strings.ResultsTab}">
@@ -156,6 +159,8 @@
                 <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="TableRowPlusAfter" /><TextBlock Text="{x:Static res:Strings.DataNewRow}" /></StackPanel>
               </Button>
               <Button Command="{Binding Data.CountCommand, FallbackValue={x:Null}}" Content="{x:Static res:Strings.DataCount}" ToolTip.Tip="{x:Static res:Strings.DataCountTip}" />
+              <CheckBox x:Name="DataCountOnFilter" IsChecked="{Binding Data.CountOnFilter, FallbackValue=False}" Content="{x:Static res:Strings.DataCountOnFilter}"
+                        ToolTip.Tip="{x:Static res:Strings.DataCountOnFilterTip}" VerticalAlignment="Center" />
               <Button Command="{Binding Data.ReloadCommand, FallbackValue={x:Null}}" ToolTip.Tip="{x:Static res:Strings.ObjectReload}">
                 <mi:MaterialIcon Kind="Refresh" />
               </Button>

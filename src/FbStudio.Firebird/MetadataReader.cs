@@ -1,3 +1,4 @@
+using FbStudio.Core.Diagrams;
 using FbStudio.Core.Metadata;
 using FbStudio.Core.Profiles;
 using FbStudio.Core.Sql;
@@ -69,6 +70,14 @@ public static class MetadataReader
     private const string GeneratorsSql = "SELECT TRIM(RDB$GENERATOR_NAME) FROM RDB$GENERATORS WHERE COALESCE(RDB$SYSTEM_FLAG, 0) = 0 ORDER BY 1";
 
     private const string ExceptionsSql = "SELECT TRIM(RDB$EXCEPTION_NAME) FROM RDB$EXCEPTIONS WHERE COALESCE(RDB$SYSTEM_FLAG, 0) = 0 ORDER BY 1";
+
+    // Las columnas con una FK lógica en el comentario («#FK_%TABLA,%CLAVE…»), como en los diagramas.
+    private const string LogicalForeignKeysSql = """
+        SELECT TRIM(rf.RDB$RELATION_NAME), TRIM(rf.RDB$FIELD_NAME), CAST(SUBSTRING(rf.RDB$DESCRIPTION FROM 1 FOR 1000) AS VARCHAR(1000))
+        FROM RDB$RELATION_FIELDS rf
+        JOIN RDB$RELATIONS r ON r.RDB$RELATION_NAME = rf.RDB$RELATION_NAME
+        WHERE COALESCE(r.RDB$SYSTEM_FLAG, 0) = 0 AND rf.RDB$DESCRIPTION CONTAINING '#FK_'
+        """;
 
     /// <summary>
     /// Carga tablas/vistas, procedimientos, funciones, paquetes, generadores, excepciones y las firmas con una conexión
@@ -147,6 +156,12 @@ public static class MetadataReader
         var packages = (await Rows(PackagesSql)).Select(r => S(r[0])!).ToList();
         var generators = (await Rows(GeneratorsSql)).Select(r => S(r[0])!).ToList();
         var exceptions = (await Rows(ExceptionsSql)).Select(r => S(r[0])!).ToList();
+        // Las FK (para sugerir el JOIN): primero las de verdad, después las lógicas.
+        var foreignKeys = (await Rows(MetadataExplorer.DiagramForeignKeysSql)).GroupBy(r => S(r[0])!)
+            .Select(g => new DiagramLink(g.Key, S(g.First()[1])!, g.Select(r => S(r[3])!).ToList(), S(g.First()[2])!,
+                g.Where(r => r[4] is not null).Select(r => S(r[4])!).ToList()))
+            .Concat((await Rows(LogicalForeignKeysSql)).Select(r => LogicalForeignKeys.Parse(S(r[0])!, S(r[1])!, S(r[2]))).OfType<DiagramLink>())
+            .ToList();
         await tx.CommitAsync(ct);
 
         return new MetadataCatalog(columns, procedures, packageProcedures)
@@ -158,6 +173,7 @@ public static class MetadataReader
             Generators = generators,
             Exceptions = exceptions,
             Signatures = signatures,
+            ForeignKeys = foreignKeys,
         };
     }
 }

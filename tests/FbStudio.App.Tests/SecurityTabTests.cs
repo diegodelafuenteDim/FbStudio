@@ -175,6 +175,100 @@ public sealed class SecurityTabTests(FirebirdFixture fb, HeadlessFixture ui) : I
     }, CancellationToken.None);
 
     [Fact]
+    public Task Permisos_de_estructura_crear_modificar_y_borrar() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open(Sysdba);
+        vm.ConfirmActionAsync = _ => Task.FromResult(true);
+        vm.ConfirmTypedAsync = _ => Task.FromResult(true);
+        var tab = vm.OpenSecurity(vm.Profiles.Single())!;
+        await tab.Working;
+        var role = NewName("r_ddl_").ToUpperInvariant();
+        vm.AskTextAsync = _ => Task.FromResult<string?>(role);
+        await tab.NewRoleAsync();
+        Assert.True(tab.HasDdl);
+        Assert.Equal(13, tab.DdlRows.Count);
+        DdlPermissionRow Ddl(string label) => tab.DdlRows.Single(r => r.Label == label);
+        Assert.False(Ddl("La base (ALTER DATABASE)").CanCreateOrDrop);           // la base: solo modificar
+
+        Ddl("Tablas").Create = true;
+        Ddl("Procedimientos").Alter = true;
+        Ddl("Procedimientos").Drop = true;
+        Ddl("La base (ALTER DATABASE)").Alter = true;
+        Assert.Equal(3, tab.PendingCount);
+        await tab.ApplyAsync();
+        Assert.Contains($"GRANT CREATE TABLE TO ROLE {role};", tab.Document.Text);
+        Assert.Contains($"GRANT ALTER ANY PROCEDURE TO ROLE {role};", tab.Document.Text);
+        Assert.Contains($"GRANT DROP ANY PROCEDURE TO ROLE {role};", tab.Document.Text);
+        Assert.Contains($"GRANT ALTER DATABASE TO ROLE {role};", tab.Document.Text);
+
+        // Al volver a leer, quedan tildados; destildar los quita.
+        Assert.True(Ddl("Tablas").Create);
+        Assert.True(Ddl("Procedimientos").Drop);
+        Assert.Contains(tab.Snapshot!.Grants, g => g is { GranteeKind: GranteeKind.Role, ObjectKind: GrantObjectKind.Metadata, Object: "SQL$TABLES", Privilege: 'C' } && g.Grantee == role);
+        Ddl("Tablas").Create = false;
+        await tab.ApplyAsync();
+        Assert.Contains($"REVOKE CREATE TABLE FROM ROLE {role};", tab.Document.Text);
+        Assert.False(Ddl("Tablas").Create);
+
+        await tab.DeleteRoleAsync();
+        w.Close();
+        await vm.DisposeAsync();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Por_objeto_muestra_quien_tiene_permisos_y_los_cambia_igual() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open(Sysdba);
+        vm.ConfirmActionAsync = _ => Task.FromResult(true);
+        vm.ConfirmTypedAsync = _ => Task.FromResult(true);
+        var tab = vm.OpenSecurity(vm.Profiles.Single())!;
+        await tab.Working;
+        var role = NewName("r_obj_").ToUpperInvariant();
+        vm.AskTextAsync = _ => Task.FromResult<string?>(role);
+        await tab.NewRoleAsync();
+
+        // Desde el árbol («Permisos…» de una tabla): la vista por objeto, con quién tiene permisos sobre ella.
+        tab.ShowObject(GrantObjectKind.Table, "TURNOS");
+        Pump();
+        Assert.True(tab.IsObjectScope);
+        Assert.Equal("TURNOS", tab.ObjectTitle);
+        Assert.Contains(tab.ObjectItems, o => o is { Kind: GrantObjectKind.Procedure, Name: "P_CONTAR" });
+        var row = tab.ObjectRows.Single(r => r.GranteeName == role);
+        Assert.Equal("Rol", row.GranteeKindLabel);
+        Assert.False(row.HasAny);
+        Assert.Contains(tab.ObjectRows, r => r is { GranteeName: "PUBLIC" });
+        row.Select = true;
+        Assert.Equal(1, tab.PendingCount);
+
+        // Es el mismo renglón que en la vista del rol: lo marcado se ve allá y se aplica una sola vez.
+        tab.GranteeScope = 0;
+        tab.SelectedGrantee = tab.Grantees.Single(g => g.Name == role);
+        Assert.Same(row, Row(tab, "TURNOS"));
+        Row(tab, "V_TURNOS").Select = true;
+        Assert.Equal(2, tab.PendingCount);
+        tab.GranteeScope = 2;
+        await tab.ApplyAsync();
+        Assert.Contains($"GRANT SELECT ON TURNOS TO ROLE {role};", tab.Document.Text);
+        Assert.Contains($"GRANT SELECT ON V_TURNOS TO ROLE {role};", tab.Document.Text);
+
+        // Al volver a leer sigue en el mismo objeto; «Solo los que tienen» deja a los que tienen algo.
+        Assert.Equal("TURNOS", tab.ObjectTitle);
+        Assert.Contains("con permiso", tab.ObjectDetail);
+        Assert.True(tab.ObjectRows.Single(r => r.GranteeName == role).Select);
+        tab.OnlyGranted = true;
+        Assert.Contains(tab.ObjectRows, r => r.GranteeName == role);
+        Assert.All(tab.ObjectRows, r => Assert.True(r.HasAny));
+        tab.ObjectFilter = "r_obj";
+        Assert.Equal([role], tab.ObjectRows.Select(r => r.GranteeName));
+
+        tab.GranteeScope = 0;
+        tab.SelectedGrantee = tab.Grantees.Single(g => g.Name == role);
+        await tab.DeleteRoleAsync();
+        w.Close();
+        await vm.DisposeAsync();
+    }, CancellationToken.None);
+
+    [Fact]
     public Task Sin_ser_administrador_o_de_solo_lectura_no_se_cambia_lo_que_no_se_puede() => ui.Session.DispatchAsync(async () =>
     {
         var readOnly = fb.Profile with { Id = Guid.NewGuid(), Name = "docker-ro", ReadOnly = true };

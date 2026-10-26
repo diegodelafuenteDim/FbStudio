@@ -5,6 +5,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
+using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
 using FbStudio.App.Resources;
 using FbStudio.Core.Sql;
@@ -26,6 +27,8 @@ public sealed class SqlEditorSetup
     private CompletionWindow? _window;
     private OverloadInsightWindow? _insight;
     private readonly SignatureProvider _signature = new();
+    private FoldingManager? _folding;
+    private Avalonia.Threading.DispatcherTimer? _foldingTimer;
 
     public SqlEditorSetup(TextEditor editor, Func<MetadataCatalog> catalog, Func<IReadOnlyList<SqlTemplate>>? templates = null)
     {
@@ -47,6 +50,60 @@ public sealed class SqlEditorSetup
         editor.TextArea.Caret.PositionChanged += (_, _) => UpdateSignature(open: false);
         // En túnel sobre el editor: corre antes que la lista de autocompletado procese Enter o Tab.
         editor.AddHandler(InputElement.KeyDownEvent, OnPreviewKeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+    }
+
+    /// <summary>
+    /// Plegar bloques (BEGIN…END, CASE…END, paréntesis y comentarios de varios renglones) con las marcas del margen. Los
+    /// bloques se recalculan medio segundo después de dejar de escribir.
+    /// </summary>
+    public bool Folding
+    {
+        get => _folding is not null;
+        set
+        {
+            if (value == Folding) return;
+            if (value)
+            {
+                _folding = FoldingManager.Install(_editor.TextArea);
+                _foldingTimer ??= new Avalonia.Threading.DispatcherTimer(TimeSpan.FromMilliseconds(500), Avalonia.Threading.DispatcherPriority.Background, (_, _) =>
+                {
+                    _foldingTimer!.Stop();
+                    UpdateFoldings();
+                });
+                _editor.Document.TextChanged += OnTextChangedForFolding;
+                _editor.TextArea.DocumentChanged += OnDocumentChangedForFolding;
+                UpdateFoldings();
+            }
+            else
+            {
+                _editor.Document.TextChanged -= OnTextChangedForFolding;
+                _editor.TextArea.DocumentChanged -= OnDocumentChangedForFolding;
+                _foldingTimer?.Stop();
+                FoldingManager.Uninstall(_folding!);
+                _folding = null;
+            }
+        }
+    }
+
+    /// <summary>Recalcula los bloques ya (sin esperar): lo usa el temporizador, y las pruebas.</summary>
+    public void UpdateFoldings() =>
+        _folding?.UpdateFoldings(SqlFolding.Find(_editor.Document.Text).Select(r => new NewFolding(r.Start, r.End)), -1);
+
+    /// <summary>Los bloques que hay ahora (para las pruebas).</summary>
+    public IReadOnlyList<(int Start, int End, bool Folded)> Foldings =>
+        _folding?.AllFoldings.Select(f => (f.StartOffset, f.EndOffset, f.IsFolded)).ToList() ?? [];
+
+    private void OnTextChangedForFolding(object? sender, EventArgs e)
+    {
+        _foldingTimer?.Stop();
+        _foldingTimer?.Start();
+    }
+
+    // Otro documento en el editor: el administrador de plegado es de un documento, se vuelve a instalar.
+    private void OnDocumentChangedForFolding(object? sender, EventArgs e)
+    {
+        Folding = false;
+        Folding = true;
     }
 
     /// <summary>Tema de colores de TextMate en uso (Light+ o Dark+, los de VS Code).</summary>
@@ -245,18 +302,20 @@ public sealed class SqlEditorSetup
             CompletionKind.Package => $"{item.Text}   ({Strings.CompletionPackage})",
             CompletionKind.Generator => $"{item.Text}   ({Strings.CompletionGenerator})",
             CompletionKind.Exception => $"{item.Text}   ({Strings.CompletionException})",
+            CompletionKind.Join => $"{item.Text}   ({string.Format(Strings.CompletionJoin, item.Detail)})",
             _ => $"{item.Text}   ({item.Detail})",
         };
         public object? Description => item.Kind.ToString();
         public double Priority => item.Kind switch
         {
+            CompletionKind.Join => 3,
             CompletionKind.Column => 2,
             CompletionKind.Table or CompletionKind.Procedure or CompletionKind.Function or CompletionKind.Generator or CompletionKind.Exception => 1,
             _ => 0,
         };
 
-        // Los nombres de objetos y columnas van con comillas si hacen falta (minúsculas, palabras reservadas).
+        // Los nombres de objetos y columnas van con comillas si hacen falta (minúsculas, palabras reservadas); un JOIN ya viene armado.
         public void Complete(TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs) =>
-            textArea.Document.Replace(completionSegment, item.Kind == CompletionKind.Keyword ? Text : SqlIdentifier.Quote(Text));
+            textArea.Document.Replace(completionSegment, item.Kind is CompletionKind.Keyword or CompletionKind.Join ? Text : SqlIdentifier.Quote(Text));
     }
 }

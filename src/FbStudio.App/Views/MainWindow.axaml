@@ -131,6 +131,14 @@
         <MenuItem x:Name="MenuNewTab" Header="{x:Static res:Strings.MenuNewTab}" InputGesture="Ctrl+T">
           <MenuItem.Icon><mi:MaterialIcon Kind="TabPlus" /></MenuItem.Icon>
         </MenuItem>
+        <MenuItem x:Name="MenuOpenFile" Header="{x:Static res:Strings.MenuOpenFile}" InputGesture="Ctrl+O">
+          <MenuItem.Icon><mi:MaterialIcon Kind="FolderOpenOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuRecentFiles" Header="{x:Static res:Strings.MenuRecentFiles}" />
+        <MenuItem x:Name="MenuSaveFile" Header="{x:Static res:Strings.MenuSaveFile}" InputGesture="Ctrl+S">
+          <MenuItem.Icon><mi:MaterialIcon Kind="ContentSaveOutline" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuSaveFileAs" Header="{x:Static res:Strings.MenuSaveFileAs}" InputGesture="Ctrl+Shift+S" />
         <MenuItem x:Name="MenuCloseTab" Header="{x:Static res:Strings.MenuCloseTab}" InputGesture="Ctrl+W">
           <MenuItem.Icon><mi:MaterialIcon Kind="TabRemove" /></MenuItem.Icon>
         </MenuItem>
@@ -144,13 +152,35 @@
         <MenuItem x:Name="MenuRunStatement" Header="{x:Static res:Strings.MenuRunStatement}" InputGesture="Ctrl+Enter">
           <MenuItem.Icon><mi:MaterialIcon Kind="PlayOutline" /></MenuItem.Icon>
         </MenuItem>
+        <MenuItem x:Name="MenuPlanOnly" Header="{x:Static res:Strings.MenuPlanOnly}" InputGesture="Ctrl+Shift+E">
+          <MenuItem.Icon><mi:MaterialIcon Kind="SitemapOutline" /></MenuItem.Icon>
+        </MenuItem>
         <MenuItem x:Name="MenuRunScript" Header="{x:Static res:Strings.MenuRunScript}" InputGesture="Ctrl+F9">
           <MenuItem.Icon><mi:MaterialIcon Kind="ScriptTextPlayOutline" /></MenuItem.Icon>
         </MenuItem>
+        <MenuItem x:Name="MenuRunFile" Header="{x:Static res:Strings.MenuRunFile}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="FileCodeOutline" /></MenuItem.Icon>
+        </MenuItem>
         <MenuItem x:Name="MenuScriptContinue" Header="{x:Static res:Strings.MenuScriptContinueOnError}" ToggleType="CheckBox"
                   IsChecked="{Binding ScriptContinueOnError}" />
+        <MenuItem x:Name="MenuFind" Header="{x:Static res:Strings.MenuFind}" InputGesture="Ctrl+F">
+          <MenuItem.Icon><mi:MaterialIcon Kind="Magnify" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuReplace" Header="{x:Static res:Strings.MenuReplace}" InputGesture="Ctrl+H">
+          <MenuItem.Icon><mi:MaterialIcon Kind="FindReplace" /></MenuItem.Icon>
+        </MenuItem>
         <MenuItem x:Name="MenuFormatSql" Header="{x:Static res:Strings.MenuFormatSql}" InputGesture="Ctrl+Shift+L">
           <MenuItem.Icon><mi:MaterialIcon Kind="FormatAlignLeft" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem Header="{x:Static res:Strings.MenuEditText}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="TextBoxEditOutline" /></MenuItem.Icon>
+          <MenuItem x:Name="MenuToggleComment" Header="{x:Static res:Strings.MenuToggleComment}" />
+          <MenuItem x:Name="MenuDuplicateLine" Header="{x:Static res:Strings.MenuDuplicateLine}" InputGesture="Ctrl+D" />
+          <MenuItem x:Name="MenuMoveLineUp" Header="{x:Static res:Strings.MenuMoveLineUp}" InputGesture="Alt+Up" />
+          <MenuItem x:Name="MenuMoveLineDown" Header="{x:Static res:Strings.MenuMoveLineDown}" InputGesture="Alt+Down" />
+          <MenuItem x:Name="MenuUppercase" Header="{x:Static res:Strings.MenuUppercase}" InputGesture="Ctrl+Shift+U" />
+          <MenuItem x:Name="MenuLowercase" Header="{x:Static res:Strings.MenuLowercase}" InputGesture="Ctrl+U" />
+          <MenuItem x:Name="MenuGoToLine" Header="{x:Static res:Strings.MenuGoToLine}" InputGesture="Ctrl+G" />
         </MenuItem>
         <MenuItem x:Name="MenuInsertTemplate" Header="{x:Static res:Strings.MenuInsertTemplate}" InputGesture="Ctrl+J">
           <MenuItem.Icon><mi:MaterialIcon Kind="TextBoxPlusOutline" /></MenuItem.Icon>
@@ -178,6 +208,12 @@
         <MenuItem x:Name="MenuExportInsert" Header="{x:Static res:Strings.MenuExportInsert}">
           <MenuItem.Icon><mi:MaterialIcon Kind="DatabaseExport" /></MenuItem.Icon>
         </MenuItem>
+        <MenuItem x:Name="MenuExportJson" Header="{x:Static res:Strings.MenuExportJson}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="CodeJson" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuExportMarkdown" Header="{x:Static res:Strings.MenuExportMarkdown}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="LanguageMarkdownOutline" /></MenuItem.Icon>
+        </MenuItem>
       </MenuItem>
       <MenuItem Header="{x:Static res:Strings.MenuView}">
         <MenuItem x:Name="MenuViewResults" Header="{x:Static res:Strings.MenuViewResults}" InputGesture="Ctrl+1" />
@@ -189,6 +225,9 @@
       <MenuItem Header="{x:Static res:Strings.MenuTools}">
         <MenuItem x:Name="MenuMonitor" Header="{x:Static res:Strings.MenuMonitor}">
           <MenuItem.Icon><mi:MaterialIcon Kind="MonitorDashboard" /></MenuItem.Icon>
+        </MenuItem>
+        <MenuItem x:Name="MenuOpenDiagram" Header="{x:Static res:Strings.MenuOpenDiagram}">
+          <MenuItem.Icon><mi:MaterialIcon Kind="Sitemap" /></MenuItem.Icon>
         </MenuItem>
         <MenuItem x:Name="MenuStatistics" Header="{x:Static res:Strings.MenuStatistics}">
           <MenuItem.Icon><mi:MaterialIcon Kind="ChartBoxOutline" /></MenuItem.Icon>
@@ -217,6 +256,9 @@
         </MenuItem>
       </MenuItem>
       <MenuItem Header="{x:Static res:Strings.MenuHelp}">
+        <MenuItem x:Name="MenuManual" Header="{x:Static res:Strings.MenuManual}" InputGesture="F1">
+          <MenuItem.Icon><mi:MaterialIcon Kind="BookOpenPageVariantOutline" /></MenuItem.Icon>
+        </MenuItem>
         <MenuItem x:Name="MenuShortcuts" Header="{x:Static res:Strings.MenuShortcuts}">
           <MenuItem.Icon><mi:MaterialIcon Kind="KeyboardOutline" /></MenuItem.Icon>
         </MenuItem>
@@ -276,6 +318,12 @@
               </MenuItem>
               <MenuItem x:Name="FlyoutExportInsert" Header="{x:Static res:Strings.ExportScriptInsert}">
                 <MenuItem.Icon><mi:MaterialIcon Kind="DatabaseExport" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem x:Name="FlyoutExportJson" Header="JSON (.json)">
+                <MenuItem.Icon><mi:MaterialIcon Kind="CodeJson" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem x:Name="FlyoutExportMarkdown" Header="Markdown (.md)">
+                <MenuItem.Icon><mi:MaterialIcon Kind="LanguageMarkdownOutline" /></MenuItem.Icon>
               </MenuItem>
             </MenuFlyout>
           </Button.Flyout>

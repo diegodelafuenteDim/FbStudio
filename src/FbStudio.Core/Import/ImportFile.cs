@@ -56,12 +56,14 @@ public sealed class ImportFile
     /// <summary>UTF-8 si los bytes lo son (o hay BOM); si no, Windows-1252.</summary>
     public static Encoding DetectEncoding(string path)
     {
-        var bytes = new byte[Math.Min(1 << 20, new FileInfo(path).Length)];
+        var length = new FileInfo(path).Length;
+        var bytes = new byte[Math.Min(1 << 20, length)];
         using (var f = File.OpenRead(path)) f.ReadExactly(bytes);
         if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) return new UTF8Encoding(true);
         try
         {
-            new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes);
+            // Si se leyó solo el principio, una letra con tilde puede quedar cortada al final: eso no es un error.
+            new UTF8Encoding(false, throwOnInvalidBytes: true).GetDecoder().GetCharCount(bytes, 0, bytes.Length, flush: bytes.Length == length);
             return new UTF8Encoding(false);
         }
         catch (DecoderFallbackException)

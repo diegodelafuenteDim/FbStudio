@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:FbStudio.App.Resources"
+             xmlns:vm="using:FbStudio.App.ViewModels"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:rg="using:FbStudio.App.ResultGrid"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="FbStudio.App.Views.TestDataTabView"
+             x:DataType="vm:TestDataTabViewModel"
+             IsVisible="{Binding IsSelected}">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Opacity" Value="0.7" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+    <Style Selector="Border.warn">
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource FbsWarningBrush}" />
+      <Setter Property="Background" Value="{DynamicResource FbsWarningBackgroundBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="8,8,8,4">
+    <Border DockPanel.Dock="Top" Classes="warn" IsVisible="{Binding IsBlocked}">
+      <TextBlock Text="{Binding BlockedText}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- Cuántas filas y cómo -->
+    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+      <TextBlock Classes="label" Text="{x:Static res:Strings.TestDataRows}" />
+      <NumericUpDown Value="{Binding RowCount}" Minimum="1" Maximum="100000" Increment="100" FormatString="N0" Width="150" Margin="0,0,16,4" />
+      <TextBlock Classes="label" Text="{x:Static res:Strings.TestDataNulls}" />
+      <ComboBox ItemsSource="{Binding NullPercents}" SelectedItem="{Binding NullPercent}" MinWidth="80" Margin="0,0,4,4" />
+      <TextBlock Classes="label" Text="%" Margin="0,0,16,0" />
+      <TextBlock Classes="label" Text="{x:Static res:Strings.TestDataSeed}" ToolTip.Tip="{x:Static res:Strings.TestDataSeedTip}" />
+      <NumericUpDown Value="{Binding Seed}" Minimum="1" Maximum="1000000" FormatString="0" Width="120" Margin="0,0,0,4" />
+    </WrapPanel>
+
+    <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,8,0,0">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Command="{Binding PreviewCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="EyeOutline" /><TextBlock Text="{x:Static res:Strings.TestDataPreview}" /></StackPanel>
+        </Button>
+        <Button Command="{Binding RunCommand}" Classes="accent">
+          <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="DatabasePlusOutline" /><TextBlock Text="{Binding RunText}" /></StackPanel>
+        </Button>
+        <Button Command="{Binding StopCommand}" Content="{x:Static res:Strings.ImportCancel}" />
+      </StackPanel>
+      <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4" Height="100">
+        <ae:TextEditor x:Name="LogView" IsReadOnly="True" ShowLineNumbers="False"
+                       FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" Padding="6,4"
+                       HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+      </Border>
+    </StackPanel>
+
+    <!-- Qué va en cada columna y la muestra -->
+    <Grid ColumnDefinitions="430,6,*">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.TestDataColumns}" FontWeight="SemiBold" Margin="0,0,0,6" TextWrapping="Wrap" />
+        <ScrollViewer>
+          <ItemsControl ItemsSource="{Binding Columns}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:TestColumnChoice">
+                <Grid ColumnDefinitions="*,220" Margin="0,2">
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" />
+                    <TextBlock Text="{Binding Detail}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                  <ComboBox Grid.Column="1" ItemsSource="{Binding $parent[ItemsControl].((vm:TestDataTabViewModel)DataContext).KindLabels}"
+                            SelectedIndex="{Binding KindIndex}" HorizontalAlignment="Stretch" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </DockPanel>
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" />
+      <DockPanel Grid.Column="2">
+        <TextBlock DockPanel.Dock="Top" x:Name="PreviewTitle" FontWeight="SemiBold" Margin="0,0,0,6" />
+        <rg:DrawnGrid x:Name="PreviewGrid" />
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</UserControl>

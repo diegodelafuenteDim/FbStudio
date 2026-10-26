@@ -26,8 +26,9 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
     private int _queryNumber;
 
     public MainWindowViewModel(ProfileStore profiles, HistoryStore? history = null, SettingsStore? settings = null, MonitorQueryStore? monitorQueries = null,
-        GridLayoutStore? gridLayouts = null, AreaStore? areas = null)
+        GridLayoutStore? gridLayouts = null, AreaStore? areas = null, SessionStore? session = null)
     {
+        _session = session;
         MonitorQueries = monitorQueries ?? new MonitorQueryStore(null);
         GridLayouts = gridLayouts ?? new GridLayoutStore(null);
         AreaStore = areas ?? new AreaStore(null);
@@ -269,6 +270,48 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         return tab;
     }
 
+    /// <summary>
+    /// Abre un diagrama guardado (.fbsdiagram) en una base: se vuelve a leer su estructura y se acomoda como quedó. Si ya
+    /// estaba abierto el mismo diagrama, se abre en una pestaña aparte.
+    /// </summary>
+    public DiagramTabViewModel? OpenDiagramFile(string path, ConnectionProfile? profile)
+    {
+        profile ??= SelectedProfile;
+        if (profile is null)
+        {
+            Notify(Strings.DiagramPickDatabase);
+            return null;
+        }
+        Core.Diagrams.DiagramFile file;
+        try
+        {
+            file = Workspace.DiagramFiles.Read(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            Notify(string.Format(Strings.DiagramFileInvalid, Path.GetFileName(path)));
+            return null;
+        }
+        profile = Profiles.FirstOrDefault(p => p.Id == profile.Id) ?? profile;
+        var tab = new DiagramTabViewModel(this, profile, new DiagramSource(file.Source, file.Area), file) { Kind = EditorTabKind.Diagram };
+        Tabs.Add(tab);
+        tab.Loading = tab.LoadAsync();
+        SelectedTab = tab;
+        return tab;
+    }
+
+    /// <summary>
+    /// Los objetos de una base que caen en un área (con sus reglas, y lo que usa solo sus tablas si el área lo pide):
+    /// para limitar el script, la comparación o las estadísticas. <paramref name="area"/> puede ser de otra base (al
+    /// comparar, las reglas del origen se aplican al destino).
+    /// </summary>
+    public async Task<IReadOnlySet<string>> AreaMembersAsync(ConnectionProfile profile, SchemaArea area)
+    {
+        var objects = await WithExplorerAsync(profile, e => e.LoadAllObjectsAsync());
+        var uses = area.IncludeDependents ? await WithExplorerAsync(profile, e => e.LoadTableUsesAsync()) : null;
+        return new AreaMembership([area], objects, uses).Members(0).Select(o => o.Name).ToHashSet(StringComparer.Ordinal);
+    }
+
     /// <summary>Guarda un cambio del registro hecho desde una pestaña (p. ej. el archivo de áreas) y rearma lo que lo usa.</summary>
     public void UpdateProfile(ConnectionProfile profile)
     {
@@ -277,15 +320,46 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
     }
 
     /// <summary>Importar un CSV o un Excel a una tabla (F-26): una pestaña por base y tabla; si ya está abierta, se elige.</summary>
-    public ImportTabViewModel OpenImport(ConnectionProfile profile, string table)
+    /// <summary>«Datos de prueba…» de una tabla: una pestaña por base y tabla (si ya está abierta, se elige).</summary>
+    /// <summary>«Comparar datos con otra base…» de una tabla del árbol (reutiliza la de esa tabla y base si ya está abierta).</summary>
+    public DataCompareTabViewModel OpenDataCompare(ConnectionProfile source, string table)
+    {
+        source = Profiles.FirstOrDefault(p => p.Id == source.Id) ?? source;
+        var tab = Tabs.OfType<DataCompareTabViewModel>().FirstOrDefault(t => t.Source.Id == source.Id && t.Table == table);
+        if (tab is null)
+        {
+            tab = new DataCompareTabViewModel(this, source, table) { Kind = EditorTabKind.DataCompare };
+            Tabs.Add(tab);
+        }
+        SelectedTab = tab;
+        return tab;
+    }
+
+    public TestDataTabViewModel OpenTestData(ConnectionProfile profile, string table)
     {
         profile = Profiles.FirstOrDefault(p => p.Id == profile.Id) ?? profile;
-        var tab = Tabs.OfType<ImportTabViewModel>().FirstOrDefault(t => t.Profile?.Id == profile.Id && t.Table == table);
+        var tab = Tabs.OfType<TestDataTabViewModel>().FirstOrDefault(t => t.Profile?.Id == profile.Id && t.Table == table);
+        if (tab is null)
+        {
+            tab = new TestDataTabViewModel(this, profile, table) { Kind = EditorTabKind.TestData };
+            Tabs.Add(tab);
+            _ = tab.LoadAsync();
+        }
+        SelectedTab = tab;
+        return tab;
+    }
+
+    /// <param name="table">null: importar a una tabla nueva (se arma desde el archivo).</param>
+    public ImportTabViewModel OpenImport(ConnectionProfile profile, string? table)
+    {
+        profile = Profiles.FirstOrDefault(p => p.Id == profile.Id) ?? profile;
+        var tab = Tabs.OfType<ImportTabViewModel>().FirstOrDefault(t => t.Profile?.Id == profile.Id
+            && (table is null ? t.IsNewTable && !t.IsImporting : !t.IsNewTable && t.Table == table));
         if (tab is null)
         {
             tab = new ImportTabViewModel(this, profile, table) { Kind = EditorTabKind.Import };
             Tabs.Add(tab);
-            _ = tab.LoadTableAsync();
+            if (table is not null) _ = tab.LoadTableAsync();
         }
         SelectedTab = tab;
         return tab;
@@ -811,6 +885,102 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         return NewSearchTab(profile);
     }
 
+    private readonly SessionStore? _session;
+
+    /// <summary>
+    /// Al cerrar (si está la opción, de fábrica sí): las pestañas de consulta con su base y su texto, o el archivo .sql de
+    /// donde vuelven a leerse (lo no guardado de un archivo se descartó al salir). Las vacías no se guardan.
+    /// </summary>
+    public void SaveSession()
+    {
+        if (_session is null) return;
+        if (!Options.RestoreTabs)
+        {
+            _session.Clear();
+            return;
+        }
+        var tabs = Tabs.Where(t => t.Kind == EditorTabKind.Sql && t is not SearchTabViewModel && (t.FilePath is not null || t.Document.TextLength > 0)).ToList();
+        _session.Save(new SessionFile
+        {
+            Tabs = tabs.Select(t => new SessionTab(t.Profile?.Id, t.BaseTitle, t.FilePath, t.FilePath is null ? t.Document.Text : null)).ToList(),
+            Selected = SelectedTab is { } selected ? Math.Max(0, tabs.IndexOf(selected)) : 0,
+        });
+    }
+
+    /// <summary>Al abrir: las consultas de la última vez, en sus bases (si siguen registradas) y la que estaba elegida.</summary>
+    public void RestoreSession()
+    {
+        if (_session is null || !Options.RestoreTabs || _session.Load() is not { Tabs.Count: > 0 } session) return;
+        var restored = new List<EditorTabViewModel>();
+        foreach (var t in session.Tabs)
+        {
+            var profile = t.ProfileId is { } id ? Profiles.FirstOrDefault(p => p.Id == id) : null;
+            if (t.FilePath is { } path)
+            {
+                if (!File.Exists(path)) continue;
+                var tab = NewQueryTab(profile);
+                try { tab.LoadFile(path); }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { tab.Status = string.Format(Strings.FileOpenFailed, Path.GetFileName(path), ex.Message); }
+                restored.Add(tab);
+            }
+            else
+            {
+                restored.Add(NewQueryTab(profile, t.Text ?? "", t.Title));
+                // «Consulta 7»: las nuevas siguen numerando desde la mayor.
+                if (System.Text.RegularExpressions.Regex.Match(t.Title, @"(\d+)$") is { Success: true } m && int.TryParse(m.Groups[1].Value, out var n))
+                    _queryNumber = Math.Max(_queryNumber, n);
+            }
+        }
+        if (restored.Count == 0) return;
+        SelectedTab = restored[Math.Clamp(session.Selected, 0, restored.Count - 1)];
+        Notify(string.Format(Strings.SessionRestored, restored.Count));
+    }
+
+    /// <summary>Los últimos archivos .sql abiertos o guardados, el más reciente primero.</summary>
+    public IReadOnlyList<string> RecentFiles => Options.RecentFiles ?? [];
+
+    /// <summary>
+    /// Consulta → «Abrir archivo .sql…» (o uno de los recientes): si ya está abierto, va a su pestaña; si no, lo lee en la
+    /// consulta elegida si está vacía o en una nueva, en la base de lo último que se tocó (puede quedar sin base).
+    /// </summary>
+    public EditorTabViewModel? OpenSqlFile(string path, ConnectionProfile? treeSelection = null)
+    {
+        if (Tabs.FirstOrDefault(t => string.Equals(t.FilePath, path, StringComparison.OrdinalIgnoreCase)) is { } open)
+        {
+            SelectedTab = open;
+            return open;
+        }
+        if (!File.Exists(path))
+        {
+            Notify(string.Format(Strings.FileNotFound, path));
+            SaveSettings(Options with { RecentFiles = RecentFiles.Where(p => !string.Equals(p, path, StringComparison.OrdinalIgnoreCase)).ToList() });
+            OnPropertyChanged(nameof(RecentFiles));
+            return null;
+        }
+        var empty = SelectedTab is { Kind: EditorTabKind.Sql, FilePath: null, IsModified: false, IsRunning: false } current && current.Document.TextLength == 0
+            ? current : null;
+        var profile = _treeIsNewer ? treeSelection ?? SelectedProfile : SelectedProfile ?? treeSelection;
+        var tab = empty ?? NewQueryTab(profile is null ? null : Profiles.FirstOrDefault(p => p.Id == profile.Id) ?? profile);
+        try
+        {
+            tab.LoadFile(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            tab.Status = string.Format(Strings.FileOpenFailed, Path.GetFileName(path), ex.Message);
+            return tab;
+        }
+        RememberFile(path);
+        return tab;
+    }
+
+    /// <summary>Suma el archivo a los recientes (al abrirlo o guardarlo).</summary>
+    public void RememberFile(string path)
+    {
+        SaveSettings(Options with { RecentFiles = [path, .. RecentFiles.Where(p => !string.Equals(p, path, StringComparison.OrdinalIgnoreCase))] });
+        OnPropertyChanged(nameof(RecentFiles));
+    }
+
     private ConnectionProfile? PickProfile(ConnectionProfile? treeSelection)
     {
         var picked = _treeIsNewer ? treeSelection ?? SelectedProfile : SelectedProfile ?? treeSelection;
@@ -927,12 +1097,62 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
+    /// <summary>«Generar SQL» de una tabla o vista del árbol: la sentencia en una consulta nueva de esa base, sin ejecutar.</summary>
+    public async Task<EditorTabViewModel?> GenerateTableSqlAsync(ConnectionProfile profile, DbObject obj, TableSqlKind kind)
+    {
+        try
+        {
+            var columns = await WithExplorerAsync(profile, explorer => explorer.LoadColumnsAsync(obj.Name));
+            if (columns.Count == 0)
+            {
+                Notify(string.Format(Strings.TableSqlNoColumns, obj.Name)); // se borró después de cargar el árbol
+                return null;
+            }
+            return NewQueryTab(Profiles.FirstOrDefault(p => p.Id == profile.Id) ?? profile, TableSql.Build(kind, obj.Name, columns));
+        }
+        catch (Exception ex)
+        {
+            Notify(string.Format(Strings.DdlReadFailed, obj.Name, ex.Message));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// «Generar SQL» de un procedimiento o una función del árbol: la llamada con sus parámetros, en una consulta nueva de
+    /// esa base, sin ejecutar. «SELECT * FROM» solo si el procedimiento devuelve algo; si no, EXECUTE PROCEDURE.
+    /// </summary>
+    public async Task<EditorTabViewModel?> GenerateRoutineSqlAsync(ConnectionProfile profile, DbObject obj, bool select)
+    {
+        try
+        {
+            var catalog = await CatalogForAsync(profile);
+            if (!catalog.Signatures.TryGetValue(obj.Name, out var signature))
+            {
+                Notify(string.Format(Strings.RoutineSqlNotFound, obj.Name));
+                return null;
+            }
+            var sql = obj.Kind == DbObjectKind.Function
+                ? RoutineCallSql.Function(signature)
+                : RoutineCallSql.Procedure(signature, select && catalog.Columns.ContainsKey(obj.Name));
+            return NewQueryTab(Profiles.FirstOrDefault(p => p.Id == profile.Id) ?? profile, sql);
+        }
+        catch (Exception ex)
+        {
+            Notify(string.Format(Strings.DdlReadFailed, obj.Name, ex.Message));
+            return null;
+        }
+    }
+
     /// <summary>DDL con el explorador del árbol (si la base está conectada) o con uno temporal.</summary>
     internal Task<ObjectScript> ScriptAsync(ConnectionProfile profile, DbObject obj) =>
         WithExplorerAsync(profile, explorer => explorer.ScriptAsync(obj));
 
     internal Task<IReadOnlyList<DbDependency>> DependenciesAsync(ConnectionProfile profile, DbObject obj) =>
         WithExplorerAsync(profile, explorer => explorer.DependenciesAsync(obj));
+
+    /// <summary>«¿Dónde se usa?» de una columna (lo que hay que mirar antes de cambiarla o borrarla).</summary>
+    public Task<IReadOnlyList<DbDependency>> ColumnUsageAsync(ConnectionProfile profile, string table, string column) =>
+        WithExplorerAsync(profile, explorer => explorer.ColumnUsageAsync(table, column));
 
     /// <summary>Lecturas de metadatos con el explorador del árbol (si la base está conectada) o con uno temporal.</summary>
     internal async Task<T> WithExplorerAsync<T>(ConnectionProfile profile, Func<MetadataExplorer, Task<T>> read)
@@ -954,7 +1174,8 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
             tab.Status = Strings.CloseWhileRunning;
             return;
         }
-        if (ask && tab.IsModified && !await ConfirmDiscardAsync(new DiscardPrompt(string.Format(Strings.CloseDiscardChanges, tab.BaseTitle), Strings.DiscardAndClose)))
+        if (ask && tab.IsModified && !await ConfirmDiscardAsync(new DiscardPrompt(
+                string.Format(tab.HasUnsavedFile || tab is AreasTabViewModel ? Strings.CloseDiscardUnsaved : Strings.CloseDiscardChanges, tab.BaseTitle), Strings.DiscardAndClose)))
             return;
         if (ask && tab.Data is { HasPending: true } data
             && !await ConfirmDiscardAsync(new DiscardPrompt(string.Format(Strings.DataCloseDiscard, tab.BaseTitle, data.PendingCount), Strings.DiscardAndClose)))
@@ -965,10 +1186,43 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
 
         var index = Tabs.IndexOf(tab);
         if (index < 0) return;
+        RememberClosed(tab);
         if (SelectedTab == tab) SelectedTab = Tabs.Count == 1 ? null : Tabs[index == Tabs.Count - 1 ? index - 1 : index + 1];
         Tabs.Remove(tab);
         await tab.DisposeAsync();
     }
+
+    /// <summary>Las consultas cerradas, la última arriba (Ctrl+Shift+T las vuelve a abrir). Solo en memoria, hasta 20.</summary>
+    private readonly List<SessionTab> _closed = [];
+
+    public bool CanReopenClosedTab => _closed.Count > 0;
+
+    private void RememberClosed(EditorTabViewModel tab)
+    {
+        if (tab.Kind != EditorTabKind.Sql || tab is SearchTabViewModel || (tab.FilePath is null && tab.Document.TextLength == 0)) return;
+        _closed.Add(new SessionTab(tab.Profile?.Id, tab.BaseTitle, tab.FilePath, tab.FilePath is null ? tab.Document.Text : null));
+        if (_closed.Count > 20) _closed.RemoveAt(0);
+        OnPropertyChanged(nameof(CanReopenClosedTab));
+    }
+
+    /// <summary>Ctrl+Shift+T: vuelve a abrir la última consulta cerrada, con su base y su texto (o su archivo).</summary>
+    public EditorTabViewModel? ReopenClosedTab()
+    {
+        if (_closed.Count == 0)
+        {
+            Notify(Strings.NothingToReopen);
+            return null;
+        }
+        var closed = _closed[^1];
+        _closed.RemoveAt(_closed.Count - 1);
+        OnPropertyChanged(nameof(CanReopenClosedTab));
+        var profile = closed.ProfileId is { } id ? Profiles.FirstOrDefault(p => p.Id == id) : null;
+        if (closed.FilePath is { } path) return OpenSqlFile(path, profile);
+        return NewQueryTab(profile, closed.Text ?? "", closed.Title);
+    }
+
+    /// <summary>«Duplicar»: una consulta nueva de la misma base con el mismo texto (sin el archivo).</summary>
+    public EditorTabViewModel DuplicateTab(EditorTabViewModel tab) => NewQueryTab(tab.Profile, tab.Document.Text);
 
     /// <summary>
     /// Cierra varias pestañas («cerrar todas», «todas menos esta», «las de la derecha»). Si alguna tiene una
@@ -984,7 +1238,7 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         var pending = closing.Where(t => t.InTransaction || t.IsModified || t.Data?.HasPending == true).ToList();
         if (pending.Count > 0)
         {
-            var list = string.Join(", ", pending.Select(t => $"«{t.BaseTitle}» ({(t.InTransaction ? Strings.PendingTransaction : t.IsModified ? Strings.PendingChanges : Strings.PendingData)})"));
+            var list = string.Join(", ", pending.Select(t => $"«{t.BaseTitle}» ({(t.InTransaction ? Strings.PendingTransaction : t.HasUnsavedFile || t is AreasTabViewModel ? Strings.PendingUnsaved : t.IsModified ? Strings.PendingChanges : Strings.PendingData)})"));
             if (!await ConfirmCloseAsync(string.Format(Strings.CloseManyPending, closing.Count, list)))
                 return false;
         }
@@ -1031,6 +1285,13 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
             _catalogs[profile.Id] = entry;
         }
         return entry.Load.IsCompletedSuccessfully ? entry.Load.Result : MetadataCatalog.Empty;
+    }
+
+    /// <summary>El catálogo de una base, esperando a que termine de cargarse si todavía no está.</summary>
+    internal async Task<MetadataCatalog> CatalogForAsync(ConnectionProfile profile)
+    {
+        CatalogFor(profile);
+        return _catalogs.TryGetValue(profile.Id, out var entry) ? await entry.Load : MetadataCatalog.Empty;
     }
 
     /// <summary>

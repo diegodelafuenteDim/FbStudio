@@ -28,6 +28,8 @@ public partial class EditorTabView : UserControl
     public EditorTabView()
     {
         InitializeComponent();
+        FindBar = new FindReplaceBar(Editor);
+        FindHost.Content = FindBar;
         UsesList.DoubleTapped += async (_, _) => { if (UsesList.SelectedItem is DependencyListItem { Row: { } row } && Tab is { } t) await t.OpenDependencyAsync(row); };
         UsedByList.DoubleTapped += async (_, _) => { if (UsedByList.SelectedItem is DependencyListItem { Row: { } row } && Tab is { } t) await t.OpenDependencyAsync(row); };
         // Ctrl+rueda: zoom de la letra del editor (en túnel: antes de que el editor lo use para desplazarse).
@@ -48,6 +50,38 @@ public partial class EditorTabView : UserControl
             {
                 e.Handled = true;
                 await GoToDefinitionAtCaretAsync();
+            }
+            else if (e.Key == Key.F3 && e.KeyModifiers is KeyModifiers.None or KeyModifiers.Shift)
+            {
+                e.Handled = true;
+                FindBar.Go(e.KeyModifiers == KeyModifiers.Shift ? -1 : 1);
+            }
+            else if (e.Key == Key.Escape && FindBar.IsVisible && e.KeyModifiers == KeyModifiers.None)
+            {
+                e.Handled = true;
+                FindBar.Close();
+            }
+            // Ctrl+/ (o la tecla de esa posición, «-» en el teclado español) comenta; Ctrl+D duplica; Ctrl+U y
+            // Ctrl+Shift+U, minúsculas y mayúsculas; Alt+↑ y Alt+↓ mueven los renglones.
+            else if (e.KeyModifiers == KeyModifiers.Control && (e.Key is Key.OemQuestion or Key.Divide || e.PhysicalKey is PhysicalKey.Slash or PhysicalKey.NumPadDivide))
+            {
+                e.Handled = true;
+                ToggleComment();
+            }
+            else if (e.Key == Key.D && e.KeyModifiers == KeyModifiers.Control)
+            {
+                e.Handled = true;
+                DuplicateLine();
+            }
+            else if (e.Key == Key.U && e.KeyModifiers is KeyModifiers.Control or (KeyModifiers.Control | KeyModifiers.Shift))
+            {
+                e.Handled = true;
+                ChangeCase(upper: e.KeyModifiers.HasFlag(KeyModifiers.Shift));
+            }
+            else if (e.Key is Key.Up or Key.Down && e.KeyModifiers == KeyModifiers.Alt)
+            {
+                e.Handled = true;
+                MoveLines(up: e.Key == Key.Up);
             }
         }, RoutingStrategies.Tunnel);
         // Ctrl+clic sobre un nombre abre el objeto (F-32); con Ctrl apretado, el puntero lo anticipa con la manito.
@@ -134,6 +168,7 @@ public partial class EditorTabView : UserControl
         base.OnDataContextChanged(e);
         if (Tab is not { } tab) return;
         Editor.Document = tab.Document;
+        Editor.IsReadOnly = tab.IsReadOnlyObject; // el DDL de una tabla se ve y se copia, no se edita ni se ejecuta
         tab.ColumnsChanged += cols => Results.SetData(cols, tab.Rows);
         Results.CopyAsScript = (rows, update) => CopyAsScriptAsync(Results, rows, update, fromData: false);
         DataGrid.CopyAsScript = (rows, update) => CopyAsScriptAsync(DataGrid, rows, update, fromData: true);
@@ -167,6 +202,12 @@ public partial class EditorTabView : UserControl
         _owner = null;
     }
 
+    /// <summary>Buscar y reemplazar en este editor (Ctrl+F, Ctrl+H, F3).</summary>
+    public FindReplaceBar FindBar { get; }
+
+    /// <summary>Ctrl+F o Ctrl+H (Consulta → Buscar / Reemplazar).</summary>
+    public void OpenFind(bool replace) => FindBar.Open(replace);
+
     /// <summary>Letra, tabulación y demás opciones del editor (al abrir la pestaña y al aceptar Opciones).</summary>
     public void ApplySettings(AppSettings s)
     {
@@ -179,6 +220,7 @@ public partial class EditorTabView : UserControl
         Editor.Options.AllowScrollBelowDocument = s.ScrollPastEnd;
         Editor.Options.EnableTextDragDrop = true;  // una tabla o una columna arrastradas del árbol escriben su nombre donde se sueltan
         _zoomWithWheel = s.ZoomWithCtrlWheel;
+        if (_editorSetup is not null) _editorSetup.Folding = s.ShowFolding;
     }
 
     private int? OffsetAt(Point point) =>
@@ -227,6 +269,29 @@ public partial class EditorTabView : UserControl
         if (selection) Editor.Select(start, formatted.Length);
         else Editor.CaretOffset = Math.Min(caret, Editor.Document.TextLength);
         tab.Status = Strings.FormatDone;
+    }
+
+    // ── Comandos de edición (el cálculo, en LineEdits; acá se aplica de una vez: un solo Ctrl+Z) ──
+
+    public void ToggleComment() => Apply(LineEdits.ToggleComment(Editor.Text, Editor.SelectionStart, Editor.SelectionLength));
+
+    public void DuplicateLine() => Apply(LineEdits.DuplicateLine(Editor.Text, Editor.SelectionStart, Editor.SelectionLength));
+
+    public void MoveLines(bool up) => Apply(LineEdits.MoveLines(Editor.Text, Editor.SelectionStart, Editor.SelectionLength, up));
+
+    public void ChangeCase(bool upper) => Apply(LineEdits.ChangeCase(Editor.Text, Editor.SelectionStart, Editor.SelectionLength, upper));
+
+    private void Apply(TextEdit? edit)
+    {
+        if (edit is not { } e || Editor.IsReadOnly) return;
+        Editor.Document.Replace(e.Start, e.Length, e.Text);
+        if (e.SelectionLength > 0) Editor.Select(e.SelectionStart, e.SelectionLength);
+        else
+        {
+            Editor.SelectionLength = 0;
+            Editor.CaretOffset = e.SelectionStart;
+        }
+        Editor.TextArea.Caret.BringCaretToView();
     }
 
     public void InsertAtCaret(string text)

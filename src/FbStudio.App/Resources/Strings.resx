@@ -407,6 +407,39 @@
   <data name="Cancelling" xml:space="preserve">
     <value>Cancelando…</value>
   </data>
+  <data name="ChartBars" xml:space="preserve">
+    <value>Barras</value>
+  </data>
+  <data name="ChartLabels" xml:space="preserve">
+    <value>Etiquetas (X):</value>
+  </data>
+  <data name="ChartLine" xml:space="preserve">
+    <value>Línea</value>
+  </data>
+  <data name="ChartPoints" xml:space="preserve">
+    <value>{0:N0} puntos</value>
+  </data>
+  <data name="ChartRowCount" xml:space="preserve">
+    <value>(cantidad de filas)</value>
+  </data>
+  <data name="ChartSave" xml:space="preserve">
+    <value>Guardar PNG…</value>
+  </data>
+  <data name="ChartTitle" xml:space="preserve">
+    <value>Gráfico</value>
+  </data>
+  <data name="ChartTitleCount" xml:space="preserve">
+    <value>Cantidad de filas por {0}</value>
+  </data>
+  <data name="ChartTitleSum" xml:space="preserve">
+    <value>{0} por {1}</value>
+  </data>
+  <data name="ChartTruncated" xml:space="preserve">
+    <value>solo los primeros {0:N0} valores distintos</value>
+  </data>
+  <data name="ChartValues" xml:space="preserve">
+    <value>Valor (Y, suma):</value>
+  </data>
   <data name="Close" xml:space="preserve">
     <value>Cerrar</value>
   </data>
@@ -418,6 +451,9 @@
   </data>
   <data name="CloseDiscardChanges" xml:space="preserve">
     <value>«{0}» tiene cambios sin compilar. Si cerrás la pestaña, se pierden.</value>
+  </data>
+  <data name="CloseDiscardUnsaved" xml:space="preserve">
+    <value>«{0}» tiene cambios sin guardar. Si cerrás la pestaña, se pierden.</value>
   </data>
   <data name="CloseManyPending" xml:space="preserve">
     <value>Vas a cerrar {0} pestañas. Tienen trabajo sin confirmar: {1}. Si las cerrás, las transacciones se deshacen (rollback) y los cambios sin compilar se pierden.</value>
@@ -485,6 +521,21 @@
   <data name="ColorWine" xml:space="preserve">
     <value>Bordó</value>
   </data>
+  <data name="ColumnUsageNone" xml:space="preserve">
+    <value>Nada la usa: ni vistas, procedimientos, triggers, índices ni FK (tampoco lógicas). Ojo: el SQL dinámico (EXECUTE STATEMENT) y las aplicaciones no figuran.</value>
+  </data>
+  <data name="ColumnUsageSummary" xml:space="preserve">
+    <value>{0} objetos. Doble clic abre cada uno. El SQL dinámico (EXECUTE STATEMENT) y las aplicaciones no figuran.</value>
+  </data>
+  <data name="ColumnUsageTitle" xml:space="preserve">
+    <value>¿Dónde se usa {0}.{1}?</value>
+  </data>
+  <data name="ColumnUsageUsedBy" xml:space="preserve">
+    <value>La usa</value>
+  </data>
+  <data name="ColumnUsageUses" xml:space="preserve">
+    <value>Apunta a</value>
+  </data>
   <data name="CommitDone" xml:space="preserve">
     <value>Commit hecho.</value>
   </data>
@@ -493,6 +544,9 @@
   </data>
   <data name="CompareAgain" xml:space="preserve">
     <value>Volver a comparar</value>
+  </data>
+  <data name="CompareAreaTip" xml:space="preserve">
+    <value>Con un área: las reglas del área del origen se aplican a las dos bases y se compara solo lo que cae en ella (sin las FK a tablas de afuera).</value>
   </data>
   <data name="CompareBuildScript" xml:space="preserve">
     <value>Script para igualar</value>
@@ -654,7 +708,7 @@
     <value>No compiló (línea {0}, columna {1}): {2}</value>
   </data>
   <data name="CompileHint" xml:space="preserve">
-    <value>Compilar: CREATE OR ALTER y confirmar (F9 sin selección o Ctrl+F9)</value>
+    <value>Compilar: CREATE OR ALTER y confirmar (F9 sin selección)</value>
   </data>
   <data name="CompileNotCreateOrAlter" xml:space="preserve">
     <value>Para compilar, el texto tiene que ser un CREATE OR ALTER (o ALTER / RECREATE) del objeto.</value>
@@ -682,6 +736,9 @@
   </data>
   <data name="CompletionInPackage" xml:space="preserve">
     <value>en {0}</value>
+  </data>
+  <data name="CompletionJoin" xml:space="preserve">
+    <value>JOIN por {0}</value>
   </data>
   <data name="CompletionPackage" xml:space="preserve">
     <value>paquete</value>
@@ -746,6 +803,81 @@
   <data name="DataColumnReadOnly" xml:space="preserve">
     <value>Esta columna no se edita (calculada o blob binario).</value>
   </data>
+  <data name="DataCompareDeleteExtra" xml:space="preserve">
+    <value>Borrar las que sobran</value>
+  </data>
+  <data name="DataCompareDeleteExtraTip" xml:space="preserve">
+    <value>Incluir en el script el DELETE de las filas que están solo en el destino.</value>
+  </data>
+  <data name="DataCompareDifferent" xml:space="preserve">
+    <value>Distinta</value>
+  </data>
+  <data name="DataCompareDirection" xml:space="preserve">
+    <value>{0}: {1} → {2}</value>
+  </data>
+  <data name="DataCompareDone" xml:space="preserve">
+    <value>{0} comparada en {1:0.0} s</value>
+  </data>
+  <data name="DataCompareEqual" xml:space="preserve">
+    <value>Son iguales: {0:N0} filas.</value>
+  </data>
+  <data name="DataCompareExtra" xml:space="preserve">
+    <value>Sobra en el destino</value>
+  </data>
+  <data name="DataCompareHint" xml:space="preserve">
+    <value>Las filas que faltan en el destino, las distintas y las que sobran aparecen acá; a la derecha, el script para igualar el destino.</value>
+  </data>
+  <data name="DataCompareIntro" xml:space="preserve">
+    <value>Elegí la otra base y apretá «Comparar»: se leen las dos (solo lectura) y se compara {0} por la clave primaria. {1} es el origen (el modelo).</value>
+  </data>
+  <data name="DataCompareKeyMissing" xml:space="preserve">
+    <value>En {1}, la tabla {0} no tiene todas las columnas de la clave primaria.</value>
+  </data>
+  <data name="DataCompareMissing" xml:space="preserve">
+    <value>Falta en el destino</value>
+  </data>
+  <data name="DataCompareNoKey" xml:space="preserve">
+    <value>La tabla {0} no tiene clave primaria: sin ella no se puede saber qué fila es cuál.</value>
+  </data>
+  <data name="DataCompareNoTable" xml:space="preserve">
+    <value>La tabla {0} no está en {1}.</value>
+  </data>
+  <data name="DataCompareOnlySourceColumns" xml:space="preserve">
+    <value>columnas solo en el origen (no se comparan): {0}</value>
+  </data>
+  <data name="DataCompareOnlyTargetColumns" xml:space="preserve">
+    <value>columnas solo en el destino (no se tocan): {0}</value>
+  </data>
+  <data name="DataCompareOpenInTargetTip" xml:space="preserve">
+    <value>Abre el script en una consulta del destino, sin ejecutarlo: revisalo, ejecutalo con F9 y confirmá a mano.</value>
+  </data>
+  <data name="DataCompareReading" xml:space="preserve">
+    <value>Leyendo {0} en {1} y en {2}…</value>
+  </data>
+  <data name="DataCompareRun" xml:space="preserve">
+    <value>Comparar</value>
+  </data>
+  <data name="DataCompareScriptHeader" xml:space="preserve">
+    <value>-- Datos de {0}: {1} (origen) → {2} (destino), {3:yyyy-MM-dd HH:mm}. Sin COMMIT: revisalo, ejecutalo y confirmá a mano.</value>
+  </data>
+  <data name="DataCompareScriptOpened" xml:space="preserve">
+    <value>El script para igualar los datos está listo para revisar: se ejecuta en {0} con F9 y se confirma a mano.</value>
+  </data>
+  <data name="DataCompareScriptTabTitle" xml:space="preserve">
+    <value>Igualar {0} en {1}</value>
+  </data>
+  <data name="DataCompareSummary" xml:space="preserve">
+    <value>{0:N0} faltan en el destino, {1:N0} distintas, {2:N0} sobran y {3:N0} iguales</value>
+  </data>
+  <data name="DataCompareTabTitle" xml:space="preserve">
+    <value>Datos de {0}</value>
+  </data>
+  <data name="DataCompareTarget" xml:space="preserve">
+    <value>Destino (el que se iguala):</value>
+  </data>
+  <data name="DataCompareTooMany" xml:space="preserve">
+    <value>{0} tiene más de {1:N0} filas: comparar datos es para tablas chicas (configuración, tipos, nomencladores).</value>
+  </data>
   <data name="DataComputedRefresh" xml:space="preserve">
     <value> Las columnas calculadas se ven actualizadas al recargar.</value>
   </data>
@@ -757,6 +889,12 @@
   </data>
   <data name="DataCounting" xml:space="preserve">
     <value>Contando…</value>
+  </data>
+  <data name="DataCountOnFilter" xml:space="preserve">
+    <value>Contar al filtrar</value>
+  </data>
+  <data name="DataCountOnFilterTip" xml:space="preserve">
+    <value>Con un filtro o un WHERE, cuenta solo cuántas filas coinciden después de cada lectura (SELECT COUNT en el servidor; en tablas grandes puede tardar). Se recuerda para las demás tablas.</value>
   </data>
   <data name="DataCountTip" xml:space="preserve">
     <value>SELECT COUNT(*) con el filtro actual (en tablas grandes puede tardar)</value>
@@ -929,6 +1067,12 @@
   <data name="DiagramColumnsNone" xml:space="preserve">
     <value>Ninguna</value>
   </data>
+  <data name="DiagramCopyMermaid" xml:space="preserve">
+    <value>Copiar como Mermaid</value>
+  </data>
+  <data name="DiagramCopyMermaidTip" xml:space="preserve">
+    <value>El diagrama como texto de Mermaid (erDiagram): pegado en un README, un issue o una wiki de GitHub o GitLab, se dibuja solo</value>
+  </data>
   <data name="DiagramExpand" xml:space="preserve">
     <value>Agregar sus vecinas</value>
   </data>
@@ -947,11 +1091,20 @@
   <data name="DiagramFileDrawio" xml:space="preserve">
     <value>Diagrama de draw.io (editable)</value>
   </data>
+  <data name="DiagramFileInvalid" xml:space="preserve">
+    <value>{0} no es un diagrama de FbStudio (o está dañado).</value>
+  </data>
+  <data name="DiagramFileMermaid" xml:space="preserve">
+    <value>Mermaid (texto para GitHub y wikis)</value>
+  </data>
   <data name="DiagramFileName" xml:space="preserve">
     <value>diagrama-{0}</value>
   </data>
   <data name="DiagramFilePng" xml:space="preserve">
     <value>Imagen PNG</value>
+  </data>
+  <data name="DiagramFileSaved" xml:space="preserve">
+    <value>Diagrama de FbStudio</value>
   </data>
   <data name="DiagramFileSvg" xml:space="preserve">
     <value>Dibujo SVG</value>
@@ -1016,6 +1169,9 @@
   <data name="DiagramLogicalOne" xml:space="preserve">
     <value>1 lógica</value>
   </data>
+  <data name="DiagramMermaidCopied" xml:space="preserve">
+    <value>Copiado como Mermaid: pegalo entre ```mermaid y ``` en un README o un issue.</value>
+  </data>
   <data name="DiagramMoreColumnOne" xml:space="preserve">
     <value>+ 1 columna</value>
   </data>
@@ -1028,8 +1184,38 @@
   <data name="DiagramNoMoreNeighbors" xml:space="preserve">
     <value>{0} no tiene más vecinas para agregar (las muy referenciadas están escondidas).</value>
   </data>
+  <data name="DiagramNoPath" xml:space="preserve">
+    <value>{0} y {1} no están unidas por ninguna cadena de FK (ni lógicas).</value>
+  </data>
+  <data name="DiagramNoPathPhysical" xml:space="preserve">
+    <value>{0} y {1} no están unidas por FK físicas (probá con las lógicas).</value>
+  </data>
   <data name="DiagramOpen" xml:space="preserve">
     <value>Abrir</value>
+  </data>
+  <data name="DiagramOpenedFromOther" xml:space="preserve">
+    <value>Guardado en «{0}»; abierto en esta base: {1}</value>
+  </data>
+  <data name="DiagramPath" xml:space="preserve">
+    <value>Camino hasta…</value>
+  </data>
+  <data name="DiagramPathDirect" xml:space="preserve">
+    <value>Relación directa: {0}.</value>
+  </data>
+  <data name="DiagramPathFound" xml:space="preserve">
+    <value>Camino: {0} ({1} relaciones).</value>
+  </data>
+  <data name="DiagramPathPickFirst" xml:space="preserve">
+    <value>Elegí en el diagrama la tabla desde donde buscar el camino.</value>
+  </data>
+  <data name="DiagramPathPrompt" xml:space="preserve">
+    <value>¿Hasta qué tabla, desde {0}?</value>
+  </data>
+  <data name="DiagramPathTip" xml:space="preserve">
+    <value>La cadena de FK más corta desde la tabla elegida (o la del diagrama) hasta otra: suma las tablas del medio y la resalta</value>
+  </data>
+  <data name="DiagramPathTitle" xml:space="preserve">
+    <value>Camino entre tablas</value>
   </data>
   <data name="DiagramPickDatabase" xml:space="preserve">
     <value>Elegí una base en el árbol para ver su diagrama.</value>
@@ -1048,6 +1234,15 @@
   </data>
   <data name="DiagramRereadTip" xml:space="preserve">
     <value>Vuelve a leer las tablas y relaciones (después de cambiar la estructura de la base).</value>
+  </data>
+  <data name="DiagramSave" xml:space="preserve">
+    <value>Guardar diagrama…</value>
+  </data>
+  <data name="DiagramSaved" xml:space="preserve">
+    <value>Diagrama guardado: {0}.</value>
+  </data>
+  <data name="DiagramSaveTip" xml:space="preserve">
+    <value>Un archivo .fbsdiagram con las opciones, las tablas y dónde quedó cada una, para abrirlo después (Herramientas → Abrir diagrama guardado)</value>
   </data>
   <data name="DiagramShowHub" xml:space="preserve">
     <value>Mostrar</value>
@@ -1102,6 +1297,24 @@
   </data>
   <data name="DisconnectWhileRunning" xml:space="preserve">
     <value>No se desconectó {0}: la pestaña «{1}» está ejecutando. Cancelala o esperá a que termine.</value>
+  </data>
+  <data name="DocButton" xml:space="preserve">
+    <value>Documentación HTML…</value>
+  </data>
+  <data name="DocButtonTip" xml:space="preserve">
+    <value>La documentación de lo leído (tablas, columnas, claves, FK, índices, vistas, procedimientos…) en un solo archivo HTML, con índice y buscador.</value>
+  </data>
+  <data name="DocSaved" xml:space="preserve">
+    <value>Documentación guardada en {0}</value>
+  </data>
+  <data name="DocSourcesQuestion" xml:space="preserve">
+    <value>¿Incluir el código de las vistas, procedimientos, funciones y triggers? En una base grande el archivo crece mucho.</value>
+  </data>
+  <data name="DocWithoutSources" xml:space="preserve">
+    <value>Sin el código</value>
+  </data>
+  <data name="DocWithSources" xml:space="preserve">
+    <value>Con el código</value>
   </data>
   <data name="DontClose" xml:space="preserve">
     <value>No cerrar</value>
@@ -1187,6 +1400,24 @@
   <data name="ExportTitle" xml:space="preserve">
     <value>Exportar {0}</value>
   </data>
+  <data name="FileNotFound" xml:space="preserve">
+    <value>Ya no está el archivo {0}: se sacó de los recientes.</value>
+  </data>
+  <data name="FileOpened" xml:space="preserve">
+    <value>Abierto: {0}</value>
+  </data>
+  <data name="FileOpenFailed" xml:space="preserve">
+    <value>No se pudo abrir {0}: {1}</value>
+  </data>
+  <data name="FileSaved" xml:space="preserve">
+    <value>Guardado: {0}</value>
+  </data>
+  <data name="FileSavedAsUtf8" xml:space="preserve">
+    <value>(en UTF-8: tenía letras que Windows-1252 no tiene)</value>
+  </data>
+  <data name="FileSaveFailed" xml:space="preserve">
+    <value>No se pudo guardar {0}: {1}</value>
+  </data>
   <data name="FilterAnd" xml:space="preserve">
     <value>y</value>
   </data>
@@ -1265,6 +1496,45 @@
   <data name="FilterOpYes" xml:space="preserve">
     <value>sí</value>
   </data>
+  <data name="FilterPanelActive" xml:space="preserve">
+    <value>{0} con filtro</value>
+  </data>
+  <data name="FilterPanelClearAll" xml:space="preserve">
+    <value>Quitar todos</value>
+  </data>
+  <data name="FilterPanelClose" xml:space="preserve">
+    <value>Cerrar el panel de filtros</value>
+  </data>
+  <data name="FilterPanelHidden" xml:space="preserve">
+    <value>oculta</value>
+  </data>
+  <data name="FilterPanelHint" xml:space="preserve">
+    <value>Lo mismo que se escribe en la fila de filtros: Enter aplica y Esc vuelve atrás; ▾ abre la ventanita de la columna.</value>
+  </data>
+  <data name="FilterPanelMenu" xml:space="preserve">
+    <value>Filtrar en el panel de filtros</value>
+  </data>
+  <data name="FilterPanelNone" xml:space="preserve">
+    <value>Ninguna columna coincide.</value>
+  </data>
+  <data name="FilterPanelOnlyFiltered" xml:space="preserve">
+    <value>Solo las que tienen filtro</value>
+  </data>
+  <data name="FilterPanelPopupTip" xml:space="preserve">
+    <value>Elegir el filtro</value>
+  </data>
+  <data name="FilterPanelSearch" xml:space="preserve">
+    <value>Buscar columna</value>
+  </data>
+  <data name="FilterPanelTitle" xml:space="preserve">
+    <value>Filtros</value>
+  </data>
+  <data name="FilterPanelToggle" xml:space="preserve">
+    <value>Panel de filtros</value>
+  </data>
+  <data name="FilterPanelToggleTip" xml:space="preserve">
+    <value>Todas las columnas en una lista, con su filtro: para buscar una columna por nombre y ver juntos los filtros puestos</value>
+  </data>
   <data name="FilterPickDate" xml:space="preserve">
     <value>Elegir el día en un calendario</value>
   </data>
@@ -1334,6 +1604,42 @@
   <data name="FilterValuesSearch" xml:space="preserve">
     <value>Buscar un valor</value>
   </data>
+  <data name="FindClose" xml:space="preserve">
+    <value>Cerrar (Esc)</value>
+  </data>
+  <data name="FindInvalid" xml:space="preserve">
+    <value>Expresión no válida</value>
+  </data>
+  <data name="FindMatchCase" xml:space="preserve">
+    <value>Distinguir mayúsculas</value>
+  </data>
+  <data name="FindNext" xml:space="preserve">
+    <value>Siguiente (F3)</value>
+  </data>
+  <data name="FindNone" xml:space="preserve">
+    <value>Sin coincidencias</value>
+  </data>
+  <data name="FindPlaceholder" xml:space="preserve">
+    <value>Buscar (Enter: siguiente, Mayús+Enter: anterior)</value>
+  </data>
+  <data name="FindPosition" xml:space="preserve">
+    <value>{0} de {1}</value>
+  </data>
+  <data name="FindPrevious" xml:space="preserve">
+    <value>Anterior (Mayús+F3)</value>
+  </data>
+  <data name="FindRegex" xml:space="preserve">
+    <value>Expresión regular (en el reemplazo, $1… son sus grupos)</value>
+  </data>
+  <data name="FindTotal" xml:space="preserve">
+    <value>{0} coincidencias</value>
+  </data>
+  <data name="FindTotalOne" xml:space="preserve">
+    <value>1 coincidencia</value>
+  </data>
+  <data name="FindWholeWord" xml:space="preserve">
+    <value>Solo la palabra entera</value>
+  </data>
   <data name="FolderCreate" xml:space="preserve">
     <value>Crear</value>
   </data>
@@ -1386,7 +1692,13 @@
     <value>SQL formateado (Ctrl+Z lo deshace).</value>
   </data>
   <data name="FormatNothing" xml:space="preserve">
-    <value>No hay consultas para formatear: el DDL y los bloques PSQL quedan como están.</value>
+    <value>No hay nada para formatear.</value>
+  </data>
+  <data name="GoToLinePrompt" xml:space="preserve">
+    <value>Número de renglón (1 a {0}):</value>
+  </data>
+  <data name="GoToLineTitle" xml:space="preserve">
+    <value>Ir al renglón</value>
   </data>
   <data name="GoToNoName" xml:space="preserve">
     <value>Poné el cursor (o hacé Ctrl+clic) sobre el nombre de una tabla, vista, procedimiento u otro objeto.</value>
@@ -1406,6 +1718,9 @@
   <data name="GridAvgPrefix" xml:space="preserve">
     <value>prom. </value>
   </data>
+  <data name="GridChart" xml:space="preserve">
+    <value>Gráfico…</value>
+  </data>
   <data name="GridClearFilters" xml:space="preserve">
     <value>Quitar filtros</value>
   </data>
@@ -1418,8 +1733,17 @@
   <data name="GridCopyAnyway" xml:space="preserve">
     <value>Copiar igual</value>
   </data>
+  <data name="GridCopyAsIn" xml:space="preserve">
+    <value>Copiar como «COLUMNA IN (…)»</value>
+  </data>
   <data name="GridCopyAsInsert" xml:space="preserve">
     <value>Copiar como INSERT</value>
+  </data>
+  <data name="GridCopyAsMarkdown" xml:space="preserve">
+    <value>Copiar la fila como tabla de Markdown</value>
+  </data>
+  <data name="GridCopyAsMarkdownRows" xml:space="preserve">
+    <value>Copiar las {0} filas como tabla de Markdown</value>
   </data>
   <data name="GridCopyAsUpdate" xml:space="preserve">
     <value>Copiar como UPDATE</value>
@@ -1438,6 +1762,9 @@
   </data>
   <data name="GridCopyRow" xml:space="preserve">
     <value>Copiar fila con encabezados</value>
+  </data>
+  <data name="GridCopySelectedAsIn" xml:space="preserve">
+    <value>Copiar {0} de las filas elegidas como IN (…) ({1})</value>
   </data>
   <data name="GridCopySelectedRows" xml:space="preserve">
     <value>Copiar las {0:N0} filas seleccionadas con encabezados</value>
@@ -1529,6 +1856,27 @@
   <data name="GridRevertRows" xml:space="preserve">
     <value>Deshacer los cambios de la fila</value>
   </data>
+  <data name="GridRowView" xml:space="preserve">
+    <value>Ver la fila en vertical…</value>
+  </data>
+  <data name="GridSearchCount" xml:space="preserve">
+    <value>{0:N0} de {1:N0}</value>
+  </data>
+  <data name="GridSearchCountMore" xml:space="preserve">
+    <value>{0:N0} de {1:N0}+</value>
+  </data>
+  <data name="GridSearchNext" xml:space="preserve">
+    <value>Siguiente (Enter)</value>
+  </data>
+  <data name="GridSearchNone" xml:space="preserve">
+    <value>Sin coincidencias</value>
+  </data>
+  <data name="GridSearchPrevious" xml:space="preserve">
+    <value>Anterior (Shift+Enter)</value>
+  </data>
+  <data name="GridSearchWatermark" xml:space="preserve">
+    <value>Buscar en los resultados…</value>
+  </data>
   <data name="GridSetNull" xml:space="preserve">
     <value>Poner NULL</value>
   </data>
@@ -1556,6 +1904,9 @@
   <data name="GridUngroupColumn" xml:space="preserve">
     <value>Desagrupar esta columna</value>
   </data>
+  <data name="GridViewValue" xml:space="preserve">
+    <value>Ver el valor…</value>
+  </data>
   <data name="HistoryFilterPlaceholder" xml:space="preserve">
     <value>Buscar en el SQL o en los errores</value>
   </data>
@@ -1573,6 +1924,9 @@
   </data>
   <data name="HistoryTab" xml:space="preserve">
     <value>Historial</value>
+  </data>
+  <data name="ImportAnalyzing" xml:space="preserve">
+    <value>Leyendo {0} para ver qué tipo va en cada columna…</value>
   </data>
   <data name="ImportAuto" xml:space="preserve">
     <value>Automático</value>
@@ -1634,8 +1988,62 @@
   <data name="ImportIntro" xml:space="preserve">
     <value>Elegí un archivo CSV o Excel (.xlsx). Las columnas que se llaman igual que las de la tabla se relacionan solas.</value>
   </data>
+  <data name="ImportKeyHint" xml:space="preserve">
+    <value>Tildá las columnas de la clave con la que se busca cada fila (de entrada, la clave primaria).</value>
+  </data>
+  <data name="ImportKeyTip" xml:space="preserve">
+    <value>Parte de la clave para encontrar la fila</value>
+  </data>
   <data name="ImportMapping" xml:space="preserve">
     <value>Qué columna del archivo va a cada columna de la tabla</value>
+  </data>
+  <data name="ImportModeAppend" xml:space="preserve">
+    <value>Agregar las filas</value>
+  </data>
+  <data name="ImportModeUpsert" xml:space="preserve">
+    <value>Actualizar las que ya están (por la clave) y agregar las demás</value>
+  </data>
+  <data name="ImportModeUpsertTip" xml:space="preserve">
+    <value>UPDATE OR INSERT … MATCHING: la fila que ya tiene esa clave se actualiza con lo del archivo y la que no, se agrega. La clave son las columnas tildadas (de entrada, la clave primaria).</value>
+  </data>
+  <data name="ImportNewTableColumns" xml:space="preserve">
+    <value>Sus columnas: el nombre y el tipo de cada una (destildá las que no van)</value>
+  </data>
+  <data name="ImportNewTableCreated" xml:space="preserve">
+    <value>La tabla {0} quedó creada (sin clave: se puede agregar después).</value>
+  </data>
+  <data name="ImportNewTableEmptyColumn" xml:space="preserve">
+    <value>Hay una columna sin nombre o sin tipo.</value>
+  </data>
+  <data name="ImportNewTableExists" xml:space="preserve">
+    <value>Ya hay un objeto llamado {0} ({1}): elegí otro nombre o importá a esa tabla.</value>
+  </data>
+  <data name="ImportNewTableIntro" xml:space="preserve">
+    <value>Elegí un archivo CSV o Excel (.xlsx): se arma una tabla con una columna por cada una del archivo, con el tipo según lo que trae. Antes de crearla podés cambiar los nombres y los tipos, o dejar columnas afuera.</value>
+  </data>
+  <data name="ImportNewTableName" xml:space="preserve">
+    <value>Tabla nueva:</value>
+  </data>
+  <data name="ImportNewTableNoName" xml:space="preserve">
+    <value>Falta el nombre de la tabla nueva.</value>
+  </data>
+  <data name="ImportNewTableProduction" xml:space="preserve">
+    <value>Vas a crear la tabla {1} con {0:N0} filas en «{2}», que es de PRODUCCIÓN.</value>
+  </data>
+  <data name="ImportNewTableRead" xml:space="preserve">
+    <value>{0}: {1:N0} filas y {2} columnas. Revisá los nombres y los tipos antes de crear la tabla.</value>
+  </data>
+  <data name="ImportNewTableRepeated" xml:space="preserve">
+    <value>La columna {0} está repetida.</value>
+  </data>
+  <data name="ImportNewTableRolledBack" xml:space="preserve">
+    <value>No se importó nada y la tabla nueva se borró: la fila del renglón {0} falló. {1}</value>
+  </data>
+  <data name="ImportNewTableTabTitle" xml:space="preserve">
+    <value>Importar · tabla nueva</value>
+  </data>
+  <data name="ImportNoKey" xml:space="preserve">
+    <value>Para actualizar hace falta una clave: tildá al menos una columna relacionada con el archivo.</value>
   </data>
   <data name="ImportPickTable" xml:space="preserve">
     <value>Elegí una tabla en el árbol (clic derecho → Importar datos).</value>
@@ -1667,6 +2075,12 @@
   <data name="ImportRun" xml:space="preserve">
     <value>Importar {0:N0} filas</value>
   </data>
+  <data name="ImportRunNewTable" xml:space="preserve">
+    <value>Crear la tabla e importar {0:N0} filas</value>
+  </data>
+  <data name="ImportRunNewTableNoCount" xml:space="preserve">
+    <value>Crear la tabla e importar</value>
+  </data>
   <data name="ImportRunning" xml:space="preserve">
     <value>Importando… {0:N0} filas</value>
   </data>
@@ -1693,6 +2107,12 @@
   </data>
   <data name="ImportTabTitle" xml:space="preserve">
     <value>Importar · {0}</value>
+  </data>
+  <data name="ImportUpsertDone" xml:space="preserve">
+    <value>Guardadas {0:N0} filas (actualizadas o agregadas) en {1:N1} s.</value>
+  </data>
+  <data name="ImportUpsertDoneWithErrors" xml:space="preserve">
+    <value>Guardadas {0:N0} filas (actualizadas o agregadas) en {1:N1} s; {2:N0} filas con error se saltearon (abajo, cuáles).</value>
   </data>
   <data name="IsolationReadCommitted" xml:space="preserve">
     <value>Read committed</value>
@@ -2186,6 +2606,12 @@
   <data name="MaintValidateTitle" xml:space="preserve">
     <value>Validar la base</value>
   </data>
+  <data name="ManualSearch" xml:space="preserve">
+    <value>Buscar en el manual…</value>
+  </data>
+  <data name="ManualTitle" xml:space="preserve">
+    <value>Manual de {0}</value>
+  </data>
   <data name="MenuAbout" xml:space="preserve">
     <value>Acerca _de FbStudio…</value>
   </data>
@@ -2213,8 +2639,14 @@
   <data name="MenuDisconnect" xml:space="preserve">
     <value>_Desconectar la base elegida</value>
   </data>
+  <data name="MenuDuplicateLine" xml:space="preserve">
+    <value>Duplicar el renglón o la selección</value>
+  </data>
   <data name="MenuEditRegistrations" xml:space="preserve">
     <value>_Editar registros…</value>
+  </data>
+  <data name="MenuEditText" xml:space="preserve">
+    <value>Editar el texto</value>
   </data>
   <data name="MenuExit" xml:space="preserve">
     <value>_Salir</value>
@@ -2225,17 +2657,29 @@
   <data name="MenuExportInsert" xml:space="preserve">
     <value>Exportar como _INSERT (.sql)…</value>
   </data>
+  <data name="MenuExportJson" xml:space="preserve">
+    <value>Exportar a JSON…</value>
+  </data>
+  <data name="MenuExportMarkdown" xml:space="preserve">
+    <value>Exportar a Markdown…</value>
+  </data>
   <data name="MenuExportProfiles" xml:space="preserve">
     <value>Exportar registros…</value>
   </data>
   <data name="MenuExportXlsx" xml:space="preserve">
     <value>Exportar a Exce_l (.xlsx)…</value>
   </data>
+  <data name="MenuFind" xml:space="preserve">
+    <value>Buscar en el editor…</value>
+  </data>
   <data name="MenuFormatSql" xml:space="preserve">
     <value>Formatear SQL</value>
   </data>
   <data name="MenuGoToDefinition" xml:space="preserve">
     <value>Abrir el objeto (Ctrl+clic)</value>
+  </data>
+  <data name="MenuGoToLine" xml:space="preserve">
+    <value>Ir al renglón…</value>
   </data>
   <data name="MenuHelp" xml:space="preserve">
     <value>A_yuda</value>
@@ -2246,11 +2690,23 @@
   <data name="MenuInsertTemplate" xml:space="preserve">
     <value>Insertar plantilla…</value>
   </data>
+  <data name="MenuLowercase" xml:space="preserve">
+    <value>Pasar a minúsculas</value>
+  </data>
   <data name="MenuMaintenance" xml:space="preserve">
     <value>Mantenimiento (backup, restore…)</value>
   </data>
+  <data name="MenuManual" xml:space="preserve">
+    <value>Manual</value>
+  </data>
   <data name="MenuMonitor" xml:space="preserve">
     <value>_Monitoreo (conexiones y transacciones)</value>
+  </data>
+  <data name="MenuMoveLineDown" xml:space="preserve">
+    <value>Bajar el renglón</value>
+  </data>
+  <data name="MenuMoveLineUp" xml:space="preserve">
+    <value>Subir el renglón</value>
   </data>
   <data name="MenuNewFolder" xml:space="preserve">
     <value>Nueva _carpeta…</value>
@@ -2258,14 +2714,32 @@
   <data name="MenuNewTab" xml:space="preserve">
     <value>_Pestaña nueva</value>
   </data>
+  <data name="MenuOpenDiagram" xml:space="preserve">
+    <value>Abrir diagrama guardado…</value>
+  </data>
+  <data name="MenuOpenFile" xml:space="preserve">
+    <value>Abrir archivo .sql…</value>
+  </data>
   <data name="MenuOptions" xml:space="preserve">
     <value>_Opciones…</value>
+  </data>
+  <data name="MenuPlanOnly" xml:space="preserve">
+    <value>Ver el plan sin ejecutar</value>
   </data>
   <data name="MenuQuery" xml:space="preserve">
     <value>_Consulta</value>
   </data>
+  <data name="MenuRecentFiles" xml:space="preserve">
+    <value>Abrir reciente</value>
+  </data>
+  <data name="MenuRecentNone" xml:space="preserve">
+    <value>(ninguno todavía)</value>
+  </data>
   <data name="MenuRegister" xml:space="preserve">
     <value>_Registrar base…</value>
+  </data>
+  <data name="MenuReplace" xml:space="preserve">
+    <value>Reemplazar…</value>
   </data>
   <data name="MenuRollback" xml:space="preserve">
     <value>_Rollback</value>
@@ -2273,11 +2747,20 @@
   <data name="MenuRun" xml:space="preserve">
     <value>_Ejecutar (todo o la selección)</value>
   </data>
+  <data name="MenuRunFile" xml:space="preserve">
+    <value>Ejecutar script desde archivo…</value>
+  </data>
   <data name="MenuRunScript" xml:space="preserve">
     <value>Ejecutar como _script (sin grilla)</value>
   </data>
   <data name="MenuRunStatement" xml:space="preserve">
     <value>Ejecutar la _sentencia del cursor</value>
+  </data>
+  <data name="MenuSaveFile" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="MenuSaveFileAs" xml:space="preserve">
+    <value>Guardar como…</value>
   </data>
   <data name="MenuSchemaScript" xml:space="preserve">
     <value>Script de la _base…</value>
@@ -2297,11 +2780,17 @@
   <data name="MenuStatistics" xml:space="preserve">
     <value>_Estadísticas de la base</value>
   </data>
+  <data name="MenuToggleComment" xml:space="preserve">
+    <value>Comentar o descomentar renglones (Ctrl+/)</value>
+  </data>
   <data name="MenuTools" xml:space="preserve">
     <value>_Herramientas</value>
   </data>
   <data name="MenuTrace" xml:space="preserve">
     <value>Trace (sentencias en vivo)…</value>
+  </data>
+  <data name="MenuUppercase" xml:space="preserve">
+    <value>Pasar a mayúsculas</value>
   </data>
   <data name="MenuView" xml:space="preserve">
     <value>_Ver</value>
@@ -2610,7 +3099,7 @@ ORDER BY a.MON$TIMESTAMP</value>
     <value>Sentencias que esperan un registro que tiene bloqueado otra transacción (clic: consulta «Bloqueos», con los posibles responsables).</value>
   </data>
   <data name="NewTabTip" xml:space="preserve">
-    <value>Pestaña de consulta nueva en la misma base (Ctrl+T)</value>
+    <value>Pestaña de consulta nueva, en la base de lo último que tocaste (Ctrl+T)</value>
   </data>
   <data name="NoColor" xml:space="preserve">
     <value>Sin color</value>
@@ -2629,6 +3118,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="NothingToExport" xml:space="preserve">
     <value>No hay resultado para exportar.</value>
+  </data>
+  <data name="NothingToReopen" xml:space="preserve">
+    <value>No hay consultas cerradas para volver a abrir.</value>
   </data>
   <data name="NothingToRun" xml:space="preserve">
     <value>No hay ninguna sentencia para ejecutar.</value>
@@ -2652,7 +3144,10 @@ ORDER BY a.MON$TIMESTAMP</value>
     <value>{0} {1}: editalo y compilalo (los cambios se aplican recién al compilar).</value>
   </data>
   <data name="ObjectTabDdl" xml:space="preserve">
-    <value>DDL de {0} generado desde los metadatos (para ver o copiar; F9 ejecuta la sentencia bajo el cursor).</value>
+    <value>DDL de {0} generado desde los metadatos, para ver o copiar: desde acá no se ejecuta nada.</value>
+  </data>
+  <data name="ObjectTabReadOnly" xml:space="preserve">
+    <value>No se ejecuta: la pestaña de {0} muestra su DDL para ver o copiar. Para ejecutar algo, copialo a una consulta nueva (Ctrl+T).</value>
   </data>
   <data name="Ok" xml:space="preserve">
     <value>Aceptar</value>
@@ -2741,11 +3236,17 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="OptionsQueries" xml:space="preserve">
     <value>Consultas</value>
   </data>
+  <data name="OptionsRestoreTabs" xml:space="preserve">
+    <value>Al cerrar, recordar las consultas abiertas y volver a abrirlas</value>
+  </data>
+  <data name="OptionsRestoreTabsTip" xml:space="preserve">
+    <value>Cada consulta con su base y su texto (cifrado como el historial); un archivo .sql se vuelve a leer del archivo.</value>
+  </data>
   <data name="OptionsRetention" xml:space="preserve">
     <value>Guardar las sentencias durante</value>
   </data>
   <data name="OptionsRetentionNote" xml:space="preserve">
-    <value>Al achicar el plazo, las sentencias más viejas se borran en el momento. El SQL y los errores del historial se guardan cifrados con la cuenta de Windows.</value>
+    <value>Al achicar el plazo, las sentencias más viejas se borran en el momento. El SQL y los errores del historial se guardan cifrados (con la cuenta del sistema en Windows, con el llavero en Linux y macOS).</value>
   </data>
   <data name="OptionsRowLimit" xml:space="preserve">
     <value>Filas que trae un SELECT</value>
@@ -2767,6 +3268,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="OptionsScrollPastEnd" xml:space="preserve">
     <value>Poder bajar más allá de la última línea</value>
+  </data>
+  <data name="OptionsShowFolding" xml:space="preserve">
+    <value>Plegar bloques (BEGIN…END, CASE, paréntesis y comentarios largos) con marcas en el margen</value>
   </data>
   <data name="OptionsTabSize" xml:space="preserve">
     <value>Ancho de la tabulación</value>
@@ -2855,6 +3359,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="PendingTransaction" xml:space="preserve">
     <value>transacción abierta</value>
   </data>
+  <data name="PendingUnsaved" xml:space="preserve">
+    <value>cambios sin guardar</value>
+  </data>
   <data name="PickDatabaseInTree" xml:space="preserve">
     <value>Elegí una base en el árbol (o hacé doble clic en ella).</value>
   </data>
@@ -2864,11 +3371,26 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="PlanFullScanWarning" xml:space="preserve">
     <value>⚠ lectura completa de {0} (sin índice): puede tardar</value>
   </data>
+  <data name="PlanOnlyDone" xml:space="preserve">
+    <value>Plan sin ejecutar: no se trajo ni se cambió nada.</value>
+  </data>
+  <data name="PlanOnlyNotApplicable" xml:space="preserve">
+    <value>El plan es para SELECT, INSERT, UPDATE, DELETE, MERGE y EXECUTE: esta sentencia no tiene.</value>
+  </data>
+  <data name="PlanOnlyPreparing" xml:space="preserve">
+    <value>Preparando la sentencia para ver su plan…</value>
+  </data>
   <data name="PlanTab" xml:space="preserve">
     <value>Plan</value>
   </data>
   <data name="ProfileDatabase" xml:space="preserve">
     <value>Base (alias o ruta)</value>
+  </data>
+  <data name="ProfileDeleteConfirm" xml:space="preserve">
+    <value>Se borra el registro «{0}» y su contraseña guardada en este equipo. La base no se toca.</value>
+  </data>
+  <data name="ProfileDeleteYes" xml:space="preserve">
+    <value>Borrar el registro</value>
   </data>
   <data name="ProfileEnvironment" xml:space="preserve">
     <value>Entorno</value>
@@ -2961,7 +3483,7 @@ ORDER BY a.MON$TIMESTAMP</value>
     <value>Leyendo el DDL de {0}…</value>
   </data>
   <data name="Ready" xml:space="preserve">
-    <value>Listo. F9 ejecuta la selección o la sentencia bajo el cursor; Esc cancela.</value>
+    <value>Listo. F9 ejecuta la selección o todo el editor, Ctrl+Enter la sentencia del cursor; Esc cancela.</value>
   </data>
   <data name="Receiving" xml:space="preserve">
     <value>Recibiendo… {0:N0} filas · {1:N1} s</value>
@@ -2971,6 +3493,18 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="ReloadDiscardChanges" xml:space="preserve">
     <value>«{0}» tiene cambios sin compilar. Si recargás, se pierden.</value>
+  </data>
+  <data name="ReplaceAll" xml:space="preserve">
+    <value>Reemplazar todo</value>
+  </data>
+  <data name="ReplacedCount" xml:space="preserve">
+    <value>{0} reemplazos</value>
+  </data>
+  <data name="ReplaceOne" xml:space="preserve">
+    <value>Reemplazar</value>
+  </data>
+  <data name="ReplacePlaceholder" xml:space="preserve">
+    <value>Reemplazar por</value>
   </data>
   <data name="RestartLater" xml:space="preserve">
     <value>Más tarde</value>
@@ -2983,6 +3517,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="RollbackDone" xml:space="preserve">
     <value>Rollback hecho: los cambios se descartaron.</value>
+  </data>
+  <data name="RoutineSqlNotFound" xml:space="preserve">
+    <value>No se encontró {0} en los metadatos: puede que ya no exista (recargá los metadatos).</value>
   </data>
   <data name="RowCountFormat" xml:space="preserve">
     <value>{0:N0} filas</value>
@@ -3020,6 +3557,21 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="RowsIn" xml:space="preserve">
     <value>{0:N0} filas en {1:N1} s</value>
   </data>
+  <data name="RowViewColumn" xml:space="preserve">
+    <value>Columna</value>
+  </data>
+  <data name="RowViewPosition" xml:space="preserve">
+    <value>Fila {0:N0} de {1:N0}</value>
+  </data>
+  <data name="RowViewTitle" xml:space="preserve">
+    <value>Fila {0} de {1}</value>
+  </data>
+  <data name="RowViewType" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="RowViewValue" xml:space="preserve">
+    <value>Valor</value>
+  </data>
   <data name="RunAnyway" xml:space="preserve">
     <value>Ejecutar igual</value>
   </data>
@@ -3037,6 +3589,18 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="SaveLogTitle" xml:space="preserve">
     <value>Guardar el registro</value>
+  </data>
+  <data name="SchemaScriptAreaHeader" xml:space="preserve">
+    <value>-- Solo el área «{0}»: sus objetos y lo que usan; {1} FK a tablas de afuera no se escriben.</value>
+  </data>
+  <data name="SchemaScriptAreaMissing" xml:space="preserve">
+    <value>Ya no está el área «{0}» en esta base.</value>
+  </data>
+  <data name="SchemaScriptAreaShort" xml:space="preserve">
+    <value>área «{0}»</value>
+  </data>
+  <data name="SchemaScriptAreaTip" xml:space="preserve">
+    <value>Con un área: sus objetos, los dominios que usan y sus permisos; las FK a tablas de afuera no se escriben, así corre en una base vacía.</value>
   </data>
   <data name="SchemaScriptCancelled" xml:space="preserve">
     <value>Script cancelado.</value>
@@ -3082,6 +3646,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="SchemaScriptIntro" xml:space="preserve">
     <value>Script para recrear la base en una vacía (extraer los metadatos).</value>
+  </data>
+  <data name="SchemaScriptOnlyArea" xml:space="preserve">
+    <value>Solo el área «{0}»</value>
   </data>
   <data name="SchemaScriptOpen" xml:space="preserve">
     <value>Abrir en una pestaña sin base</value>
@@ -3146,6 +3713,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="SchemaScriptViews" xml:space="preserve">
     <value>Vistas</value>
   </data>
+  <data name="SchemaScriptWholeDatabase" xml:space="preserve">
+    <value>Toda la base</value>
+  </data>
   <data name="ScopeSelectionLine" xml:space="preserve">
     <value>se ejecutó solo la selección (línea {0})</value>
   </data>
@@ -3172,6 +3742,18 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="ScriptErrorsAt" xml:space="preserve">
     <value>{0} con error (líneas {1})</value>
+  </data>
+  <data name="ScriptFileEmpty" xml:space="preserve">
+    <value>{0} no tiene sentencias para ejecutar.</value>
+  </data>
+  <data name="ScriptFileHistory" xml:space="preserve">
+    <value>-- Script del archivo {0} ({1:N0} sentencias)</value>
+  </data>
+  <data name="ScriptFileReadFailed" xml:space="preserve">
+    <value>No se pudo leer {0}: {1}</value>
+  </data>
+  <data name="ScriptFromFile" xml:space="preserve">
+    <value>desde el archivo {0}</value>
   </data>
   <data name="ScriptGridless" xml:space="preserve">
     <value>sin grilla</value>
@@ -3323,6 +3905,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="SecApplyTitle" xml:space="preserve">
     <value>Aplicar permisos</value>
   </data>
+  <data name="SecColGrantee" xml:space="preserve">
+    <value>Usuario o rol</value>
+  </data>
   <data name="SecColGrantOption" xml:space="preserve">
     <value>Puede darlos</value>
   </data>
@@ -3337,6 +3922,54 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="SecColumnsNote" xml:space="preserve">
     <value>Solo algunas columnas: {0}</value>
+  </data>
+  <data name="SecDdlCharsets" xml:space="preserve">
+    <value>Juegos de caracteres</value>
+  </data>
+  <data name="SecDdlColClass" xml:space="preserve">
+    <value>Objetos</value>
+  </data>
+  <data name="SecDdlCollations" xml:space="preserve">
+    <value>Intercalaciones</value>
+  </data>
+  <data name="SecDdlDatabase" xml:space="preserve">
+    <value>La base (ALTER DATABASE)</value>
+  </data>
+  <data name="SecDdlDomains" xml:space="preserve">
+    <value>Dominios</value>
+  </data>
+  <data name="SecDdlExceptions" xml:space="preserve">
+    <value>Excepciones</value>
+  </data>
+  <data name="SecDdlFilters" xml:space="preserve">
+    <value>Filtros de BLOB</value>
+  </data>
+  <data name="SecDdlFunctions" xml:space="preserve">
+    <value>Funciones</value>
+  </data>
+  <data name="SecDdlGenerators" xml:space="preserve">
+    <value>Generadores</value>
+  </data>
+  <data name="SecDdlHeader" xml:space="preserve">
+    <value>Permisos de estructura (crear, modificar y borrar objetos)</value>
+  </data>
+  <data name="SecDdlPackages" xml:space="preserve">
+    <value>Paquetes</value>
+  </data>
+  <data name="SecDdlProcedures" xml:space="preserve">
+    <value>Procedimientos</value>
+  </data>
+  <data name="SecDdlRoles" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="SecDdlTables" xml:space="preserve">
+    <value>Tablas</value>
+  </data>
+  <data name="SecDdlTip" xml:space="preserve">
+    <value>Los permisos de DDL de Firebird 3: crear tablas, modificar cualquier procedimiento, borrar cualquier dominio… El dueño de un objeto siempre lo puede cambiar.</value>
+  </data>
+  <data name="SecDdlViews" xml:space="preserve">
+    <value>Vistas</value>
   </data>
   <data name="SecDeleteRole" xml:space="preserve">
     <value>Borrar rol…</value>
@@ -3376,6 +4009,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="SecFilter" xml:space="preserve">
     <value>Filtrar</value>
+  </data>
+  <data name="SecGranteeScopeObjects" xml:space="preserve">
+    <value>Por objeto: quién tiene permisos</value>
   </data>
   <data name="SecGranteeScopePsql" xml:space="preserve">
     <value>Procedimientos, funciones, paquetes, triggers y vistas</value>
@@ -3443,6 +4079,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="SecNotOnServer" xml:space="preserve">
     <value>no está en el servidor</value>
   </data>
+  <data name="SecObjectGranted" xml:space="preserve">
+    <value>{0} con permiso</value>
+  </data>
   <data name="SecObjectKindAll" xml:space="preserve">
     <value>Todos los objetos</value>
   </data>
@@ -3484,6 +4123,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="SecPickGrantee" xml:space="preserve">
     <value>Elegí un usuario o un rol de la lista para ver y cambiar sus permisos.</value>
+  </data>
+  <data name="SecPickObject" xml:space="preserve">
+    <value>Elegí un objeto a la izquierda para ver quién tiene permisos sobre él, y darlos o quitarlos.</value>
   </data>
   <data name="SecProduction" xml:space="preserve">
     <value>Es una base de PRODUCCIÓN.</value>
@@ -3623,6 +4265,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="ServerReading" xml:space="preserve">
     <value>Leyendo los datos del servidor…</value>
   </data>
+  <data name="SessionRestored" xml:space="preserve">
+    <value>Se volvieron a abrir {0} consultas de la última vez.</value>
+  </data>
   <data name="ShortcutsHelp" xml:space="preserve">
     <value>F9 (o F5)               Ejecutar la selección; sin selección, TODO el editor:
                         varias sentencias corren en orden y paran en el primer error (o siguen: menú Consulta);
@@ -3630,16 +4275,31 @@ ORDER BY a.MON$TIMESTAMP</value>
                         (en la pestaña de un procedimiento, trigger, vista o función: compilarlo)
 Ctrl+Enter              Ejecutar solo la sentencia donde está el cursor
 Ctrl+F9                 Ejecutar como script, sin grilla (scripts largos: miles de INSERT o UPDATE)
+Ctrl+Shift+E            Ver el plan de la sentencia sin ejecutarla
 Esc                     Cancelar la ejecución
 Ctrl+Alt+C / Ctrl+Alt+R Commit / Rollback
-Ctrl+Espacio            Autocompletar (tablas, columnas por alias)
+F1                      El manual, en el capítulo de lo que estás usando
+
+En el editor:
+Ctrl+Espacio            Autocompletar (después de JOIN, primero las tablas relacionadas por FK)
+Ctrl+J                  Insertar una plantilla (o escribir su abreviatura y Tab)
+Ctrl+Shift+L            Formatear SQL (también procedimientos, triggers y EXECUTE BLOCK)
+F12 o Ctrl+clic         Abrir el objeto del nombre que está bajo el cursor
+Ctrl+F / Ctrl+H         Buscar / reemplazar (F3 y Mayús+F3: siguiente y anterior; Tab: entre los dos campos)
+Ctrl+/                  Comentar o descomentar renglones (en el teclado español, Ctrl + la tecla «-»)
+Ctrl+D                  Duplicar el renglón o la selección
+Alt+↑ / Alt+↓           Subir o bajar los renglones
+Ctrl+Shift+U / Ctrl+U   Pasar a mayúsculas / a minúsculas
+Ctrl+G                  Ir al renglón
+Ctrl+O / Ctrl+S         Abrir / guardar un archivo .sql (Ctrl+Shift+S: guardar como)
 Ctrl+rueda / Ctrl+0     Agrandar o achicar la letra del editor / volverla al tamaño de Opciones
 Ctrl+1 … Ctrl+5         Resultados, Plan, Estadísticas, Historial, Mensajes
 Ctrl+6                  Dependencias (en la pestaña de un objeto)
 Ctrl+7                  Datos (en la pestaña de una tabla o vista)
 
 Pestañas (cada una con su base y su transacción):
-Ctrl+T                  Pestaña nueva en la misma base
+Ctrl+T                  Pestaña nueva, en la base de lo último que tocaste
+Ctrl+Shift+T            Volver a abrir la última consulta cerrada
 Ctrl+W (o Ctrl+F4)      Cerrar la pestaña (clic del medio también)
 Ctrl+Tab                Pasar a la siguiente (Ctrl+Shift+Tab: la anterior)
 Ctrl+Shift+F            Buscar en metadatos (fuentes, nombres, columnas, descripciones)
@@ -3654,7 +4314,9 @@ Ctrl+C / Ctrl+Shift+C    Copiar celda / fila con encabezados (con varias filas
                          seleccionadas, Ctrl+C las copia todas)
 Shift+clic, Ctrl+clic    Seleccionar un rango de filas / sumar filas sueltas
 Ctrl+A                   Seleccionar todas las filas
-Clic derecho             «Copiar todas las filas», «Copiar columna»
+Ctrl+F                   Buscar en los resultados (Enter y Shift+Enter: siguiente y anterior)
+Doble clic               Ver el valor entero de la celda (en Resultados)
+Clic derecho             Copiar (también como INSERT, Markdown o IN), ver la fila en vertical, gráfico
 
 En la pestaña Datos (nada se guarda hasta «Aplicar»):
 Doble clic, F2, escribir Editar la celda (Enter guarda y baja, Tab pasa a la derecha, Esc cancela)
@@ -3665,7 +4327,8 @@ En el árbol:
 Doble clic en una base   Conectar y usarla en la pestaña
 Doble clic en un objeto  Abrir su DDL en una pestaña (procedimientos, triggers,
                          vistas y funciones se editan y compilan ahí)
-Doble clic en columna    Insertar el nombre en el editor</value>
+Doble clic en columna    Insertar el nombre en el editor
+Arrastrar al editor      Escribir el nombre de la tabla, el objeto o la columna donde se suelta</value>
   </data>
   <data name="ShortcutsTitle" xml:space="preserve">
     <value>Atajos de teclado</value>
@@ -3757,11 +4420,17 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="StatsAnalysisWarnings" xml:space="preserve">
     <value>{0} con aviso (columna «Aviso»)</value>
   </data>
+  <data name="StatsAreaChosen" xml:space="preserve">
+    <value>Tildadas las {0} tablas del área «{1}».</value>
+  </data>
   <data name="StatsCancelLatency" xml:space="preserve">
     <value>Latencia de cancelación: {0:N0} ms</value>
   </data>
   <data name="StatsCancelled" xml:space="preserve">
     <value>Estadística cancelada.</value>
+  </data>
+  <data name="StatsChooseArea" xml:space="preserve">
+    <value>Tildar las tablas de un área…</value>
   </data>
   <data name="StatsColClustering" xml:space="preserve">
     <value>Clustering</value>
@@ -4129,8 +4798,14 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TabDatabaseIs" xml:space="preserve">
     <value>Base de esta pestaña: {0}. F9 ejecuta.</value>
   </data>
+  <data name="TabDuplicate" xml:space="preserve">
+    <value>Duplicar</value>
+  </data>
   <data name="TabHasNoEditor" xml:space="preserve">
     <value>La pestaña elegida no tiene editor</value>
+  </data>
+  <data name="TableSqlNoColumns" xml:space="preserve">
+    <value>No se encontraron las columnas de {0}: puede que ya no exista (recargá los metadatos).</value>
   </data>
   <data name="TabNewOnDatabase" xml:space="preserve">
     <value>Pestaña nueva en {0} (la anterior sigue con su base y su transacción).</value>
@@ -4138,8 +4813,134 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TabOpenTransactionTip" xml:space="preserve">
     <value>Transacción de escritura abierta: Commit o Rollback</value>
   </data>
+  <data name="TabRename" xml:space="preserve">
+    <value>Renombrar…</value>
+  </data>
+  <data name="TabRenamePrompt" xml:space="preserve">
+    <value>Nombre de la pestaña:</value>
+  </data>
+  <data name="TabReopenClosed" xml:space="preserve">
+    <value>Reabrir la pestaña cerrada (Ctrl+Shift+T)</value>
+  </data>
   <data name="TemplateNone" xml:space="preserve">
     <value>No hay plantillas: se agregan en Herramientas → Opciones → Plantillas.</value>
+  </data>
+  <data name="TestDataColumns" xml:space="preserve">
+    <value>Qué va en cada columna</value>
+  </data>
+  <data name="TestDataConfirm" xml:space="preserve">
+    <value>Vas a agregar {0:N0} filas inventadas a {1} de «{2}».</value>
+  </data>
+  <data name="TestDataConfirmTitle" xml:space="preserve">
+    <value>Datos de prueba</value>
+  </data>
+  <data name="TestDataDone" xml:space="preserve">
+    <value>Agregadas {0:N0} filas de prueba en {1:N1} s.</value>
+  </data>
+  <data name="TestDataDoneWithErrors" xml:space="preserve">
+    <value>Agregadas {0:N0} filas de prueba en {1:N1} s; {2:N0} no entraron (p. ej. por un índice único) y se saltearon.</value>
+  </data>
+  <data name="TestDataErrorLine" xml:space="preserve">
+    <value>Fila {0}: {1}</value>
+  </data>
+  <data name="TestDataFailed" xml:space="preserve">
+    <value>No se pudieron generar los datos: {0}</value>
+  </data>
+  <data name="TestDataIntro" xml:space="preserve">
+    <value>Filas inventadas para probar: cada columna va con lo que conviene por su tipo y su nombre (se puede cambiar), las FK con valores que ya existen y la clave numerada desde la mayor. Mirá la muestra antes de agregarlas.</value>
+  </data>
+  <data name="TestDataNoReference" xml:space="preserve">
+    <value>{0} es obligatoria y {1} está vacía: no hay valores para la FK.</value>
+  </data>
+  <data name="TestDataNulls" xml:space="preserve">
+    <value>Vacías en las opcionales:</value>
+  </data>
+  <data name="TestDataPreview" xml:space="preserve">
+    <value>Ver una muestra</value>
+  </data>
+  <data name="TestDataPreviewed" xml:space="preserve">
+    <value>Muestra de {0} filas: nada se escribió todavía.</value>
+  </data>
+  <data name="TestDataPreviewTitle" xml:space="preserve">
+    <value>Muestra (primeras {0} filas)</value>
+  </data>
+  <data name="TestDataProduction" xml:space="preserve">
+    <value>Es una base de PRODUCCIÓN: los datos de prueba solo se generan en Desarrollo y Prueba.</value>
+  </data>
+  <data name="TestDataReadOnly" xml:space="preserve">
+    <value>El registro es de solo lectura: no se generan datos.</value>
+  </data>
+  <data name="TestDataRows" xml:space="preserve">
+    <value>Filas:</value>
+  </data>
+  <data name="TestDataRun" xml:space="preserve">
+    <value>Agregar {0:N0} filas</value>
+  </data>
+  <data name="TestDataSeed" xml:space="preserve">
+    <value>Semilla:</value>
+  </data>
+  <data name="TestDataSeedTip" xml:space="preserve">
+    <value>Con la misma semilla salen los mismos datos (para repetir una prueba); después de agregar, sube sola.</value>
+  </data>
+  <data name="TestDataTabTitle" xml:space="preserve">
+    <value>Datos de prueba · {0}</value>
+  </data>
+  <data name="TestKindAddress" xml:space="preserve">
+    <value>Dirección</value>
+  </data>
+  <data name="TestKindBoolean" xml:space="preserve">
+    <value>Sí o no</value>
+  </data>
+  <data name="TestKindCity" xml:space="preserve">
+    <value>Ciudad</value>
+  </data>
+  <data name="TestKindCode" xml:space="preserve">
+    <value>Código</value>
+  </data>
+  <data name="TestKindDate" xml:space="preserve">
+    <value>Fecha (último año)</value>
+  </data>
+  <data name="TestKindDecimal" xml:space="preserve">
+    <value>Número con decimales</value>
+  </data>
+  <data name="TestKindDocument" xml:space="preserve">
+    <value>Documento</value>
+  </data>
+  <data name="TestKindEmail" xml:space="preserve">
+    <value>Mail</value>
+  </data>
+  <data name="TestKindFirstName" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="TestKindFullName" xml:space="preserve">
+    <value>Nombre completo</value>
+  </data>
+  <data name="TestKindInteger" xml:space="preserve">
+    <value>Número entero</value>
+  </data>
+  <data name="TestKindLastName" xml:space="preserve">
+    <value>Apellido</value>
+  </data>
+  <data name="TestKindPhone" xml:space="preserve">
+    <value>Teléfono</value>
+  </data>
+  <data name="TestKindReference" xml:space="preserve">
+    <value>Un valor de la tabla referenciada</value>
+  </data>
+  <data name="TestKindSequence" xml:space="preserve">
+    <value>Numerada (desde la mayor)</value>
+  </data>
+  <data name="TestKindSkip" xml:space="preserve">
+    <value>(no se llena)</value>
+  </data>
+  <data name="TestKindText" xml:space="preserve">
+    <value>Texto</value>
+  </data>
+  <data name="TestKindTime" xml:space="preserve">
+    <value>Hora</value>
+  </data>
+  <data name="TestKindTimestamp" xml:space="preserve">
+    <value>Fecha y hora (último año)</value>
   </data>
   <data name="ThemeDark" xml:space="preserve">
     <value>Oscuro</value>
@@ -4187,7 +4988,7 @@ Doble clic en columna    Insertar el nombre en el editor</value>
     <value>Ejecutar</value>
   </data>
   <data name="ToolRunTip" xml:space="preserve">
-    <value>Ejecutar la selección o la sentencia bajo el cursor (F9)</value>
+    <value>Ejecutar la selección o todo el editor (F9); la sentencia del cursor, Ctrl+Enter</value>
   </data>
   <data name="ToolSearch" xml:space="preserve">
     <value>Buscar</value>
@@ -4210,17 +5011,56 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TraceAutoStopped" xml:space="preserve">
     <value>El trace se detuvo solo a los {0} minutos · {1:N0} eventos.</value>
   </data>
+  <data name="TraceBefore" xml:space="preserve">
+    <value>Antes</value>
+  </data>
+  <data name="TraceChangeFaster" xml:space="preserve">
+    <value>más rápida</value>
+  </data>
+  <data name="TraceChangeGone" xml:space="preserve">
+    <value>ya no aparece</value>
+  </data>
+  <data name="TraceChangeNew" xml:space="preserve">
+    <value>nueva</value>
+  </data>
+  <data name="TraceChangeSame" xml:space="preserve">
+    <value>igual</value>
+  </data>
+  <data name="TraceChangeSlower" xml:space="preserve">
+    <value>más lenta</value>
+  </data>
   <data name="TraceClear" xml:space="preserve">
     <value>Limpiar</value>
+  </data>
+  <data name="TraceClearComparison" xml:space="preserve">
+    <value>Quitar la comparación</value>
   </data>
   <data name="TraceColAddress" xml:space="preserve">
     <value>IP</value>
   </data>
+  <data name="TraceColAvgBefore" xml:space="preserve">
+    <value>Prom. ms antes</value>
+  </data>
+  <data name="TraceColAvgChange" xml:space="preserve">
+    <value>% prom.</value>
+  </data>
   <data name="TraceColAvgMs" xml:space="preserve">
     <value>ms promedio</value>
   </data>
+  <data name="TraceColAvgNow" xml:space="preserve">
+    <value>Prom. ms ahora</value>
+  </data>
+  <data name="TraceColChange" xml:space="preserve">
+    <value>Cambio</value>
+  </data>
   <data name="TraceColCount" xml:space="preserve">
     <value>Veces</value>
+  </data>
+  <data name="TraceColCountBefore" xml:space="preserve">
+    <value>Veces antes</value>
+  </data>
+  <data name="TraceColCountNow" xml:space="preserve">
+    <value>Veces ahora</value>
   </data>
   <data name="TraceColFailed" xml:space="preserve">
     <value>Fallas</value>
@@ -4243,6 +5083,12 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TraceColReads" xml:space="preserve">
     <value>Lecturas</value>
   </data>
+  <data name="TraceColReadsBefore" xml:space="preserve">
+    <value>Lecturas/vez antes</value>
+  </data>
+  <data name="TraceColReadsNow" xml:space="preserve">
+    <value>Lecturas/vez ahora</value>
+  </data>
   <data name="TraceColRecords" xml:space="preserve">
     <value>Filas</value>
   </data>
@@ -4252,8 +5098,17 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TraceColTime" xml:space="preserve">
     <value>Hora</value>
   </data>
+  <data name="TraceColTotalBefore" xml:space="preserve">
+    <value>Total ms antes</value>
+  </data>
+  <data name="TraceColTotalDifference" xml:space="preserve">
+    <value>Diferencia ms</value>
+  </data>
   <data name="TraceColTotalMs" xml:space="preserve">
     <value>ms en total</value>
+  </data>
+  <data name="TraceColTotalNow" xml:space="preserve">
+    <value>Total ms ahora</value>
   </data>
   <data name="TraceColUser" xml:space="preserve">
     <value>Usuario</value>
@@ -4263,6 +5118,18 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   </data>
   <data name="TraceColWrites" xml:space="preserve">
     <value>Escrituras</value>
+  </data>
+  <data name="TraceCompare" xml:space="preserve">
+    <value>Comparar con un log…</value>
+  </data>
+  <data name="TraceCompareTip" xml:space="preserve">
+    <value>Otro período (un log guardado antes) contra lo de ahora, consulta por consulta: cuáles están más lentas, más rápidas, son nuevas o ya no aparecen</value>
+  </data>
+  <data name="TraceComparisonSummary" xml:space="preserve">
+    <value>Antes: {0} ({1} consultas) · ahora: {2} consultas · {3} más lentas, {4} más rápidas, {5} nuevas, {6} ya no aparecen. Se compara el promedio por ejecución; el orden es por cuánto cambió el tiempo total.</value>
+  </data>
+  <data name="TraceComparisonTab" xml:space="preserve">
+    <value>Comparación</value>
   </data>
   <data name="TraceDetailError" xml:space="preserve">
     <value>Error:</value>
@@ -4278,6 +5145,12 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   </data>
   <data name="TraceDetailPerf" xml:space="preserve">
     <value>{0:N0} ms · {1:N0} lecturas · {2:N0} fetches · {3:N0} escrituras · {4:N0} filas</value>
+  </data>
+  <data name="TraceDetailPeriod" xml:space="preserve">
+    <value>{0}: {1:N0} veces · total {2:N0} ms · promedio {3:N1} ms · la más lenta {4:N0} ms</value>
+  </data>
+  <data name="TraceDetailPeriodMissing" xml:space="preserve">
+    <value>{0}: no aparece</value>
   </data>
   <data name="TraceDetailPlan" xml:space="preserve">
     <value>Plan:</value>
@@ -4323,6 +5196,9 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   </data>
   <data name="TraceNothingToSave" xml:space="preserve">
     <value>No hay nada para guardar: el log se arma mientras el trace está activo.</value>
+  </data>
+  <data name="TraceNow" xml:space="preserve">
+    <value>Ahora</value>
   </data>
   <data name="TraceOnlyYours" xml:space="preserve">
     <value>Si no entrás como SYSDBA, puede que el trace vea solo tus propias conexiones: Firebird 3 no acepta el rol (RDB$ADMIN) al iniciar un trace.</value>
@@ -4432,6 +5308,9 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TreeColumnCount" xml:space="preserve">
     <value>{0}: {1:N0} columnas</value>
   </data>
+  <data name="TreeColumnUsage" xml:space="preserve">
+    <value>¿Dónde se usa?…</value>
+  </data>
   <data name="TreeCompare" xml:space="preserve">
     <value>Comparar con otra base…</value>
   </data>
@@ -4447,6 +5326,9 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TreeCopyName" xml:space="preserve">
     <value>Copiar el nombre</value>
   </data>
+  <data name="TreeDataCompare" xml:space="preserve">
+    <value>Comparar datos con otra base…</value>
+  </data>
   <data name="TreeDependencies" xml:space="preserve">
     <value>Dependencias (usa / es usado por)</value>
   </data>
@@ -4455,6 +5337,9 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   </data>
   <data name="TreeDisconnect" xml:space="preserve">
     <value>Desconectar</value>
+  </data>
+  <data name="TreeDocumentation" xml:space="preserve">
+    <value>Documentación en HTML…</value>
   </data>
   <data name="TreeEditAreas" xml:space="preserve">
     <value>Editar áreas…</value>
@@ -4489,6 +5374,9 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TreeFolderNoColor" xml:space="preserve">
     <value>Sin color propio</value>
   </data>
+  <data name="TreeGenerateSql" xml:space="preserve">
+    <value>Generar SQL</value>
+  </data>
   <data name="TreeGroupMaintenance" xml:space="preserve">
     <value>Mantenimiento</value>
   </data>
@@ -4506,6 +5394,9 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   </data>
   <data name="TreeImportData" xml:space="preserve">
     <value>Importar datos (CSV o Excel)…</value>
+  </data>
+  <data name="TreeImportNewTable" xml:space="preserve">
+    <value>Importar a una tabla nueva (CSV o Excel)…</value>
   </data>
   <data name="TreeInsertName" xml:space="preserve">
     <value>Escribir el nombre en la consulta</value>
@@ -4531,6 +5422,9 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TreeOpenCompilable" xml:space="preserve">
     <value>Abrir (editar, compilar y dependencias)</value>
   </data>
+  <data name="TreePermissions" xml:space="preserve">
+    <value>Permisos…</value>
+  </data>
   <data name="TreeRegister" xml:space="preserve">
     <value>Registrar base…</value>
   </data>
@@ -4555,8 +5449,20 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="TreeServerDetails" xml:space="preserve">
     <value>Datos del servidor…</value>
   </data>
+  <data name="TreeSqlDelete" xml:space="preserve">
+    <value>DELETE por la clave primaria</value>
+  </data>
+  <data name="TreeSqlSelect" xml:space="preserve">
+    <value>SELECT con todas las columnas</value>
+  </data>
+  <data name="TreeSqlUpdate" xml:space="preserve">
+    <value>UPDATE por la clave primaria</value>
+  </data>
   <data name="TreeStatistics" xml:space="preserve">
     <value>Estadísticas</value>
+  </data>
+  <data name="TreeTestData" xml:space="preserve">
+    <value>Generar datos de prueba…</value>
   </data>
   <data name="TreeTrace" xml:space="preserve">
     <value>Trace (sentencias en vivo)</value>
@@ -4579,6 +5485,45 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="UnexpectedError" xml:space="preserve">
     <value>Error no previsto: {0} (quedó en errors.log, en la carpeta de FbStudio).</value>
   </data>
+  <data name="ValueViewerBadImage" xml:space="preserve">
+    <value>No se pudo dibujar la imagen: mirala en hexadecimal o guardala en un archivo.</value>
+  </data>
+  <data name="ValueViewerBytes" xml:space="preserve">
+    <value>{0:N0} bytes</value>
+  </data>
+  <data name="ValueViewerChars" xml:space="preserve">
+    <value>{0:N0} caracteres</value>
+  </data>
+  <data name="ValueViewerCopy" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="ValueViewerFormatted" xml:space="preserve">
+    <value>Con sangría</value>
+  </data>
+  <data name="ValueViewerHex" xml:space="preserve">
+    <value>Hexadecimal</value>
+  </data>
+  <data name="ValueViewerImage" xml:space="preserve">
+    <value>Imagen</value>
+  </data>
+  <data name="ValueViewerRtfSource" xml:space="preserve">
+    <value>Código RTF</value>
+  </data>
+  <data name="ValueViewerRtfText" xml:space="preserve">
+    <value>Texto del RTF</value>
+  </data>
+  <data name="ValueViewerSave" xml:space="preserve">
+    <value>Guardar en archivo…</value>
+  </data>
+  <data name="ValueViewerText" xml:space="preserve">
+    <value>Texto</value>
+  </data>
+  <data name="ValueViewerTitle" xml:space="preserve">
+    <value>Valor de {0}</value>
+  </data>
+  <data name="ValueViewerWrap" xml:space="preserve">
+    <value>Ajustar renglones</value>
+  </data>
   <data name="WelcomeImport" xml:space="preserve">
     <value>Importar registros…</value>
   </data>
@@ -4594,11 +5539,32 @@ Doble clic en columna    Insertar el nombre en el editor</value>
   <data name="WelcomeTitle" xml:space="preserve">
     <value>Registrá tu primera base</value>
   </data>
+  <data name="WhatsNewCount" xml:space="preserve">
+    <value>{0} novedades</value>
+  </data>
+  <data name="WhatsNewCountWithFixes" xml:space="preserve">
+    <value>{0} novedades y {1} correcciones</value>
+  </data>
+  <data name="WhatsNewCountWithOneFix" xml:space="preserve">
+    <value>{0} novedades y 1 corrección</value>
+  </data>
   <data name="WhatsNewEmpty" xml:space="preserve">
     <value>No se encontró el registro de cambios.</value>
   </data>
+  <data name="WhatsNewFix" xml:space="preserve">
+    <value>Corrección</value>
+  </data>
+  <data name="WhatsNewInDevelopment" xml:space="preserve">
+    <value>en desarrollo</value>
+  </data>
   <data name="WhatsNewInstalled" xml:space="preserve">
     <value>instalada</value>
+  </data>
+  <data name="WhatsNewInstalledVersion" xml:space="preserve">
+    <value>Versión instalada: {0}</value>
+  </data>
+  <data name="WhatsNewNext" xml:space="preserve">
+    <value>Próxima versión</value>
   </data>
   <data name="WhatsNewOnGitHub" xml:space="preserve">
     <value>Ver el registro completo en GitHub</value>

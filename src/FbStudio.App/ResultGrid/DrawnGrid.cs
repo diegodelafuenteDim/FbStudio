@@ -42,25 +42,37 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
     private TextBox? _cellEditor;
     private CancellationTokenSource? _buildCts;
     private readonly DispatcherTimer _rebuildTimer;
+    private readonly Border _filterPanelHost;
+    private readonly ToggleButton _filterPanelToggle;
+    private readonly Border _searchBar;
+    private readonly TextBox _searchBox = new() { Width = 200, FontSize = 12, Padding = new Thickness(6, 2) };
+    private readonly TextBlock _searchCount = new() { FontSize = 12, Opacity = 0.75, VerticalAlignment = VerticalAlignment.Center, MinWidth = 70, TextAlignment = TextAlignment.Center };
+    private IReadOnlyList<(int Display, int Column)> _searchMatches = [];
+    private int _searchAt = -1;
 
     public DrawnGrid()
     {
         RowDefinitions = new RowDefinitions("Auto,*");
+        ColumnDefinitions = new ColumnDefinitions("*,Auto");
         _canvas = new GridCanvas(this);
 
         // Panel de agrupado (arriba)
         var clearFilters = new Button { Content = Strings.GridClearFilters, FontSize = 12, Padding = new Thickness(8, 2), IsVisible = false };
-        clearFilters.Click += (_, _) => ApplySpec(Spec with { Filters = ImmutableDictionary<int, ColumnFilter>.Empty });
+        clearFilters.Click += (_, _) => ClearFilters();
         var expandAll = new Button { Content = Strings.GridExpandAll, FontSize = 12, Padding = new Thickness(8, 2), IsVisible = false };
         expandAll.Click += (_, _) => ApplySpec(Spec with { ExpandAll = true, ExpandedGroups = [] });
         var collapseAll = new Button { Content = Strings.GridCollapseAll, FontSize = 12, Padding = new Thickness(8, 2), IsVisible = false };
         collapseAll.Click += (_, _) => ApplySpec(Spec with { ExpandAll = false, ExpandedGroups = [] });
+        _filterPanelToggle = new ToggleButton { Content = Strings.FilterPanelToggle, FontSize = 12, Padding = new Thickness(8, 2) };
+        ToolTip.SetTip(_filterPanelToggle, Strings.FilterPanelToggleTip);
+        _filterPanelToggle.IsCheckedChanged += (_, _) => IsFilterPanelOpen = _filterPanelToggle.IsChecked == true;
         var panelContent = new DockPanel { LastChildFill = true };
         var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, [DockPanel.DockProperty] = Dock.Right };
         right.Children.Add(_viewStatus);
         right.Children.Add(expandAll);
         right.Children.Add(collapseAll);
         right.Children.Add(clearFilters);
+        right.Children.Add(_filterPanelToggle);
         panelContent.Children.Add(right);
         var chipsHost = new Panel();
         chipsHost.Children.Add(_groupHint);
@@ -69,10 +81,19 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         _groupPanel = new Border { Padding = new Thickness(8, 4), MinHeight = 34, Child = panelContent, BorderThickness = new Thickness(0, 0, 0, 1) };
         ViewChanged += () =>
         {
+            if (_searchBar?.IsVisible == true) RunSearch(); // otro filtro u orden: las posiciones cambiaron
             clearFilters.IsVisible = !Spec.Filters.IsEmpty;
             expandAll.IsVisible = collapseAll.IsVisible = !Spec.GroupBy.IsEmpty;
+            FilterPanel?.SyncFromGrid();
         };
+        SetColumnSpan(_groupPanel, 2);
         Children.Add(_groupPanel);
+
+        // Panel de filtros (a la derecha, a pedido): se arma recién la primera vez que se abre.
+        _filterPanelHost = new Border { Width = 290, BorderThickness = new Thickness(1, 0, 0, 0), IsVisible = false };
+        SetRow(_filterPanelHost, 1);
+        SetColumn(_filterPanelHost, 1);
+        Children.Add(_filterPanelHost);
 
         // Área de datos: canvas + scrollbars + capa para el editor de filtros
         var area = new Avalonia.Controls.Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), RowDefinitions = new RowDefinitions("*,Auto") };
@@ -83,6 +104,38 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         SetRow(_h, 1);
         area.Children.Add(_v);
         area.Children.Add(_h);
+        // Buscar en los resultados (Ctrl+F con la grilla elegida): arriba a la derecha, sobre los datos.
+        Button SearchButton(string text, string tip, Action click)
+        {
+            var b = new Button { Content = text, FontSize = 12, Padding = new Thickness(6, 1) };
+            ToolTip.SetTip(b, tip);
+            b.Click += (_, _) => click();
+            return b;
+        }
+        _searchBox.Watermark = Strings.GridSearchWatermark;
+        _searchBox.TextChanged += (_, _) => SearchText = _searchBox.Text ?? "";
+        _searchBox.KeyDown += (_, e) =>
+        {
+            if (e.Key is Key.Enter or Key.F3) { SearchNext(e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? -1 : 1); e.Handled = true; }
+            else if (e.Key == Key.Escape) { CloseSearch(); e.Handled = true; }
+        };
+        _searchBar = new Border
+        {
+            IsVisible = false, ZIndex = 20, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 2, 18, 0), Padding = new Thickness(6, 4), CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1),
+            Child = new StackPanel
+            {
+                Orientation = Orientation.Horizontal, Spacing = 4,
+                Children =
+                {
+                    _searchBox, _searchCount,
+                    SearchButton("▲", Strings.GridSearchPrevious, () => SearchNext(-1)),
+                    SearchButton("▼", Strings.GridSearchNext, () => SearchNext(1)),
+                    SearchButton("✕", Strings.Close, CloseSearch),
+                },
+            },
+        };
+        area.Children.Add(_searchBar);
         Children.Add(area);
 
         _v.ValueChanged += (_, e) => _canvas.SetOffset(_canvas.OffsetX, e.NewValue);
@@ -101,6 +154,102 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         // Clic o teclado pueden cambiar la fila elegida: se avisa después de que el canvas la actualizó.
         _canvas.AddHandler(PointerPressedEvent, (_, _) => Dispatcher.UIThread.Post(CheckSelection), Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
         _canvas.AddHandler(KeyDownEvent, (_, _) => Dispatcher.UIThread.Post(CheckSelection), Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
+    }
+
+    // ---------- buscar en los resultados ----------
+
+    /// <summary>Ctrl+F con la grilla elegida: abre la barra de búsqueda con el texto elegido para escribir encima.</summary>
+    public void OpenSearch()
+    {
+        _searchBar.IsVisible = true;
+        _searchBar.Background = this.FindResource(ActualThemeVariant, "SemiColorBackground1") as IBrush ?? Brushes.White;
+        _searchBar.BorderBrush = this.FindResource(ActualThemeVariant, "SemiColorBorder") as IBrush ?? Brushes.Gray;
+        _searchBox.Focus();
+        _searchBox.SelectAll();
+        RunSearch();
+    }
+
+    public void CloseSearch()
+    {
+        _searchBar.IsVisible = false;
+        _searchMatches = [];
+        _searchAt = -1;
+        _canvas.Focus();
+    }
+
+    public bool IsSearchOpen => _searchBar.IsVisible;
+
+    /// <summary>El foco a las celdas (como un clic en la grilla).</summary>
+    public void FocusCells() => _canvas.Focus();
+
+    /// <summary>Lo que se busca: al cambiarlo se busca enseguida y se va a la primera coincidencia desde la celda elegida.</summary>
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (value == _searchText) return;
+            _searchText = value;
+            if (_searchBox.Text != value) _searchBox.Text = value;
+            RunSearch();
+        }
+    }
+
+    private string _searchText = "";
+
+    /// <summary>«3 de 27» (o «Sin coincidencias»).</summary>
+    public string SearchCount => _searchCount.Text ?? "";
+
+    public int SearchMatchCount => _searchMatches.Count;
+
+    private void RunSearch()
+    {
+        var columns = DisplayColumns.ToList();
+        IEnumerable<(int, IReadOnlyList<object?>)> Displayed()
+        {
+            for (var d = 0; d < DisplayCount; d++)
+            {
+                var entry = Snapshot?[d] ?? new DisplayEntry(d, -1);
+                if (!entry.IsGroup) yield return (d, Rows[entry.RowIndex]);
+            }
+        }
+        _searchMatches = _searchText.Trim().Length == 0 ? [] : GridSearch.Find(Displayed(), columns, _searchText);
+        // La primera desde la celda elegida (incluida), en el orden de lectura.
+        var (display, column) = (_canvas.SelectedDisplay, _canvas.SelectedColumn);
+        var order = columns.Select(c => c.Ordinal).ToList();
+        _searchAt = -1;
+        for (var i = 0; i < _searchMatches.Count; i++)
+        {
+            var m = _searchMatches[i];
+            if (m.Display > display || (m.Display == display && order.IndexOf(m.Column) >= order.IndexOf(column)))
+            {
+                _searchAt = i;
+                break;
+            }
+        }
+        if (_searchAt < 0 && _searchMatches.Count > 0) _searchAt = 0;
+        GoToMatch();
+    }
+
+    /// <summary>La siguiente (1) o la anterior (-1), dando la vuelta.</summary>
+    public void SearchNext(int direction)
+    {
+        if (_searchMatches.Count == 0) return;
+        _searchAt = ((_searchAt + direction) % _searchMatches.Count + _searchMatches.Count) % _searchMatches.Count;
+        GoToMatch();
+    }
+
+    private void GoToMatch()
+    {
+        if (_searchMatches.Count == 0)
+        {
+            _searchCount.Text = _searchText.Trim().Length == 0 ? "" : Strings.GridSearchNone;
+            return;
+        }
+        var (display, column) = _searchMatches[_searchAt];
+        SelectCell(display, column);
+        ScrollIntoView(display, column);
+        _searchCount.Text = string.Format(_searchMatches.Count >= GridSearch.Limit ? Strings.GridSearchCountMore : Strings.GridSearchCount, _searchAt + 1, _searchMatches.Count);
     }
 
     /// <summary>Cambió la fila de la celda elegida (clic, teclado o al volver a elegirla después de refrescar).</summary>
@@ -295,6 +444,15 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
     /// <summary>Filas seleccionadas (Shift+clic, Ctrl+clic, Ctrl+A); sin selección de filas, la de la celda actual.</summary>
     public IReadOnlyList<int> SelectedRowIndexes() => _canvas.SelectedRowIndexes();
 
+    /// <summary>«Gráfico…» de lo que se ve (desde un encabezado, con esa columna).</summary>
+    public ChartWindow? ShowChart(int? column = null) => _canvas.ShowChart(column);
+
+    /// <summary>«Ver la fila en vertical» (fila de lo que se muestra).</summary>
+    public RowViewerWindow? ShowRow(int displayIndex) => _canvas.ShowRow(displayIndex);
+
+    /// <summary>«Ver el valor» de una celda (fila y columna de lo que se muestra).</summary>
+    public ValueViewerWindow? ShowValue(int displayIndex, int column) => _canvas.ShowValue(displayIndex, column);
+
     public void SelectAllRows() => _canvas.SelectAll();
 
     public void SelectRows(int fromDisplay, int toDisplay) => _canvas.SelectRange(fromDisplay, toDisplay);
@@ -303,6 +461,10 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
     /// Texto para pegar en Excel: encabezados y filas separadas por tabulaciones, NULL vacío, números con el separador
     /// decimal del sistema y sin tabulaciones ni saltos de línea adentro de los valores.
     /// </summary>
+    /// <summary>Las filas como tabla de Markdown, con las columnas en el orden en que se ven.</summary>
+    public string MarkdownText(IEnumerable<int> rowIndexes) =>
+        Core.Export.MarkdownTable.ToText(DisplayColumns.ToList(), rowIndexes.Select(r => (IReadOnlyList<object?>)Rows[r]));
+
     public string ClipboardText(IEnumerable<int> rowIndexes, bool header = true)
     {
         var sb = new System.Text.StringBuilder();
@@ -336,6 +498,10 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         }).ToList();
         return (columns, rows);
     }
+
+    /// <summary>«COL IN (…)» con los valores distintos de una columna en esas filas (sin NULL); null si no hay ninguno.</summary>
+    public string? InListText(int column, IEnumerable<int> rowIndexes) =>
+        Core.Export.InList.Format(Columns[column], rowIndexes.Select(r => (object?)Rows[r][column]));
 
     /// <summary>Los valores de una columna (filas visibles), uno por línea: sirve para armar un IN (…).</summary>
     public string ColumnClipboardText(int column) =>
@@ -523,7 +689,52 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         _groupPanel.Background = PanelBackground();
         _groupPanel.BorderBrush = ActualThemeVariant == ThemeVariant.Dark
             ? new SolidColorBrush(Color.FromRgb(60, 60, 64)) : new SolidColorBrush(Color.FromRgb(225, 225, 230));
+        _filterPanelHost.Background = _groupPanel.Background;
+        _filterPanelHost.BorderBrush = _groupPanel.BorderBrush;
     }
+
+    // ---------- Panel de filtros (F-12) ----------
+
+    /// <summary>El panel con todas las columnas y sus filtros; null hasta que se abre por primera vez.</summary>
+    public FilterPanel? FilterPanel { get; private set; }
+
+    /// <summary>El panel de filtros a la derecha de la grilla (botón «Panel de filtros» o el menú del encabezado).</summary>
+    public bool IsFilterPanelOpen
+    {
+        get => _filterPanelHost.IsVisible;
+        set
+        {
+            if (value == _filterPanelHost.IsVisible) return;
+            if (value && FilterPanel is null) _filterPanelHost.Child = FilterPanel = new FilterPanel(this);
+            _filterPanelHost.IsVisible = value;
+            _filterPanelToggle.IsChecked = value;
+        }
+    }
+
+    /// <summary>Abre el panel de filtros con el foco en el cuadro de esa columna.</summary>
+    public void ShowFilterPanelFor(int column)
+    {
+        IsFilterPanelOpen = true;
+        if (FilterPanel is not { } panel) return;
+        if (panel.BoxFor(column) is null)
+        {
+            panel.SearchText = "";
+            panel.OnlyFiltered = false;
+        }
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (panel.BoxFor(column) is not { } box) return;
+            box.BringIntoView();
+            box.Focus();
+        });
+    }
+
+    /// <summary>Saca todos los filtros de columna.</summary>
+    public void ClearFilters() => ApplySpec(Spec with { Filters = ImmutableDictionary<int, ColumnFilter>.Empty });
+
+    /// <summary>Lo que muestra vacío el cuadro del filtro de una columna (fila de filtros y panel), según su tipo.</summary>
+    internal static string FilterPlaceholder(ColumnInfo column) =>
+        column.IsNumeric ? ">100, <=5, =3" : column.DataTypeName is "DATE" or "TIMESTAMP" ? "2026-07-01" : Strings.GridFilterTextPlaceholder;
 
     // ---------- Editor de filtros (TextBox real sobre la celda de la fila de filtros) ----------
 
@@ -538,7 +749,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             MinHeight = 0,
             Padding = new Thickness(4, 2),
             FontSize = 12,
-            PlaceholderText = Columns[column].IsNumeric ? ">100, <=5, =3" : Columns[column].DataTypeName is "DATE" or "TIMESTAMP" ? "2026-07-01" : Strings.GridFilterTextPlaceholder,
+            PlaceholderText = FilterPlaceholder(Columns[column]),
             Tag = column,
         };
         Canvas.SetLeft(editor, cellRect.X);
@@ -575,8 +786,14 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         _canvas.OpenFilterPopupFor(column);
     }
 
-    internal void OpenFilterPopup(int column, Rect cellRect)
+    internal void OpenFilterPopup(int column, Rect cellRect) => OpenFilterPopup(column, _canvas, PlacementMode.Bottom, cellRect);
+
+    /// <summary>La ventanita de filtro junto a un control (el ▾ del panel de filtros), hacia la izquierda.</summary>
+    internal void OpenFilterPopup(int column, Control target) => OpenFilterPopup(column, target, PlacementMode.LeftEdgeAlignedTop, null);
+
+    private void OpenFilterPopup(int column, Control target, PlacementMode placement, Rect? rect)
     {
+        if (column < 0 || column >= Columns.Length) return;
         CloseFilterEditor(apply: true);
         CloseFilterPopup();
         var current = Spec.Filters.TryGetValue(column, out var f) ? f.Text : null;
@@ -596,9 +813,9 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         var popup = new Popup
         {
             Child = content,
-            PlacementTarget = _canvas,
-            Placement = PlacementMode.Bottom,
-            PlacementRect = cellRect,
+            PlacementTarget = target,
+            Placement = placement,
+            PlacementRect = rect,
             IsLightDismissEnabled = true,
         };
         content.Applied += text =>
@@ -863,6 +1080,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         public IReadOnlyCollection<int> Hidden => _hidden;
 
         public int SelectedColumn => _selected.Column;
+        public int SelectedDisplay => _selected.Display;
 
         public bool IsHidden(int column) => _hidden.Contains(column);
 
@@ -1195,10 +1413,11 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             if (d < 0) return;
             if (Entry(d).IsGroup) { _owner.ToggleGroupAt(d); return; }
             var c = ColumnAt(p.X);
-            if (e.ClickCount == 2 && _owner.Source is not null && c >= 0)
+            if (e.ClickCount == 2 && c >= 0)
             {
                 _selected = (d, c);
-                OpenEditorAtSelection();
+                if (_owner.Source is { } editable && editable.CanEdit(c)) OpenEditorAtSelection();
+                else ShowValue(d, c);
                 e.Handled = true;
                 return;
             }
@@ -1334,8 +1553,11 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                     items.Add(show);
                 }
                 items.Add(Item(string.Format(Strings.GridCopyColumn, _owner.VisibleRowIndexes().Count), () => _ = CopyTextAsync(_owner.ColumnClipboardText(col))));
+                items.Add(Item(Strings.GridCopyAsIn, () => { if (_owner.InListText(col, _owner.VisibleRowIndexes()) is { } inList) _ = CopyTextAsync(inList); }));
+                items.Add(Item(Strings.GridChart, () => ShowChart(col)));
                 items.Add(new Separator());
                 items.Add(Item(Strings.GridFilterMenu, () => _owner.OpenFilterPopup(col)));
+                items.Add(Item(Strings.FilterPanelMenu, () => _owner.ShowFilterPanelFor(col)));
                 items.Add(Item(Strings.GridRemoveColumnFilter, () => _owner.SetFilter(col, null), _owner.Spec.Filters.ContainsKey(col)));
                 items.Add(Item(Strings.GridRemoveAllFilters, () => _owner.ApplySpec(_owner.Spec with { Filters = ImmutableDictionary<int, ColumnFilter>.Empty }), !_owner.Spec.Filters.IsEmpty));
             }
@@ -1364,10 +1586,17 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                     if (!_rows.Contains(d)) { _rows.Clear(); _anchor = d; } // clic derecho fuera de la selección: esa fila
                     var selected = SelectedRowIndexes();
                     var visible = _owner.VisibleRowIndexes();
+                    items.Add(Item(Strings.GridViewValue, () => ShowValue(d, col)));
+                    items.Add(Item(Strings.GridRowView, () => ShowRow(d)));
+                    items.Add(Item(Strings.GridChart, () => ShowChart(null)));
                     items.Add(Item(Strings.GridCopyCell, () => _ = CopyAsync(false)));
                     items.Add(Item(selected.Count > 1 ? string.Format(Strings.GridCopySelectedRows, selected.Count) : Strings.GridCopyRow,
                         () => _ = CopyRowsAsync(selected)));
                     items.Add(Item(string.Format(Strings.GridCopyAllRows, visible.Count), () => _ = CopyRowsAsync(visible)));
+                    items.Add(Item(selected.Count > 1 ? string.Format(Strings.GridCopyAsMarkdownRows, selected.Count) : Strings.GridCopyAsMarkdown,
+                        () => _ = CopyTextAsync(_owner.MarkdownText(selected))));
+                    items.Add(Item(string.Format(Strings.GridCopySelectedAsIn, Columns[col].Name, selected.Count),
+                        () => { if (_owner.InListText(col, selected) is { } inList) _ = CopyTextAsync(inList); }, !CellFormatter.IsNull(value) || selected.Count > 1));
                     if (_owner.CopyAsScript is { } copyAs)
                     {
                         // Las filas elegidas como sentencias para pegar en otra base o en un script.
@@ -1394,6 +1623,37 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             if (items.Count == 0) return;
             var menu = new ContextMenu { ItemsSource = items, Placement = PlacementMode.Pointer };
             menu.Open(this);
+        }
+
+        /// <summary>«Gráfico…» de lo que se ve; desde un encabezado, esa columna va como X o como Y según su tipo.</summary>
+        public ChartWindow? ShowChart(int? column)
+        {
+            if (_owner.Rows.Count == 0 || Columns.Length == 0) return null;
+            var chart = new ChartWindow(_owner, column);
+            if (TopLevel.GetTopLevel(this) is Window owner) chart.Show(owner);
+            else chart.Show();
+            return chart;
+        }
+
+        /// <summary>«Ver la fila en vertical»: columna, tipo y valor, con ◀ ▶ para recorrer lo que se ve.</summary>
+        public RowViewerWindow? ShowRow(int display)
+        {
+            if (display < 0 || Entry(display).IsGroup) return null;
+            var viewer = new RowViewerWindow(_owner, Entry(display).RowIndex);
+            if (TopLevel.GetTopLevel(this) is Window owner) viewer.Show(owner);
+            else viewer.Show();
+            return viewer;
+        }
+
+        /// <summary>«Ver el valor»: la celda entera en su ventana (texto largo, blob, imagen, JSON, RTF…).</summary>
+        public ValueViewerWindow? ShowValue(int display, int col)
+        {
+            if (display < 0 || col < 0 || Entry(display).IsGroup) return null;
+            var column = Columns[col];
+            var viewer = new ValueViewerWindow(column.Name, column.DataTypeName, _owner.Rows[Entry(display).RowIndex][col]);
+            if (TopLevel.GetTopLevel(this) is Window owner) viewer.Show(owner);
+            else viewer.Show();
+            return viewer;
         }
 
         private static string FilterFor(object? value, ColumnInfo col, string op) => value switch

@@ -15,7 +15,7 @@ public sealed record IdentityValue(string Table, string Column, long Value);
 
 /// <summary>
 /// Todos los objetos de una base, leídos de RDB$ en una sola transacción: lo que hace falta para el script de la base
-/// entera (Extract Metadata) y para comparar dos bases.
+/// entera y para comparar dos bases.
 /// </summary>
 public sealed record DatabaseSchema
 {
@@ -48,6 +48,12 @@ public sealed record DatabaseSchema
 
     /// <summary>Valor actual de cada identity (se lee con los valores de los generadores).</summary>
     public IReadOnlyList<IdentityValue> IdentityValues { get; init; } = [];
+
+    /// <summary>Solo los objetos de esta área (<see cref="SchemaFilter"/>); null, la base entera.</summary>
+    public string? Area { get; init; }
+
+    /// <summary>Con un área: las FK a tablas de afuera que no se escriben.</summary>
+    public int ForeignKeysOutside { get; init; }
 }
 
 /// <summary>
@@ -107,4 +113,7 @@ public sealed record SchemaScriptOptions
     public bool Triggers { get; init; } = true;
     public bool Roles { get; init; } = true;
     public bool Privileges { get; init; } = true;
+
+    /// <summary>Solo los objetos de esta área de la base (F-9); null, la base entera.</summary>
+    public string? Area { get; init; }
 }

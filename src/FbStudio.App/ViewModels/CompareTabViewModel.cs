@@ -43,7 +43,7 @@ public sealed partial class CompareItem(SchemaDifference difference) : Observabl
 }
 
 /// <summary>
-/// Pestaña «Comparar bases» (Database Comparer): lee el origen y el destino a la vez (dos conexiones de solo lectura),
+/// Pestaña «Comparar bases»: lee el origen y el destino a la vez (dos conexiones de solo lectura),
 /// lista lo nuevo, lo distinto y lo que sobra, y arma con lo tildado el script para que el destino quede igual al
 /// origen. El script se abre en una pestaña de consulta del destino para revisarlo y ejecutarlo a mano.
 /// </summary>
@@ -139,6 +139,17 @@ public sealed partial class CompareTabViewModel : EditorTabViewModel
             var readTarget = targetExplorer.ReadSchemaAsync(options, new Progress<SchemaProgress>(p => { progress.Target = p; Show(); }), _cts.Token);
             var schemas = await Task.WhenAll(readSource, readTarget);
             if (_disposed) return;
+            if (CompareOptions.Area is { } areaName)
+            {
+                // Las reglas del área del origen, aplicadas a las dos bases.
+                if (Owner.AreaStore.Areas(Source).FirstOrDefault(a => a.Name == areaName) is not { } area)
+                {
+                    Status = string.Format(Strings.SchemaScriptAreaMissing, areaName);
+                    return;
+                }
+                schemas[0] = SchemaFilter.Only(schemas[0], area.Name, await Owner.AreaMembersAsync(Source, area));
+                schemas[1] = SchemaFilter.Only(schemas[1], area.Name, await Owner.AreaMembersAsync(Target, area));
+            }
             var differences = SchemaComparer.Compare(schemas[0], schemas[1], CompareOptions);
             Items = differences.Select(d => new CompareItem(d)).ToList();
             foreach (var item in Items) item.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(CompareItem.IsChecked)) Script = ""; };

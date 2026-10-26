@@ -88,6 +88,8 @@
                 <Button DockPanel.Dock="Right" Classes="tool" Command="{Binding ClearTablesCommand}" Content="{x:Static res:Strings.StatsTablesClear}" Margin="6,0,0,0" />
                 <TextBox Text="{Binding TableFilter}" PlaceholderText="{x:Static res:Strings.StatsTablesFilter}" />
               </DockPanel>
+              <ComboBox x:Name="AreaPicker" DockPanel.Dock="Top" ItemsSource="{Binding AreaNames}" IsVisible="{Binding HasAreas}"
+                        PlaceholderText="{x:Static res:Strings.StatsChooseArea}" HorizontalAlignment="Stretch" Margin="0,0,0,6" />
               <TextBlock DockPanel.Dock="Bottom" Text="{x:Static res:Strings.StatsTablesNote}" Opacity="0.6" FontSize="11" Margin="0,6,0,0" />
               <Panel>
                 <ListBox ItemsSource="{Binding VisibleTables}" Background="Transparent">

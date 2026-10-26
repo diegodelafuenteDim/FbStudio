@@ -101,6 +101,54 @@ public class DataImporterTests(FirebirdFixture fb) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Actualiza_las_que_ya_estan_por_la_clave_y_agrega_las_demas()
+    {
+        var table = await NewTableAsync();
+        await ExecAsync($"INSERT INTO {table} (ID, NOMBRE, IMPORTE) VALUES (1, 'viejo', 10)");
+        await ExecAsync($"INSERT INTO {table} (ID, NOMBRE, IMPORTE) VALUES (2, 'no viene', 20)");
+        var result = await DataImporter.ImportAsync(fb.Profile, fb.Password, table, ["ID", "NOMBRE"],
+            [(2, [1, "nuevo"]), (3, [3, "agregado"])], new ImportOptions(MatchingColumns: ["ID"]));
+        Assert.True(result.Committed);
+        Assert.Equal(2, result.Inserted);                                       // escritas: una actualizada y una agregada
+        var rows = await RowsAsync(table);
+        Assert.Equal([(1, "nuevo"), (2, "no viene"), (3, "agregado")], rows.Select(r => (Convert.ToInt32(r[0]), (string)r[1])));
+        Assert.Equal(10m, (decimal)rows[0][3]);                                 // lo que no viene en el archivo no se toca
+    }
+
+    [Fact]
+    public async Task Crea_la_tabla_nueva_y_si_no_se_importa_la_vuelve_a_borrar()
+    {
+        var table = "IMPNEW_" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+        var columns = ImportSchema.Infer(["Id", "Nombre", "Importe"], [["1", "Pérez", "12,50"], ["2", "Gómez", "3"]], Ar);
+        var ddl = ImportSchema.CreateTableSql(table, columns);
+        IEnumerable<(long, object?[])> Rows(params string[][] rows) =>
+            rows.Select((r, i) => ((long)(i + 2), r.Select((v, c) => ImportMapping.Convert(v, columns[c].Type, Ar)).ToArray()));
+
+        // Una fila que falla (con «deshacer todo»): no queda la tabla vacía.
+        var failed = await DataImporter.ImportAsync(fb.Profile, fb.Password, table, columns.Select(c => c.Name).ToList(),
+            Rows(["1", "Pérez", "12,50"], ["no es número", "Gómez", "3"]), new ImportOptions(CreateTableSql: ddl));
+        Assert.False(failed.Committed);
+        Assert.False(failed.TableCreated);
+        Assert.Equal(0, Convert.ToInt32(await ScalarAsync($"SELECT COUNT(*) FROM RDB$RELATIONS WHERE RDB$RELATION_NAME = '{table}'")));
+
+        var created = await DataImporter.ImportAsync(fb.Profile, fb.Password, table, columns.Select(c => c.Name).ToList(),
+            Rows(["1", "Pérez", "12,50"], ["2", "Gómez", "3"]), new ImportOptions(CreateTableSql: ddl));
+        _tables.Add(table);
+        Assert.True(created.TableCreated);
+        Assert.Equal(2, created.Inserted);
+        Assert.Equal(15.50m, Convert.ToDecimal(await ScalarAsync($"SELECT SUM(IMPORTE) FROM {table}")));
+    }
+
+    private async Task<object?> ScalarAsync(string sql)
+    {
+        await using var c = FbConnectionFactory.Create(fb.Profile, fb.Password, "test");
+        await c.OpenAsync();
+        await using var tx = await c.BeginTransactionAsync();
+        await using var cmd = new FbCommand(sql, c, tx);
+        return await cmd.ExecuteScalarAsync();
+    }
+
+    [Fact]
     public async Task Vaciar_antes_y_registro_de_solo_lectura()
     {
         var table = await NewTableAsync();

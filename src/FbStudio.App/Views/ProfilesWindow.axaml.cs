@@ -40,7 +40,7 @@ public partial class ProfilesWindow : Window
 
         List.SelectionChanged += (_, _) => { if (List.SelectedItem is ConnectionProfile p) Show(p); };
         NewButton.Click += (_, _) => { List.SelectedItem = null; ShowNew(); };
-        DeleteButton.Click += (_, _) => Delete();
+        DeleteButton.Click += async (_, _) => await DeleteAsync();
         SaveButton.Click += async (_, _) => await SaveAsync();
         TestButton.Click += async (_, _) => await TestAsync();
         CloseButton.Click += (_, _) => Close();
@@ -178,9 +178,13 @@ public partial class ProfilesWindow : Window
         await new InfoDialog(Strings.ProfileSavedTitle, string.Format(Strings.ProfileSavedMessage, profile.Name)).ShowDialog(this);
     }
 
-    private void Delete()
+    /// <summary>Borra el registro (y su contraseña guardada) después de preguntar; la base no se toca.</summary>
+    private async Task DeleteAsync()
     {
         if (List.SelectedItem is not ConnectionProfile p) return;
+        if (!await new ConfirmDialog([string.Format(Strings.ProfileDeleteConfirm, p.Name)], Strings.ProfileDeleteYes, Strings.Cancel, Strings.ProfileDeleteYes)
+                .ShowDialog<bool>(this))
+            return;
         _store.Delete(p.Id);
         Reload(null);
     }

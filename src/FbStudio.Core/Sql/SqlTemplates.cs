@@ -19,7 +19,7 @@ public static class SqlTemplates
         new("upd", "UPDATE … SET … WHERE", "UPDATE ${cursor}\nSET \nWHERE "),
         new("del", "DELETE FROM … WHERE", "DELETE FROM ${cursor}\nWHERE "),
         new("uoi", "UPDATE OR INSERT … MATCHING", "UPDATE OR INSERT INTO ${cursor} ()\nVALUES ()\nMATCHING ()"),
-        new("gen", "Valor de un generador", "SELECT GEN_ID(${cursor}, 0)\nFROM RDB$DATABASE"),
+        new("gen", Resources.CoreStrings.TemplateGeneratorValue, "SELECT GEN_ID(${cursor}, 0)\nFROM RDB$DATABASE"),
         new("eb", "EXECUTE BLOCK", "EXECUTE BLOCK\nRETURNS (RESULTADO VARCHAR(100))\nAS\nDECLARE VARIABLE I INTEGER;\nBEGIN\n  ${cursor}\n  SUSPEND;\nEND"),
         new("proc", "CREATE OR ALTER PROCEDURE", "CREATE OR ALTER PROCEDURE ${cursor} (\n  P INTEGER)\nRETURNS (\n  R INTEGER)\nAS\nBEGIN\n  \n  SUSPEND;\nEND"),
         new("func", "CREATE OR ALTER FUNCTION", "CREATE OR ALTER FUNCTION ${cursor} (\n  P INTEGER)\nRETURNS INTEGER\nAS\nBEGIN\n  RETURN P;\nEND"),

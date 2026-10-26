@@ -35,6 +35,12 @@ public enum GrantObjectKind
     Generator,
     Exception,
     Role,
+
+    /// <summary>
+    /// Un permiso de estructura de Firebird 3 (DDL) sobre una clase de objetos («SQL$TABLES»…): C crear, L modificar
+    /// cualquiera (en «SQL$DATABASE», ALTER DATABASE) y O borrar cualquiera.
+    /// </summary>
+    Metadata,
 }
 
 /// <summary>Una fila de RDB$USER_PRIVILEGES: un permiso de alguien sobre un objeto.</summary>

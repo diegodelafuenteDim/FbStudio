@@ -43,6 +43,8 @@ public enum EditorTabKind
     Security,
     Areas,
     Diagram,
+    TestData,
+    DataCompare,
 }
 
 /// <summary>
@@ -53,6 +55,7 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
 {
     public const int MessagesTab = 4; // Resultados, Plan, Estadísticas, Historial, Mensajes, Dependencias
     public const int DependenciesTab = 5;
+    public const int PlanTab = 1;
     public const int DataTab = 6;
     private const int UiChunkRows = 5_000;
 
@@ -82,8 +85,59 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         _baseTitle = baseTitle;
         Document = new TextDocument(text);
         _savedText = text;
-        Document.TextChanged += (_, _) => { if (Kind == EditorTabKind.Object) IsModified = Document.Text != _savedText; };
+        Document.TextChanged += (_, _) => { if (Kind == EditorTabKind.Object || FilePath is not null) IsModified = Document.Text != _savedText; };
     }
+
+    /// <summary>El archivo .sql de la consulta (Consulta → «Abrir archivo» o «Guardar como»); null si nunca se guardó.</summary>
+    [ObservableProperty] private string? _filePath;
+
+    private System.Text.Encoding _fileEncoding = new System.Text.UTF8Encoding(false);
+
+    /// <summary>
+    /// Lee un archivo .sql en la pestaña (UTF-8 o Windows-1252, como venga): el texto, su nombre como título y, desde
+    /// acá, el aviso de cambios sin guardar.
+    /// </summary>
+    public void LoadFile(string path)
+    {
+        var encoding = Core.Import.ImportFile.DetectEncoding(path);
+        var text = File.ReadAllText(path, encoding);
+        _fileEncoding = encoding;
+        FilePath = path;
+        Document.Text = text;
+        BaseTitle = Path.GetFileName(path);
+        MarkSaved();
+        Status = string.Format(Strings.FileOpened, path);
+    }
+
+    /// <summary>
+    /// Guarda el texto en un archivo, con la codificación con que se leyó (uno nuevo, UTF-8). En la pestaña de un objeto
+    /// es una copia: sus «cambios sin compilar» siguen siendo respecto de la base.
+    /// </summary>
+    public void SaveFile(string path)
+    {
+        var encoding = _fileEncoding;
+        var note = "";
+        if (encoding.CodePage == 1252)
+        {
+            // Una letra que Windows-1252 no tiene se perdería: entonces va en UTF-8.
+            try { System.Text.Encoding.GetEncoding(1252, System.Text.EncoderFallback.ExceptionFallback, System.Text.DecoderFallback.ExceptionFallback).GetByteCount(Document.Text); }
+            catch (System.Text.EncoderFallbackException)
+            {
+                encoding = new System.Text.UTF8Encoding(false);
+                note = " " + Strings.FileSavedAsUtf8;
+            }
+        }
+        File.WriteAllText(path, Document.Text, encoding);
+        Status = string.Format(Strings.FileSaved, path) + note;
+        if (Kind == EditorTabKind.Object) return;
+        _fileEncoding = encoding;
+        FilePath = path;
+        BaseTitle = Path.GetFileName(path);
+        MarkSaved();
+    }
+
+    /// <summary>Hay cambios sin guardar en el archivo (no en la base, como en la pestaña de un objeto).</summary>
+    public bool HasUnsavedFile => Kind == EditorTabKind.Sql && FilePath is not null && IsModified;
 
     public EditorTabKind Kind { get; init; } = EditorTabKind.Sql;
 
@@ -103,9 +157,31 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Procedimientos, triggers, vistas y funciones se pueden editar y compilar desde su pestaña.</summary>
     public bool IsCompilable => Kind == EditorTabKind.Object && Object is { } o && DbObjectKinds.IsCompilable(o.Kind);
 
+    /// <summary>
+    /// La pestaña de una tabla (o de otro objeto que no se compila): el DDL es para ver o copiar y no se ejecuta nada desde
+    /// acá. Correrlo como script intentaría crear de nuevo la tabla, sus claves, índices, triggers y permisos.
+    /// </summary>
+    public bool IsReadOnlyObject => Kind == EditorTabKind.Object && !IsCompilable;
+
+    /// <summary>Si es la pestaña de un objeto de solo lectura, lo avisa y devuelve true: no se ejecuta.</summary>
+    private bool RefuseReadOnlyObject()
+    {
+        if (!IsReadOnlyObject) return false;
+        Status = string.Format(Strings.ObjectTabReadOnly, BaseTitle);
+        return true;
+    }
+
     public string ObjectCaption => Object is { } o ? $"{DbObjectKinds.Singular(o.Kind)} {o.Name}" + (o.Detail is { } d ? $" · {d}" : "") : "";
 
     private string _baseTitle;
+
+    /// <summary>Una consulta sin archivo se puede renombrar («Consulta 3» → «Turnos del día»); se recuerda al cerrar.</summary>
+    public bool CanRename => Kind == EditorTabKind.Sql && this is not SearchTabViewModel && FilePath is null;
+
+    public void Rename(string title)
+    {
+        if (CanRename && title.Trim() is { Length: > 0 } trimmed) BaseTitle = trimmed;
+    }
 
     public string BaseTitle
     {
@@ -425,7 +501,7 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Ejecuta una sentencia. Devuelve null si no llegó al servidor (bloqueada, sin confirmar) o falló la conexión.</summary>
     public async Task<QueryOutcome?> RunAsync(string sql)
     {
-        if (IsRunning) return null;
+        if (IsRunning || RefuseReadOnlyObject()) return null;
         if (Profile is not { } profile)
         {
             Status = _owner.Tree.IsEmpty ? Strings.RegisterFirst : Strings.SearchPickDatabase;
@@ -536,6 +612,54 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         return outcome;
     }
 
+    /// <summary>
+    /// «Ver el plan sin ejecutar» (Ctrl+Shift+E): prepara la sentencia y muestra su plan, con el aviso si recorre una tabla
+    /// entera, sin traer filas ni cambiar nada. Para mirar una consulta pesada antes de correrla en producción.
+    /// </summary>
+    public async Task ShowPlanOnlyAsync(string sql)
+    {
+        if (IsRunning || RefuseReadOnlyObject()) return;
+        if (Profile is not { } profile)
+        {
+            Status = _owner.Tree.IsEmpty ? Strings.RegisterFirst : Strings.SearchPickDatabase;
+            return;
+        }
+        var statement = StatementClassifier.Classify(sql);
+        if (statement.Kind is not (StatementKind.Select or StatementKind.Dml or StatementKind.Execute))
+        {
+            Status = Strings.PlanOnlyNotApplicable;
+            return;
+        }
+        // Con parámetros (F-25) se prepara con «?»: el plan no depende de los valores.
+        var toPrepare = SqlParameters.Applies(statement) && SqlParameters.Find(sql) is { IsEmpty: false } parameters ? parameters.Sql : sql;
+        IsRunning = true;
+        _cts = new CancellationTokenSource();
+        Status = Strings.PlanOnlyPreparing;
+        try
+        {
+            var session = await EnsureSessionAsync(profile, _cts.Token);
+            var (plan, explained) = await session.PlanAsync(toPrepare, _cts.Token);
+            Plan = FormatPlan(plan, explained);
+            var scans = PlanAnalyzer.FullScans(plan);
+            _planWarning = scans.Count == 0 ? null : string.Format(Strings.PlanFullScanWarning, string.Join(", ", scans));
+            SelectedResultTab = PlanTab;
+            Status = Strings.PlanOnlyDone + (_planWarning is { } warning ? " · " + warning : "");
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Status = string.Format(Strings.ErrorStatus, ex.Message.Split('\n', 2)[0].Trim());
+            Messages = ex.Message;
+            SelectedResultTab = MessagesTab;
+        }
+        finally
+        {
+            InTransaction = _session?.InTransaction == true;
+            IsRunning = false;
+            _cts?.Dispose();
+            _cts = null;
+        }
+    }
+
     /// <summary>El plan llega antes que las filas: se muestra y, si recorre una tabla entera, se avisa ya.</summary>
     private void OnPlanKnown(string? plan, bool explained)
     {
@@ -596,7 +720,7 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
     /// <param name="asScript">Ctrl+F9: como script sin grilla aunque sea una sola sentencia.</param>
     public async Task RunTextAsync(string text, int offset, ExecutionScope scope, bool asScript = false)
     {
-        if (IsRunning) return;
+        if (IsRunning || RefuseReadOnlyObject()) return;
         var statements = SqlScriptSplitter.Split(text)
             .Select(s => (Span: s with { Start = s.Start + offset }, Info: StatementClassifier.Classify(s.Text)))
             .Where(s => s.Info.Kind != StatementKind.Empty)
@@ -623,14 +747,62 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         await RunScriptAsync(text, statements, notice, gridless, automatic: gridless && !asScript);
     }
 
+    /// <summary>
+    /// Consulta → «Ejecutar script desde archivo…»: un .sql (por grande que sea) corre entero sin pasar por el editor,
+    /// sin grilla como Ctrl+F9: la misma revisión de seguridad antes de empezar, parar o seguir ante errores, y el registro
+    /// en Mensajes con los renglones del archivo. El historial guarda el nombre del archivo, no su contenido.
+    /// </summary>
+    public async Task RunFileAsync(string path)
+    {
+        if (IsRunning || RefuseReadOnlyObject()) return;
+        string text;
+        try
+        {
+            text = await File.ReadAllTextAsync(path, Core.Import.ImportFile.DetectEncoding(path));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Status = string.Format(Strings.ScriptFileReadFailed, Path.GetFileName(path), ex.Message);
+            return;
+        }
+        var statements = SqlScriptSplitter.Split(text)
+            .Select(s => (Span: s, Info: StatementClassifier.Classify(s.Text)))
+            .Where(s => s.Info.Kind != StatementKind.Empty)
+            .ToList();
+        if (statements.Count == 0)
+        {
+            Status = string.Format(Strings.ScriptFileEmpty, Path.GetFileName(path));
+            return;
+        }
+        var file = new ScriptFile(Path.GetFileName(path), text);
+        await RunScriptAsync(text, statements, string.Format(Strings.ScriptFromFile, file.Name), gridless: true, automatic: false, file);
+    }
+
+    /// <summary>Un script leído de un archivo: su nombre y en qué renglón cae cada posición (sin cargarlo en el editor).</summary>
+    private sealed class ScriptFile(string name, string text)
+    {
+        private readonly int[] _lineStarts = [0, .. text.Select((c, i) => (c, i)).Where(x => x.c == '\n').Select(x => x.i + 1)];
+
+        public string Name { get; } = name;
+
+        public int Line(int offset)
+        {
+            var i = Array.BinarySearch(_lineStarts, offset);
+            return (i >= 0 ? i : ~i - 1) + 1;
+        }
+    }
+
     /// <param name="gridless">
     /// Sin grilla (para scripts largos): sin plan ni lecturas por tabla, la grilla queda como estaba, una sola entrada
     /// en el historial y el avance cada 200 ms.
     /// </param>
     /// <param name="automatic">Se eligió sin grilla por el largo del script (se avisa).</param>
+    /// <param name="file">El script viene de un archivo: los renglones son los del archivo y el cursor del editor no se mueve.</param>
     private async Task RunScriptAsync(string text, List<(StatementSpan Span, StatementInfo Info)> statements, string? notice,
-        bool gridless, bool automatic)
+        bool gridless, bool automatic, ScriptFile? file = null)
     {
+        int LineOf(int offset) => file?.Line(offset) ?? this.LineOf(offset);
+
         if (Profile is not { } profile)
         {
             Status = _owner.Tree.IsEmpty ? Strings.RegisterFirst : Strings.SearchPickDatabase;
@@ -725,15 +897,16 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
                     log.AppendLine(string.Format(Strings.ScriptLogError, line, info.Keyword, ShortError(outcome.Error)));
                     if (firstError is null)
                     {
-                        // El cursor va al primer error; si es un bloqueo, se dice quién tiene el registro.
+                        // El cursor va al primer error (salvo en un script de un archivo, que no está en el editor); si es
+                        // un bloqueo, se dice quién tiene el registro.
                         firstError = outcome.Error;
                         lockNote = await DescribeLockAsync(outcome.Error);
-                        if (FirebirdErrorPosition.Parse(outcome.Error) is { } position)
+                        if (file is null && FirebirdErrorPosition.Parse(outcome.Error) is { } position)
                         {
                             var at = position.InDocument(Document.Text, span.Start);
                             GoTo(at.Line, at.Column);
                         }
-                        else
+                        else if (file is null)
                         {
                             GoTo(line, 1);
                         }
@@ -807,7 +980,7 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
 
         // Sin grilla, el historial guarda el script entero una vez (no miles de entradas).
         if (gridless)
-            _owner.RecordScript(profile, text, new QueryOutcome
+            _owner.RecordScript(profile, file is null ? text : string.Format(Strings.ScriptFileHistory, file.Name, statements.Count), new QueryOutcome
             {
                 TotalTime = clock.Elapsed,
                 RecordsAffected = (int)Math.Min(affected, int.MaxValue),

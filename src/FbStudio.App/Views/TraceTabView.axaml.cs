@@ -20,10 +20,13 @@ public partial class TraceTabView : UserControl
         OpenLogButton.Click += async (_, _) => await OpenLogAsync();
         SaveLogButton.Click += async (_, _) => await SaveLogAsync();
         ExportAnalysisButton.Click += async (_, _) => await ExportAnalysisAsync();
+        CompareButton.Click += async (_, _) => await CompareAsync();
+        ComparisonGrid.SelectionChanged += () => (DataContext as TraceTabViewModel)?.SelectChange(ComparisonGrid.CurrentRow);
     }
 
     public ResultGrid.DrawnGrid Analysis => AnalysisGrid;
     public ResultGrid.DrawnGrid EventsList => EventsGrid;
+    public ResultGrid.DrawnGrid Comparison => ComparisonGrid;
 
     protected override void OnDataContextChanged(EventArgs e)
     {
@@ -35,6 +38,17 @@ public partial class TraceTabView : UserControl
             AnalysisGrid.SetData(groupColumns, groupRows, keepView: true);
             EventsGrid.SetData(eventColumns, eventRows, keepView: true);
         };
+        trace.ComparisonChanged += (columns, rows) => ComparisonGrid.SetData(columns, rows, keepView: true);
+    }
+
+    /// <summary>«Comparar con un log…»: elige el log de antes y pasa a la pestaña de la comparación.</summary>
+    private async Task CompareAsync()
+    {
+        if (DataContext is not TraceTabViewModel trace || TopLevel.GetTopLevel(this)?.StorageProvider is not { } storage) return;
+        var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions { Title = Strings.TraceCompare.TrimEnd('…'), FileTypeFilter = [LogFiles] });
+        if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
+        trace.CompareWith(path);
+        if (trace.HasBaseline) Pages.SelectedItem = ComparisonPage;
     }
 
     private async Task OpenLogAsync()

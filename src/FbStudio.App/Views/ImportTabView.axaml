@@ -54,12 +54,17 @@
 
     <!-- Importar -->
     <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,8,0,0">
+      <WrapPanel IsVisible="{Binding !IsNewTable}">
+        <RadioButton GroupName="mode" Content="{x:Static res:Strings.ImportModeAppend}" IsChecked="{Binding !Upsert}" Margin="0,0,12,4" />
+        <RadioButton GroupName="mode" x:Name="UpsertMode" Content="{x:Static res:Strings.ImportModeUpsert}" IsChecked="{Binding Upsert}" Margin="0,0,16,4"
+                     ToolTip.Tip="{x:Static res:Strings.ImportModeUpsertTip}" />
+      </WrapPanel>
       <WrapPanel>
         <CheckBox Content="{x:Static res:Strings.ImportEmptyIsNull}" IsChecked="{Binding EmptyIsNull}" Margin="0,0,16,4" />
         <RadioButton GroupName="errors" Content="{x:Static res:Strings.ImportStopOnError}" IsChecked="{Binding StopOnError}" Margin="0,0,12,4" />
         <RadioButton GroupName="errors" Content="{x:Static res:Strings.ImportSkipErrors}" IsChecked="{Binding !StopOnError}" Margin="0,0,16,4" />
         <CheckBox Content="{x:Static res:Strings.ImportEmptyFirst}" IsChecked="{Binding EmptyTableFirst}" Margin="0,0,16,4"
-                  Foreground="{DynamicResource FbsDangerBrush}" />
+                  IsVisible="{Binding !IsNewTable}" IsEnabled="{Binding !Upsert}" Foreground="{DynamicResource FbsDangerBrush}" />
       </WrapPanel>
       <StackPanel Orientation="Horizontal" Spacing="6">
         <Button Command="{Binding RunCommand}" Classes="accent">
@@ -76,19 +81,47 @@
 
     <!-- Relación de columnas y vista previa -->
     <Grid ColumnDefinitions="360,6,*">
-      <DockPanel>
+      <DockPanel IsVisible="{Binding !IsNewTable}">
         <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.ImportMapping}" FontWeight="SemiBold" Margin="0,0,0,6" TextWrapping="Wrap" />
+        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.ImportKeyHint}" IsVisible="{Binding Upsert}" FontSize="12" Opacity="0.75"
+                   Margin="0,0,0,6" TextWrapping="Wrap" />
         <ScrollViewer>
           <ItemsControl ItemsSource="{Binding Columns}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:ImportColumnChoice">
-                <Grid ColumnDefinitions="*,170" Margin="0,2">
-                  <StackPanel VerticalAlignment="Center">
+                <Grid ColumnDefinitions="Auto,*,170" Margin="0,2">
+                  <CheckBox IsChecked="{Binding IsKey}" ToolTip.Tip="{x:Static res:Strings.ImportKeyTip}" Margin="0,0,4,0"
+                            IsVisible="{Binding $parent[ItemsControl].((vm:ImportTabViewModel)DataContext).Upsert}" />
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="{Binding Name}" />
                     <TextBlock Text="{Binding Detail}" FontSize="11" Opacity="0.6" />
                   </StackPanel>
-                  <ComboBox Grid.Column="1" ItemsSource="{Binding $parent[ItemsControl].((vm:ImportTabViewModel)DataContext).FileColumns}"
+                  <ComboBox Grid.Column="2" ItemsSource="{Binding $parent[ItemsControl].((vm:ImportTabViewModel)DataContext).FileColumns}"
                             SelectedIndex="{Binding FileIndex}" HorizontalAlignment="Stretch" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </DockPanel>
+      <!-- Importar a una tabla nueva: su nombre y, por cada columna del archivo, el nombre y el tipo que va a tener. -->
+      <DockPanel IsVisible="{Binding IsNewTable}">
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Margin="0,0,0,8">
+          <TextBlock Classes="label" Text="{x:Static res:Strings.ImportNewTableName}" />
+          <TextBox Grid.Column="1" x:Name="NewTableNameBox" Text="{Binding NewTableName}" />
+        </Grid>
+        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.ImportNewTableColumns}" FontWeight="SemiBold" Margin="0,0,0,6" TextWrapping="Wrap" />
+        <ScrollViewer>
+          <ItemsControl ItemsSource="{Binding NewColumns}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ImportNewColumn">
+                <Grid ColumnDefinitions="Auto,*,130" RowDefinitions="Auto,Auto" Margin="0,2,0,6">
+                  <CheckBox Grid.RowSpan="2" IsChecked="{Binding Include}" VerticalAlignment="Center" Margin="0,0,4,0" />
+                  <TextBox Grid.Column="1" Text="{Binding Name}" FontSize="12" Padding="6,3" MinHeight="0" Margin="0,0,4,0" />
+                  <TextBox Grid.Column="2" Text="{Binding Type}" FontSize="12" Padding="6,3" MinHeight="0"
+                           FontFamily="Cascadia Mono,Consolas,Menlo,monospace" />
+                  <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Header, StringFormat='← {0}'}"
+                             FontSize="11" Opacity="0.6" Margin="2,2,0,0" TextTrimming="CharacterEllipsis" />
                 </Grid>
               </DataTemplate>
             </ItemsControl.ItemTemplate>

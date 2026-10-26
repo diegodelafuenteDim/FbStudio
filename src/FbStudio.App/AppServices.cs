@@ -43,9 +43,17 @@ public static class AppServices
     public static HistoryStore? CreateHistoryStore(string? folder = null, int retentionDays = 90)
     {
         folder ??= ProfileStore.DefaultFolder;
-        IDataProtector? protector = OperatingSystem.IsWindows()
-            ? new DpapiDataProtector()
-            : CreateSecretStore(folder) is { IsPersistent: true } secrets ? AesDataProtector.FromSecretStore(secrets) : null;
-        return protector is null ? null : new HistoryStore(Path.Combine(folder, "history.db"), protector, TimeSpan.FromDays(retentionDays));
+        return Protector(folder) is { } protector ? new HistoryStore(Path.Combine(folder, "history.db"), protector, TimeSpan.FromDays(retentionDays)) : null;
     }
+
+    /// <summary>Las pestañas de la última vez, cifradas como el historial (sin cifrado, solo en memoria).</summary>
+    public static SessionStore CreateSessionStore(string? folder = null)
+    {
+        folder ??= ProfileStore.DefaultFolder;
+        return new SessionStore(folder, Protector(folder));
+    }
+
+    private static IDataProtector? Protector(string folder) => OperatingSystem.IsWindows()
+        ? new DpapiDataProtector()
+        : CreateSecretStore(folder) is { IsPersistent: true } secrets ? AesDataProtector.FromSecretStore(secrets) : null;
 }

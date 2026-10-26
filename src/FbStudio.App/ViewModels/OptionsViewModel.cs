@@ -22,8 +22,12 @@ public sealed partial class OptionsViewModel : ObservableObject
     private static readonly string[] MonospaceFonts =
         ["Cascadia Mono", "Cascadia Code", "Consolas", "JetBrains Mono", "Fira Code", "Source Code Pro", "Courier New", "Lucida Console"];
 
+    /// <summary>Lo guardado al abrir: lo que la ventana no muestra (archivos recientes, lo que se recuerda de Datos, la última versión vista…) sigue igual.</summary>
+    private readonly AppSettings _current;
+
     public OptionsViewModel(AppSettings current)
     {
+        _current = current;
         _folderColors = current.FolderColors; // se cambian desde el árbol: acá solo pasan
         var installed = InstalledFonts();
         Fonts = MonospaceFonts.Where(f => installed is null || installed.Contains(f))
@@ -62,6 +66,8 @@ public sealed partial class OptionsViewModel : ObservableObject
     [ObservableProperty] private bool _highlightCurrentLine;
     [ObservableProperty] private bool _scrollPastEnd;
     [ObservableProperty] private bool _zoomWithCtrlWheel;
+    [ObservableProperty] private bool _showFolding;
+    [ObservableProperty] private bool _restoreTabs;
     [ObservableProperty] private bool _formatUppercaseKeywords;
 
     /// <summary>Plantillas del editor, editables (F-32).</summary>
@@ -160,6 +166,8 @@ public sealed partial class OptionsViewModel : ObservableObject
         HighlightCurrentLine = s.HighlightCurrentLine;
         ScrollPastEnd = s.ScrollPastEnd;
         ZoomWithCtrlWheel = s.ZoomWithCtrlWheel;
+        ShowFolding = s.ShowFolding;
+        RestoreTabs = s.RestoreTabs;
         FormatUppercaseKeywords = s.FormatUppercaseKeywords;
         LoadTemplates(s.EffectiveTemplates);
         PreviewDataChanges = s.PreviewDataChanges;
@@ -175,7 +183,7 @@ public sealed partial class OptionsViewModel : ObservableObject
     public AppSettings ToSettings()
     {
         var d = new AppSettings();
-        return new AppSettings
+        return (_current with
         {
             Theme = (AppTheme)Math.Clamp(ThemeIndex, 0, Themes.Count - 1),
             EnvironmentColors = new Dictionary<ProfileEnvironment, string>
@@ -197,6 +205,8 @@ public sealed partial class OptionsViewModel : ObservableObject
             HighlightCurrentLine = HighlightCurrentLine,
             ScrollPastEnd = ScrollPastEnd,
             ZoomWithCtrlWheel = ZoomWithCtrlWheel,
+            ShowFolding = ShowFolding,
+            RestoreTabs = RestoreTabs,
             FormatUppercaseKeywords = FormatUppercaseKeywords,
             Templates = TemplatesToSave(),
             PreviewDataChanges = PreviewDataChanges,
@@ -206,7 +216,7 @@ public sealed partial class OptionsViewModel : ObservableObject
             OatWarnMinutes = (int?)OatWarnMinutes ?? d.OatWarnMinutes,
             OatDangerMinutes = (int?)OatDangerMinutes ?? d.OatDangerMinutes,
             OatIgnoreMaintenance = OatIgnoreMaintenance,
-        }.Normalized();
+        }).Normalized();
     }
 
     [RelayCommand]

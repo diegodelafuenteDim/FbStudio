@@ -309,5 +309,9 @@ public class QuerySessionTests(FirebirdFixture fb)
         Assert.Equal("P_CONTAR()", catalog.Signatures["P_CONTAR"].ToString());
         Assert.Equal("F_DOBLE(X INTEGER) RETURNS INTEGER", catalog.Signatures["f_doble"].ToString());
         Assert.Equal("PKG_TURNOS.CANTIDAD() RETURNS INTEGER", catalog.Signatures["PKG_TURNOS.CANTIDAD"].ToString());
+
+        // Las FK, para sugerir el JOIN con su ON.
+        var fk = Assert.Single(catalog.ForeignKeys, k => k.Name == "FK_DET_TURNO");
+        Assert.Equal(("TURNOS_DET", "TURNO", "TURNOS", "ID"), (fk.Table, fk.Columns.Single(), fk.Referenced, fk.ReferencedColumns.Single()));
     }
 }

@@ -135,6 +135,9 @@
   <data name="CompareRemoved" xml:space="preserve">
     <value>sobra: está solo en el destino</value>
   </data>
+  <data name="DataCompareExtraNotDeleted" xml:space="preserve">
+    <value>-- {0} filas están solo en el destino: no se borran (tildá «Borrar las que sobran» para incluirlas).</value>
+  </data>
   <data name="DataScriptCheck" xml:space="preserve">
     <value>Cada sentencia tiene que afectar 1 fila. Si alguna afecta 0, otro cambió o borró esa fila desde que se leyó: ROLLBACK y recargar.</value>
   </data>
@@ -167,6 +170,72 @@
   </data>
   <data name="DependencyDomainCheck" xml:space="preserve">
     <value>CHECK del dominio</value>
+  </data>
+  <data name="DependencyLogicalFk" xml:space="preserve">
+    <value>FK lógica en {0}</value>
+  </data>
+  <data name="DocArea" xml:space="preserve">
+    <value>Área: {0}</value>
+  </data>
+  <data name="DocColumn" xml:space="preserve">
+    <value>Columna</value>
+  </data>
+  <data name="DocColumns" xml:space="preserve">
+    <value>Columnas</value>
+  </data>
+  <data name="DocDefault" xml:space="preserve">
+    <value>Por defecto</value>
+  </data>
+  <data name="DocDescription" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="DocGenerated" xml:space="preserve">
+    <value>Generada el {0:yyyy-MM-dd HH:mm} con FbStudio</value>
+  </data>
+  <data name="DocInactive" xml:space="preserve">
+    <value>inactivo</value>
+  </data>
+  <data name="DocIndexes" xml:space="preserve">
+    <value>Índices</value>
+  </data>
+  <data name="DocInputs" xml:space="preserve">
+    <value>Parámetros de entrada</value>
+  </data>
+  <data name="DocKeys" xml:space="preserve">
+    <value>Claves y restricciones</value>
+  </data>
+  <data name="DocLogicalFk" xml:space="preserve">
+    <value>FK lógica (del comentario)</value>
+  </data>
+  <data name="DocMessage" xml:space="preserve">
+    <value>Mensaje</value>
+  </data>
+  <data name="DocNull" xml:space="preserve">
+    <value>Acepta NULL</value>
+  </data>
+  <data name="DocOutputs" xml:space="preserve">
+    <value>Parámetros de salida</value>
+  </data>
+  <data name="DocReferencedBy" xml:space="preserve">
+    <value>La referencian</value>
+  </data>
+  <data name="DocReturns" xml:space="preserve">
+    <value>Devuelve</value>
+  </data>
+  <data name="DocSearch" xml:space="preserve">
+    <value>Buscar…</value>
+  </data>
+  <data name="DocSource" xml:space="preserve">
+    <value>Código</value>
+  </data>
+  <data name="DocTitle" xml:space="preserve">
+    <value>Documentación de {0}</value>
+  </data>
+  <data name="DocTriggers" xml:space="preserve">
+    <value>Triggers</value>
+  </data>
+  <data name="DocType" xml:space="preserve">
+    <value>Tipo</value>
   </data>
   <data name="EditNewRow" xml:space="preserve">
     <value>la fila nueva {0}</value>
@@ -239,6 +308,10 @@
   </data>
   <data name="FilterNotATime" xml:space="preserve">
     <value>«{0}» no es una hora (p. ej. 08:30)</value>
+  </data>
+  <data name="HexDumpTruncated" xml:space="preserve">
+    <value>
+… (se muestran {0:N0} de {1:N0} bytes; «Guardar en archivo» lo guarda entero)</value>
   </data>
   <data name="ImportColumnN" xml:space="preserve">
     <value>Columna {0}</value>
@@ -658,6 +731,12 @@
   </data>
   <data name="StatsTablesUnsupported" xml:space="preserve">
     <value>Esta versión de la biblioteca de Firebird no permite pedir las estadísticas de algunas tablas: leé la estadística completa.</value>
+  </data>
+  <data name="TableSqlNoKey" xml:space="preserve">
+    <value>sin clave primaria: completar la condición</value>
+  </data>
+  <data name="TemplateGeneratorValue" xml:space="preserve">
+    <value>Valor de un generador</value>
   </data>
   <data name="TraceNotStarted" xml:space="preserve">
     <value>El servidor no confirmó la sesión de traza.</value>

@@ -54,7 +54,7 @@ public sealed class EditorToolsTests(FirebirdFixture fb, HeadlessFixture ui) : I
         Assert.Equal("SELECT 1\nFROM rdb$database;\nselect 2 from rdb$database;", view.Editor.Text.ReplaceLineEndings("\n"));
         view.Editor.Text = "create table y (id integer)";
         view.FormatSql();
-        Assert.StartsWith("No hay consultas para formatear", vm.SelectedTab.Status);
+        Assert.StartsWith("No hay nada para formatear", vm.SelectedTab.Status);
 
         // Sin mayúsculas, según Opciones.
         vm.SaveSettings(vm.Options with { FormatUppercaseKeywords = false });
@@ -162,6 +162,11 @@ public sealed class EditorToolsTests(FirebirdFixture fb, HeadlessFixture ui) : I
         var options = new OptionsViewModel(new AppSettings());
         Assert.Equal(SqlTemplates.Defaults.Count, options.Templates.Count);
         Assert.Null(options.ToSettings().Templates);
+        // Lo que la ventana no muestra no se pierde al aceptar.
+        var kept = new ViewModels.OptionsViewModel(new AppSettings { RecentFiles = [@"C:\x\a.sql"], DataCountOnFilter = true, DataScriptWithCommit = true, LastSeenVersion = "0.2.0" })
+            .ToSettings();
+        Assert.Equal([@"C:\x\a.sql"], kept.RecentFiles!);
+        Assert.Equal((true, true, "0.2.0"), (kept.DataCountOnFilter, kept.DataScriptWithCommit, kept.LastSeenVersion));
 
         options.AddTemplateCommand.Execute(null);
         options.SelectedTemplate!.Abbreviation = "hoy";

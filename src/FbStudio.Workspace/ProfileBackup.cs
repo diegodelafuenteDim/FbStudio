@@ -10,8 +10,8 @@ namespace FbStudio.Workspace;
 /// <summary>Lo que se guarda en el archivo. Sin contraseñas, los registros van legibles; con contraseñas, todo cifrado.</summary>
 public sealed record ProfileBackupFile
 {
-    public string Format { get; init; } = ProfileBackup.FormatName;
-    public int Version { get; init; } = ProfileBackup.CurrentVersion;
+    public string Format { get; set; } = ProfileBackup.FormatName;
+    public int Version { get; set; } = ProfileBackup.CurrentVersion;
     public DateTime CreatedAt { get; init; }
 
     /// <summary>Cuántos registros trae (se ve antes de pedir la frase).</summary>
@@ -34,11 +34,11 @@ public sealed record EncryptedBackup(string Kdf, int Iterations, string Salt, st
 /// <summary>Lo que hay adentro: los registros y, si se incluyeron, sus contraseñas (por Id del registro).</summary>
 public sealed record ProfileBackupContent
 {
-    public List<ConnectionProfile> Profiles { get; init; } = [];
-    public Dictionary<Guid, string> Passwords { get; init; } = [];
+    public List<ConnectionProfile> Profiles { get; set; } = [];
+    public Dictionary<Guid, string> Passwords { get; set; } = [];
 
     /// <summary>Las áreas de cada base (por Id del registro), si se incluyeron.</summary>
-    public Dictionary<Guid, SchemaAreaFile> Areas { get; init; } = [];
+    public Dictionary<Guid, SchemaAreaFile> Areas { get; set; } = [];
 
     /// <summary>Registros que vienen sin usuario (se exportaron sin él).</summary>
     [JsonIgnore]

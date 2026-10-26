@@ -49,6 +49,9 @@
       <Button x:Name="SaveLogButton" Margin="0,0,6,4">
         <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="ContentSaveOutline" /><TextBlock Text="{x:Static res:Strings.TraceSaveLog}" /></StackPanel>
       </Button>
+      <Button x:Name="CompareButton" Margin="0,0,6,4" ToolTip.Tip="{x:Static res:Strings.TraceCompareTip}">
+        <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="CompareHorizontal" /><TextBlock Text="{x:Static res:Strings.TraceCompare}" /></StackPanel>
+      </Button>
       <Button x:Name="ExportAnalysisButton" Margin="0,0,6,4">
         <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="FileExcel" /><TextBlock Text="{x:Static res:Strings.TraceExportAnalysis}" /></StackPanel>
       </Button>
@@ -78,6 +81,15 @@
       </TabItem>
       <TabItem Header="{x:Static res:Strings.TraceEventsTab}">
         <rg:DrawnGrid x:Name="EventsGrid" />
+      </TabItem>
+      <TabItem x:Name="ComparisonPage" Header="{x:Static res:Strings.TraceComparisonTab}" IsVisible="{Binding HasBaseline}">
+        <DockPanel>
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,4">
+            <Button DockPanel.Dock="Right" Command="{Binding ClearBaselineCommand}" Content="{x:Static res:Strings.TraceClearComparison}" />
+            <TextBlock Text="{Binding ComparisonSummary}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,8,0" />
+          </DockPanel>
+          <rg:DrawnGrid x:Name="ComparisonGrid" />
+        </DockPanel>
       </TabItem>
     </TabControl>
   </DockPanel>

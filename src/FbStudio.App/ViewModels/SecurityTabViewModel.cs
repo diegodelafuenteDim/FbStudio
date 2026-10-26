@@ -27,10 +27,11 @@ public sealed partial class PermissionRow : ObservableObject
     private readonly string _originalWanted;
     private readonly bool _originalGrantOption;
 
-    public PermissionRow(GrantObjectKind kind, string name, IReadOnlyList<DbGrant> grants, bool editable)
+    public PermissionRow(GrantObjectKind kind, string name, IReadOnlyList<DbGrant> grants, bool editable, GranteeItem? grantee = null)
     {
         Kind = kind;
         Name = name;
+        Grantee = grantee;
         Grants = grants;
         IsEditable = editable;
         var whole = grants.Where(g => g.Field is null).ToList();
@@ -46,6 +47,12 @@ public sealed partial class PermissionRow : ObservableObject
     public GrantObjectKind Kind { get; }
     public string Name { get; }
     public string KindLabel => SecurityTabViewModel.Label(Kind);
+
+    /// <summary>De quién es el permiso (en la vista por objeto, el renglón muestra esto en vez del objeto).</summary>
+    public GranteeItem? Grantee { get; }
+    public string GranteeName => Grantee?.Name ?? "";
+    public string GranteeKindLabel => Grantee?.KindLabel ?? "";
+    public string GranteeDetail => Grantee?.Detail ?? "";
     public IReadOnlyList<DbGrant> Grants { get; }
     public bool IsEditable { get; }
 
@@ -96,6 +103,49 @@ public sealed partial class PermissionRow : ObservableObject
         SecurityScript.Changes(granteeKind, grantee, Kind, Name, Grants, Wanted, GrantOption, currentUser);
 }
 
+/// <summary>Los permisos de estructura (DDL) de alguien sobre una clase de objetos: crear, modificar y borrar cualquiera.</summary>
+public sealed partial class DdlPermissionRow : ObservableObject
+{
+    private readonly string _original;
+    private readonly bool _originalGrantOption;
+
+    public DdlPermissionRow(SecurityScript.DdlClass cls, IReadOnlyList<DbGrant> grants, bool editable)
+    {
+        Class = cls;
+        Grants = grants;
+        IsEditable = editable;
+        _original = string.Concat(SecurityScript.DdlPrivileges.Where(p => grants.Any(g => g.Privilege == p)));
+        _originalGrantOption = grants.Any(g => g.GrantOption);
+        Reset();
+    }
+
+    public SecurityScript.DdlClass Class { get; }
+    public IReadOnlyList<DbGrant> Grants { get; }
+    public bool IsEditable { get; }
+    public string Label => SecurityTabViewModel.DdlLabel(Class);
+    public bool CanCreateOrDrop => !Class.OnlyAlter;
+
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsChanged))] private bool _create;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsChanged))] private bool _alter;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsChanged))] private bool _drop;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsChanged))] private bool _grantOption;
+
+    public string Wanted => string.Concat(new[] { (Create, 'C'), (Alter, 'L'), (Drop, 'O') }.Where(t => t.Item1).Select(t => t.Item2));
+
+    public bool IsChanged => Wanted != _original || (Wanted.Length > 0 && GrantOption != _originalGrantOption);
+
+    public void Reset()
+    {
+        Create = _original.Contains('C');
+        Alter = _original.Contains('L');
+        Drop = _original.Contains('O');
+        GrantOption = _originalGrantOption;
+    }
+
+    public IReadOnlyList<SecurityStatement> Statements(GranteeKind kind, string grantee, string currentUser) =>
+        SecurityScript.DdlChanges(kind, grantee, Class, Grants, Wanted, GrantOption, currentUser);
+}
+
 /// <summary>Si un usuario tiene un rol, con casilla.</summary>
 public sealed partial class RoleMembership : ObservableObject
 {
@@ -124,10 +174,20 @@ public sealed partial class RoleMembership : ObservableObject
         !IsChanged ? null : IsMember ? SecurityScript.GrantRole(Role, user) : SecurityScript.RevokeRole(Role, user, Grant!.Grantor, currentUser);
 }
 
+/// <summary>Un objeto de la lista «Por objeto»: tabla, vista, procedimiento… y cuántos tienen algún permiso sobre él.</summary>
+public sealed record SecurityObjectItem(GrantObjectKind Kind, string Name, int Grantees)
+{
+    public string KindLabel => SecurityTabViewModel.Label(Kind);
+
+    /// <summary>«Tabla · 3 con permiso».</summary>
+    public string Subtitle => KindLabel + (Grantees > 0 ? " · " + string.Format(Strings.SecObjectGranted, Grantees) : "");
+}
+
 /// <summary>
 /// Pestaña «Usuarios y permisos» de una base (F-28). A la izquierda los usuarios del servidor y los roles de la base (o
 /// los objetos PSQL, que también reciben permisos); a la derecha, los roles y los permisos del elegido, con casillas
-/// por objeto. Los cambios de permisos se juntan (aunque se pase de un usuario a otro) y «Aplicar» muestra el SQL,
+/// por objeto. O al revés, «Por objeto»: se elige una tabla (o vista, procedimiento…) y se ve quién tiene permisos
+/// sobre ella, con las mismas casillas. Los cambios de permisos se juntan (aunque se pase de un usuario a otro) y «Aplicar» muestra el SQL,
 /// pregunta y los ejecuta todos en una transacción. Crear, cambiar o borrar usuarios y roles se hace en el momento;
 /// borrar pide escribir el nombre. Con un registro de solo lectura se puede mirar pero no cambiar.
 /// </summary>
@@ -143,8 +203,25 @@ public sealed partial class SecurityTabViewModel : EditorTabViewModel
 
     private readonly Dictionary<GrantObjectKind, IReadOnlyList<string>> _objects = [];
     private readonly Dictionary<GranteeKind, IReadOnlyList<string>> _psql = [];
-    private readonly Dictionary<(GranteeKind, string), (List<PermissionRow> Rows, List<RoleMembership> Roles)> _states = [];
+    private readonly Dictionary<(GranteeKind, string), GranteeState> _states = [];
+    private ILookup<(GranteeKind, string, GrantObjectKind, string), DbGrant> _grantsByPair = Array.Empty<DbGrant>().ToLookup(g => (g.GranteeKind, g.Grantee, g.ObjectKind, g.Object));
+    private List<PermissionRow> _objectRowsAll = [];
     private SecuritySnapshot? _snapshot;
+
+    /// <summary>
+    /// Lo que se va armando de alguien que recibe permisos: un renglón por objeto (se arman a pedido: todos al elegirlo a
+    /// la izquierda, o de a uno desde la vista por objeto) y sus roles. Los cambios sin aplicar quedan acá, así valen en
+    /// las dos vistas.
+    /// </summary>
+    private sealed class GranteeState
+    {
+        public Dictionary<(GrantObjectKind, string), PermissionRow> Rows { get; } = [];
+        public List<PermissionRow>? Ordered { get; set; }
+        public List<RoleMembership> Roles { get; } = [];
+
+        /// <summary>Los permisos de estructura (solo usuarios y roles).</summary>
+        public List<DdlPermissionRow> Ddl { get; } = [];
+    }
     private bool _disposed;
 
     public SecurityTabViewModel(MainWindowViewModel owner, ConnectionProfile profile) : base(owner, profile, Strings.SecTabTitle)
@@ -184,8 +261,15 @@ public sealed partial class SecurityTabViewModel : EditorTabViewModel
 
     // ── Lista de la izquierda ──
 
-    public IReadOnlyList<string> GranteeScopes { get; } = [Strings.SecGranteeScopeUsers, Strings.SecGranteeScopePsql];
-    [ObservableProperty] private int _granteeScope;
+    public IReadOnlyList<string> GranteeScopes { get; } = [Strings.SecGranteeScopeUsers, Strings.SecGranteeScopePsql, Strings.SecGranteeScopeObjects];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsObjectScope), nameof(IsGranteeScope))]
+    private int _granteeScope;
+
+    /// <summary>«Por objeto»: a la izquierda los objetos y a la derecha quién tiene permisos sobre el elegido.</summary>
+    public bool IsObjectScope => GranteeScope == 2;
+    public bool IsGranteeScope => !IsObjectScope;
     [ObservableProperty] private string _granteeFilter = "";
     [ObservableProperty] private IReadOnlyList<GranteeItem> _grantees = [];
 
@@ -200,14 +284,74 @@ public sealed partial class SecurityTabViewModel : EditorTabViewModel
     public string GranteeTitle => SelectedGrantee?.Name ?? "";
     public string GranteeDetail => SelectedGrantee?.Subtitle ?? "";
 
-    partial void OnGranteeScopeChanged(int value) => RebuildGrantees();
-    partial void OnGranteeFilterChanged(string value) => RebuildGrantees();
+    partial void OnGranteeScopeChanged(int value)
+    {
+        RebuildGrantees();
+        RebuildObjects();
+    }
+
+    partial void OnGranteeFilterChanged(string value)
+    {
+        RebuildGrantees();
+        RebuildObjects();
+    }
+
+    // ── Por objeto ──
+
+    [ObservableProperty] private IReadOnlyList<SecurityObjectItem> _objectItems = [];
+
+    /// <summary>Qué tipo de objeto lista «Por objeto» (0 = todos, como <see cref="ObjectKinds"/>).</summary>
+    [ObservableProperty] private int _objectScopeKindIndex;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasObject), nameof(ObjectTitle), nameof(ObjectDetail))]
+    private SecurityObjectItem? _selectedObject;
+
+    public bool HasObject => SelectedObject is not null;
+    public string ObjectTitle => SelectedObject?.Name ?? "";
+    public string ObjectDetail => SelectedObject?.Subtitle ?? "";
+
+    /// <summary>Un renglón por usuario, rol (y objeto PSQL con permisos) sobre el objeto elegido.</summary>
+    [ObservableProperty] private IReadOnlyList<PermissionRow> _objectRows = [];
+
+    partial void OnObjectScopeKindIndexChanged(int value) => RebuildObjects();
+    partial void OnSelectedObjectChanged(SecurityObjectItem? value) => ShowObjectRows();
+
+    /// <summary>Lleva a «Por objeto» con ese objeto elegido (clic derecho en el árbol → «Permisos…»).</summary>
+    public void ShowObject(GrantObjectKind kind, string name)
+    {
+        GranteeFilter = "";
+        ObjectScopeKindIndex = 0;
+        GranteeScope = 2;
+        SelectedObject = ObjectItems.FirstOrDefault(o => o.Kind == kind && o.Name == name);
+    }
     partial void OnSelectedGranteeChanged(GranteeItem? value) => ShowGrantee();
 
     // ── Lo de la derecha ──
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasRoles))] private IReadOnlyList<RoleMembership> _roles = [];
     public bool HasRoles => Roles.Count > 0;
+
+    /// <summary>Los permisos de estructura del elegido (crear tablas, modificar cualquier procedimiento…), si es usuario o rol.</summary>
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasDdl))] private IReadOnlyList<DdlPermissionRow> _ddlRows = [];
+    public bool HasDdl => DdlRows.Count > 0;
+
+    public static string DdlLabel(SecurityScript.DdlClass cls) => cls.Name switch
+    {
+        "SQL$TABLES" => Strings.SecDdlTables,
+        "SQL$VIEWS" => Strings.SecDdlViews,
+        "SQL$PROCEDURES" => Strings.SecDdlProcedures,
+        "SQL$FUNCTIONS" => Strings.SecDdlFunctions,
+        "SQL$PACKAGES" => Strings.SecDdlPackages,
+        "SQL$GENERATORS" => Strings.SecDdlGenerators,
+        "SQL$DOMAINS" => Strings.SecDdlDomains,
+        "SQL$EXCEPTIONS" => Strings.SecDdlExceptions,
+        "SQL$ROLES" => Strings.SecDdlRoles,
+        "SQL$CHARSETS" => Strings.SecDdlCharsets,
+        "SQL$COLLATIONS" => Strings.SecDdlCollations,
+        "SQL$FILTERS" => Strings.SecDdlFilters,
+        _ => Strings.SecDdlDatabase,
+    };
 
     public IReadOnlyList<string> ObjectKinds { get; } =
     [
@@ -221,6 +365,7 @@ public sealed partial class SecurityTabViewModel : EditorTabViewModel
     [ObservableProperty] private IReadOnlyList<PermissionRow> _rows = [];
 
     partial void OnObjectKindIndexChanged(int value) => ApplyRowFilter();
+    // En «Por objeto», el filtro y «Solo los que tienen» de la derecha valen para los usuarios y roles.
     partial void OnObjectFilterChanged(string value) => ApplyRowFilter();
     partial void OnOnlyGrantedChanged(bool value) => ApplyRowFilter();
 
@@ -301,14 +446,19 @@ public sealed partial class SecurityTabViewModel : EditorTabViewModel
                     ? _objects[GrantObjectKind.View]
                     : (await Owner.WithExplorerAsync(profile, e => e.LoadObjectsAsync(objectKind))).Select(o => o.Name).ToList();
             if (_disposed) return;
+            var previousObject = SelectedObject;
             _snapshot = snapshot;
+            _grantsByPair = snapshot.Grants.ToLookup(g => (g.GranteeKind, g.Grantee, g.ObjectKind, g.Object));
             _states.Clear();
             PendingCount = 0;
             CanManageUsers = snapshot.CanManageUsers;
             IsLoaded = true;
-            if (previous is { Kind: not (GranteeKind.User or GranteeKind.Role) }) GranteeScope = 1;
+            if (previous is { Kind: not (GranteeKind.User or GranteeKind.Role) } && !IsObjectScope) GranteeScope = 1;
             RebuildGrantees();
             SelectedGrantee = previous is null ? null : Grantees.FirstOrDefault(g => g.Kind == previous.Kind && g.Name == previous.Name);
+            RebuildObjects();
+            SelectedObject = previousObject is null ? null : ObjectItems.FirstOrDefault(o => o.Kind == previousObject.Kind && o.Name == previousObject.Name);
+            ShowObjectRows();
             Status = string.Format(Strings.SecLoaded, snapshot.Users.Count, snapshot.Roles.Count(r => !r.IsSystem), snapshot.Grants.Count);
         }
         catch (Exception ex)
@@ -331,20 +481,9 @@ public sealed partial class SecurityTabViewModel : EditorTabViewModel
         var list = new List<GranteeItem>();
         if (GranteeScope == 0)
         {
-            foreach (var u in s.Users)
-            {
-                var flags = new[] { u.FullName, u.Active ? null : Strings.SecInactive, u.Admin ? Strings.SecAdminFlag : null };
-                list.Add(new GranteeItem(GranteeKind.User, u.Name, string.Join(" · ", flags.Where(f => !string.IsNullOrEmpty(f))), u));
-            }
-            // Los que tienen permisos pero no están en el servidor (PUBLIC, usuarios borrados u otro servidor de usuarios).
-            foreach (var name in s.Grants.Where(g => g.GranteeKind == GranteeKind.User).Select(g => g.Grantee).Distinct()
-                         .Where(n => !s.Users.Any(u => u.Name == n)).Order(StringComparer.Ordinal))
-                list.Add(new GranteeItem(GranteeKind.User, name, name == "PUBLIC" ? Strings.SecPublicNote : Strings.SecNotOnServer));
-            if (!list.Any(g => g.Name == "PUBLIC")) list.Add(new GranteeItem(GranteeKind.User, "PUBLIC", Strings.SecPublicNote));
-            foreach (var r in s.Roles.Where(r => !r.IsSystem))
-                list.Add(new GranteeItem(GranteeKind.Role, r.Name, r.Description ?? ""));
+            list.AddRange(UsersAndRoles(s));
         }
-        else
+        else if (GranteeScope == 1)
         {
             foreach (var (granteeKind, _) in PsqlGrantees)
             foreach (var name in _psql.GetValueOrDefault(granteeKind) ?? [])
@@ -354,59 +493,149 @@ public sealed partial class SecurityTabViewModel : EditorTabViewModel
         Grantees = filter.Length == 0 ? list : list.Where(g => g.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 
+    /// <summary>Los usuarios del servidor (y los que tienen permisos sin estar en él, PUBLIC incluido) y los roles de la base.</summary>
+    private static List<GranteeItem> UsersAndRoles(SecuritySnapshot s)
+    {
+        var list = new List<GranteeItem>();
+        foreach (var u in s.Users)
+        {
+            var flags = new[] { u.FullName, u.Active ? null : Strings.SecInactive, u.Admin ? Strings.SecAdminFlag : null };
+            list.Add(new GranteeItem(GranteeKind.User, u.Name, string.Join(" · ", flags.Where(f => !string.IsNullOrEmpty(f))), u));
+        }
+        // Los que tienen permisos pero no están en el servidor (PUBLIC, usuarios borrados u otro servidor de usuarios).
+        foreach (var name in s.Grants.Where(g => g.GranteeKind == GranteeKind.User).Select(g => g.Grantee).Distinct()
+                     .Where(n => !s.Users.Any(u => u.Name == n)).Order(StringComparer.Ordinal))
+            list.Add(new GranteeItem(GranteeKind.User, name, name == "PUBLIC" ? Strings.SecPublicNote : Strings.SecNotOnServer));
+        if (!list.Any(g => g.Name == "PUBLIC")) list.Add(new GranteeItem(GranteeKind.User, "PUBLIC", Strings.SecPublicNote));
+        foreach (var r in s.Roles.Where(r => !r.IsSystem))
+            list.Add(new GranteeItem(GranteeKind.Role, r.Name, r.Description ?? ""));
+        return list;
+    }
+
+    private GranteeState StateFor(GranteeItem g)
+    {
+        if (_states.TryGetValue((g.Kind, g.Name), out var state)) return state;
+        state = new GranteeState();
+        if (g.Kind == GranteeKind.User && g.Name != "PUBLIC" && _snapshot is { } s)
+        {
+            foreach (var role in s.Roles.Where(r => !r.IsSystem || r.Name == "RDB$ADMIN").Select(r => r.Name))
+            {
+                var membership = new RoleMembership(role, _grantsByPair[(g.Kind, g.Name, GrantObjectKind.Role, role)].FirstOrDefault(), !IsReadOnlyProfile);
+                membership.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(RoleMembership.IsChanged)) UpdatePending(); };
+                state.Roles.Add(membership);
+            }
+        }
+        if (g.Kind is GranteeKind.User or GranteeKind.Role)
+        {
+            foreach (var cls in SecurityScript.DdlClasses)
+            {
+                var row = new DdlPermissionRow(cls, _grantsByPair[(g.Kind, g.Name, GrantObjectKind.Metadata, cls.Name)].ToList(), !IsReadOnlyProfile);
+                row.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(DdlPermissionRow.IsChanged)) UpdatePending(); };
+                state.Ddl.Add(row);
+            }
+        }
+        _states[(g.Kind, g.Name)] = state;
+        return state;
+    }
+
+    /// <summary>El renglón de los permisos de alguien sobre un objeto (el mismo en las dos vistas).</summary>
+    private PermissionRow RowFor(GranteeItem g, GranteeState state, GrantObjectKind kind, string name)
+    {
+        if (state.Rows.TryGetValue((kind, name), out var row)) return row;
+        row = new PermissionRow(kind, name, _grantsByPair[(g.Kind, g.Name, kind, name)].ToList(), !IsReadOnlyProfile, g);
+        row.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(PermissionRow.IsChanged)) UpdatePending(); };
+        state.Rows[(kind, name)] = row;
+        return row;
+    }
+
     private void ShowGrantee()
     {
         if (SelectedGrantee is not { } g || _snapshot is not { } s)
         {
             Roles = [];
             Rows = [];
+            DdlRows = [];
             return;
         }
-        if (!_states.TryGetValue((g.Kind, g.Name), out var state))
+        var state = StateFor(g);
+        DdlRows = state.Ddl;
+        if (state.Ordered is null)
         {
-            var editable = !IsReadOnlyProfile;
             var mine = s.Grants.Where(x => x.GranteeKind == g.Kind && x.Grantee == g.Name).ToList();
             var rows = new List<PermissionRow>();
             foreach (var kind in ObjectKindsInOrder)
             {
                 var names = (_objects.GetValueOrDefault(kind) ?? []).Concat(mine.Where(x => x.ObjectKind == kind).Select(x => x.Object)).Distinct();
-                foreach (var name in names.Order(StringComparer.Ordinal))
-                    rows.Add(new PermissionRow(kind, name, mine.Where(x => x.ObjectKind == kind && x.Object == name).ToList(), editable));
+                foreach (var name in names.Order(StringComparer.Ordinal)) rows.Add(RowFor(g, state, kind, name));
             }
-            var roles = new List<RoleMembership>();
-            if (g.Kind == GranteeKind.User && g.Name != "PUBLIC")
-            {
-                foreach (var role in s.Roles.Where(r => !r.IsSystem || r.Name == "RDB$ADMIN").Select(r => r.Name))
-                    roles.Add(new RoleMembership(role, mine.FirstOrDefault(x => x.ObjectKind == GrantObjectKind.Role && x.Object == role), editable));
-            }
-            foreach (var row in rows) row.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(PermissionRow.IsChanged)) UpdatePending(); };
-            foreach (var role in roles) role.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(RoleMembership.IsChanged)) UpdatePending(); };
-            state = (rows, roles);
-            _states[(g.Kind, g.Name)] = state;
+            state.Ordered = rows;
         }
         Roles = state.Roles;
         ApplyRowFilter();
     }
 
+    private void RebuildObjects()
+    {
+        if (_snapshot is not { } s)
+        {
+            ObjectItems = [];
+            return;
+        }
+        GrantObjectKind? only = ObjectScopeKindIndex is > 0 and <= 7 ? ObjectKindsInOrder[ObjectScopeKindIndex - 1] : null;
+        var filter = GranteeFilter.Trim();
+        var granted = s.Grants.Where(g => g.ObjectKind != GrantObjectKind.Role).GroupBy(g => (g.ObjectKind, g.Object))
+            .ToDictionary(x => x.Key, x => x.Select(g => (g.GranteeKind, g.Grantee)).Distinct().Count());
+        var selected = SelectedObject;
+        ObjectItems = ObjectKindsInOrder.Where(k => only is null || k == only)
+            .SelectMany(k => (_objects.GetValueOrDefault(k) ?? []).Order(StringComparer.Ordinal).Select(n => (Kind: k, Name: n)))
+            .Where(o => filter.Length == 0 || o.Name.Contains(filter, StringComparison.OrdinalIgnoreCase))
+            .Select(o => new SecurityObjectItem(o.Kind, o.Name, granted.GetValueOrDefault((o.Kind, o.Name))))
+            .ToList();
+        if (selected is not null && !ObjectItems.Any(o => o.Kind == selected.Kind && o.Name == selected.Name)) SelectedObject = null;
+    }
+
+    /// <summary>Quién puede tener permisos sobre el objeto elegido: usuarios, PUBLIC, roles y los objetos PSQL que ya tienen.</summary>
+    private void ShowObjectRows()
+    {
+        if (SelectedObject is not { } o || _snapshot is not { } s)
+        {
+            _objectRowsAll = [];
+            ObjectRows = [];
+            return;
+        }
+        var candidates = UsersAndRoles(s);
+        candidates.AddRange(s.Grants.Where(g => g.ObjectKind == o.Kind && g.Object == o.Name && g.GranteeKind is not (GranteeKind.User or GranteeKind.Role))
+            .Select(g => (g.GranteeKind, g.Grantee)).Distinct().Order()
+            .Select(g => new GranteeItem(g.GranteeKind, g.Grantee, "")));
+        _objectRowsAll = candidates.Select(g => RowFor(g, StateFor(g), o.Kind, o.Name)).ToList();
+        ApplyRowFilter();
+    }
+
     private void ApplyRowFilter()
     {
-        if (SelectedGrantee is not { } g || !_states.TryGetValue((g.Kind, g.Name), out var state))
+        var filter = ObjectFilter.Trim();
+        if (IsObjectScope)
+        {
+            ObjectRows = _objectRowsAll.Where(r => (filter.Length == 0 || r.GranteeName.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                                                   && (!OnlyGranted || r.HasAny || r.IsChanged)).ToList();
+            return;
+        }
+        if (SelectedGrantee is not { } g || !_states.TryGetValue((g.Kind, g.Name), out var state) || state.Ordered is not { } ordered)
         {
             Rows = [];
             return;
         }
         GrantObjectKind? kind = ObjectKindIndex is > 0 and <= 7 ? ObjectKindsInOrder[ObjectKindIndex - 1] : null;
-        var filter = ObjectFilter.Trim();
-        Rows = state.Rows.Where(r => (kind is null || r.Kind == kind)
-                                     && (filter.Length == 0 || r.Name.Contains(filter, StringComparison.OrdinalIgnoreCase))
-                                     && (!OnlyGranted || r.HasAny || r.IsChanged))
+        Rows = ordered.Where(r => (kind is null || r.Kind == kind)
+                                  && (filter.Length == 0 || r.Name.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                                  && (!OnlyGranted || r.HasAny || r.IsChanged))
             .ToList();
     }
 
     private void UpdatePending() =>
-        PendingCount = _states.Values.Sum(s => s.Rows.Count(r => r.IsChanged) + s.Roles.Count(r => r.IsChanged));
+        PendingCount = _states.Values.Sum(s => s.Rows.Values.Count(r => r.IsChanged) + s.Roles.Count(r => r.IsChanged) + s.Ddl.Count(r => r.IsChanged));
 
-    /// <summary>Todas las sentencias de los cambios sin aplicar, de todos los usuarios y roles tocados.</summary>
+    /// <summary>Todas las sentencias de los cambios sin aplicar, de todos los usuarios y roles tocados (en las dos vistas).</summary>
     public IReadOnlyList<SecurityStatement> PendingStatements()
     {
         if (_snapshot is not { } s) return [];
@@ -414,7 +643,9 @@ public sealed partial class SecurityTabViewModel : EditorTabViewModel
         foreach (var ((kind, name), state) in _states.OrderBy(x => x.Key.Item1).ThenBy(x => x.Key.Item2, StringComparer.Ordinal))
         {
             foreach (var role in state.Roles) if (role.Statement(name, s.CurrentUser) is { } st) statements.Add(st);
-            foreach (var row in state.Rows.Where(r => r.IsChanged)) statements.AddRange(row.Statements(kind, name, s.CurrentUser));
+            foreach (var row in state.Rows.Values.Where(r => r.IsChanged).OrderBy(r => Array.IndexOf(ObjectKindsInOrder, r.Kind)).ThenBy(r => r.Name, StringComparer.Ordinal))
+                statements.AddRange(row.Statements(kind, name, s.CurrentUser));
+            foreach (var ddl in state.Ddl.Where(r => r.IsChanged)) statements.AddRange(ddl.Statements(kind, name, s.CurrentUser));
         }
         return statements;
     }
@@ -460,8 +691,9 @@ public sealed partial class SecurityTabViewModel : EditorTabViewModel
     {
         foreach (var state in _states.Values)
         {
-            foreach (var row in state.Rows.Where(r => r.IsChanged)) row.Reset();
+            foreach (var row in state.Rows.Values.Where(r => r.IsChanged)) row.Reset();
             foreach (var role in state.Roles.Where(r => r.IsChanged)) role.Reset();
+            foreach (var ddl in state.Ddl.Where(r => r.IsChanged)) ddl.Reset();
         }
         UpdatePending();
         ApplyRowFilter();

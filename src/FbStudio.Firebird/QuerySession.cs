@@ -360,6 +360,32 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
             || ex is FbException { ErrorCode: 335544794 } // isc_cancelled
             || ex.InnerException is not null && IsCancellation(ex.InnerException, ct));
 
+    /// <summary>
+    /// El plan de una sentencia sin ejecutarla: solo se prepara (no trae filas ni cambia nada). En la transacción abierta
+    /// si hay una; si no, en una de solo lectura que se descarta.
+    /// </summary>
+    public async Task<(string? Plan, bool Explained)> PlanAsync(string sql, CancellationToken ct = default)
+    {
+        await _gate.WaitAsync(ct);
+        try
+        {
+            await OpenAsync(ct);
+            var own = _tx is null;
+            var tx = _tx ?? await _connection!.BeginTransactionAsync(Transactions.ReadOnly, ct);
+            try
+            {
+                await using var cmd = new FbCommand(sql, _connection, tx);
+                await cmd.PrepareAsync(ct);
+                return await GetPlanAsync(cmd, ct);
+            }
+            finally
+            {
+                if (own) await tx.DisposeAsync(); // sin confirmar: se deshace (no había nada)
+            }
+        }
+        finally { _gate.Release(); }
+    }
+
     private static async Task<(string?, bool)> GetPlanAsync(FbCommand cmd, CancellationToken ct)
     {
         try

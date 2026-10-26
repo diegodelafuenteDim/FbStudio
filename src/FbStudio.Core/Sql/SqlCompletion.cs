@@ -10,6 +10,9 @@ public enum CompletionKind
     Package,
     Generator,
     Exception,
+
+    /// <summary>Una tabla relacionada por FK con lo que está en el FROM, con su alias y su ON («TURNOS t ON t.ID = td.TURNO»).</summary>
+    Join,
 }
 
 public sealed record CompletionItem(string Text, CompletionKind Kind, string? Detail = null);
@@ -21,7 +24,8 @@ public sealed record SignatureHelp(RoutineSignature Signature, int Argument, int
 /// Autocompletado (F-33): palabras clave, tablas/vistas, procedimientos, funciones, paquetes, generadores y
 /// excepciones; columnas después de «alias.» y también sin alias, de lo que está en el FROM. Las columnas de una
 /// subconsulta (<c>FROM (SELECT …) x</c>) y de un WITH salen de su lista de SELECT; las de un procedimiento
-/// seleccionable, de sus parámetros de salida. Mira solo la sentencia donde está el cursor.
+/// seleccionable, de sus parámetros de salida. Después de JOIN, primero las tablas relacionadas por FK con el ON armado.
+/// Mira solo la sentencia donde está el cursor.
 /// </summary>
 public static class SqlCompletion
 {
@@ -95,6 +99,7 @@ public static class SqlCompletion
             items = previous is "UPDATE" or "INTO" or "TABLE"
                 ? objects.Concat(keywords)
                 : objects.Concat(procedures).Concat(packages).Concat(keywords);
+            if (previous == "JOIN") items = Joins(statement.Text, start - statement.Start, catalog).Where(j => Matches(j.Text)).Concat(items);
         }
         else
         {
@@ -196,6 +201,67 @@ public static class SqlCompletion
         return tables;
     }
 
+    // ── JOIN por las FK ──
+
+    /// <summary>
+    /// Después de JOIN: las tablas relacionadas por una FK (o una lógica «#FK_») con las que ya están en el FROM antes del
+    /// cursor, con un alias libre y el ON armado: «TURNOS t ON t.ID = td.TURNO». Primero las de la última tabla del FROM;
+    /// de cada una, primero a las que apunta y después las que la apuntan. Las que ya están en el FROM van al final (puede
+    /// hacer falta otra vez la misma tabla, por otra FK).
+    /// </summary>
+    private static IEnumerable<CompletionItem> Joins(string sql, int caret, MetadataCatalog catalog)
+    {
+        if (catalog.ForeignKeys.Count == 0) return [];
+        var tokens = SqlLexer.Tokenize(sql).ToList();
+        var inFrom = new List<(string Table, string Reference)>();
+        var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i + 1 < tokens.Count; i++)
+        {
+            if (!tokens[i].IsWord("FROM") && !tokens[i].IsWord("JOIN")) continue;
+            var next = tokens[i + 1];
+            if (next.Start >= caret || next.Kind is not (SqlTokenKind.Word or SqlTokenKind.QuotedIdentifier)) continue;
+            var name = Unquote(next.Text);
+            var alias = AliasAt(tokens, i + 2);
+            used.Add(name);
+            if (alias is not null) used.Add(alias);
+            if (catalog.Tables.FirstOrDefault(t => t.Equals(name, StringComparison.OrdinalIgnoreCase)) is { } table)
+                inFrom.Add((table, alias ?? SqlIdentifier.Quote(table)));
+        }
+        var tablesInFrom = inFrom.Select(f => f.Table).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var joins = new List<(int Order, CompletionItem Item)>();
+        foreach (var (table, reference) in Enumerable.Reverse(inFrom))
+        {
+            foreach (var fk in catalog.ForeignKeys.Where(k => k.Columns.Count == k.ReferencedColumns.Count))
+            {
+                if (fk.Table.Equals(table, StringComparison.OrdinalIgnoreCase)) Add(fk.Referenced, fk.ReferencedColumns, fk.Columns, 0, fk.Name);
+                if (fk.Referenced.Equals(table, StringComparison.OrdinalIgnoreCase)) Add(fk.Table, fk.Columns, fk.ReferencedColumns, 1, fk.Name);
+            }
+
+            void Add(string target, IReadOnlyList<string> targetColumns, IReadOnlyList<string> columns, int order, string name)
+            {
+                if (!catalog.Columns.ContainsKey(target)) return;
+                var alias = NewAlias(target, used);
+                var on = string.Join(" AND ", targetColumns.Select((c, k) => $"{alias}.{SqlIdentifier.Quote(c)} = {reference}.{SqlIdentifier.Quote(columns[k])}"));
+                if (!target.Equals(table, StringComparison.OrdinalIgnoreCase) && tablesInFrom.Contains(target)) order = 2;
+                joins.Add((order, new CompletionItem($"{SqlIdentifier.Quote(target)} {alias} ON {on}", CompletionKind.Join, name)));
+            }
+        }
+        // Estable: dentro de cada grupo queda el orden de las tablas del FROM (la última primero).
+        return joins.OrderBy(j => j.Order).Select(j => j.Item).DistinctBy(i => i.Text, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    /// <summary>Las iniciales en minúsculas (TURNOS_DET → td), con un número si ya está usado o es una palabra reservada.</summary>
+    private static string NewAlias(string table, IReadOnlySet<string> used)
+    {
+        var initials = string.Concat(table.Split(['_', '$', ' '], StringSplitOptions.RemoveEmptyEntries)
+            .Where(w => char.IsAsciiLetter(w[0])).Select(w => char.ToLowerInvariant(w[0])));
+        if (initials.Length == 0) initials = "t";
+        bool Free(string a) => !used.Contains(a) && !KeywordSet.Contains(a) && !SqlIdentifier.IsReserved(a);
+        if (Free(initials)) return initials;
+        for (var n = 2; ; n++)
+            if (Free(initials + n)) return initials + n;
+    }
+
     // ── Lo que hay en el FROM ──
 
     /// <summary>Columnas de un alias o un nombre, y qué se muestra al lado (la tabla, el WITH o la subconsulta).</summary>
@@ -262,7 +328,7 @@ public static class SqlCompletion
         return tokens[j] switch
         {
             { Kind: SqlTokenKind.QuotedIdentifier } q => Unquote(q.Text),
-            { Kind: SqlTokenKind.Word } w when !KeywordSet.Contains(w.Text) => w.Text,
+            { Kind: SqlTokenKind.Word } w when !KeywordSet.Contains(w.Text) && !SqlIdentifier.IsReserved(w.Text) => w.Text,
             _ => null,
         };
     }

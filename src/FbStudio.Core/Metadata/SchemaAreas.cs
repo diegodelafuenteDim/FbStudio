@@ -9,8 +9,8 @@ public sealed record SchemaArea
 {
     public required string Name { get; init; }
     public string? Description { get; init; }
-    public IReadOnlyList<string> Rules { get; init; } = [];
-    public IReadOnlyList<string> Exclude { get; init; } = [];
+    public IReadOnlyList<string> Rules { get; set; } = [];
+    public IReadOnlyList<string> Exclude { get; set; } = [];
 
     /// <summary>
     /// Sumar los procedimientos, vistas y triggers que usan solo tablas del área (por las dependencias de la base):
@@ -25,8 +25,8 @@ public sealed record SchemaArea
 /// <summary>El archivo de áreas de una base. No tiene datos de conexión: se puede compartir con otros.</summary>
 public sealed record SchemaAreaFile
 {
-    public int Version { get; init; } = 1;
-    public IReadOnlyList<SchemaArea> Areas { get; init; } = [];
+    public int Version { get; set; } = 1;
+    public IReadOnlyList<SchemaArea> Areas { get; set; } = [];
 }
 
 /// <summary>

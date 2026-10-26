@@ -10,7 +10,7 @@ using Material.Icons;
 namespace FbStudio.App.ViewModels;
 
 /// <summary>
-/// Pestaña «Script de la base» (Extract Metadata): lee todos los objetos en una transacción de solo lectura y arma el
+/// Pestaña «Script de la base»: lee todos los objetos en una transacción de solo lectura y arma el
 /// script para recrear la base en una vacía. Se guarda o se copia; no se ejecuta sobre la misma base (crearía objetos
 /// que ya existen y, siguiendo ante errores, reemplazaría procedimientos por sus firmas vacías).
 /// </summary>
@@ -27,6 +27,13 @@ public sealed partial class SchemaScriptTabViewModel : EditorTabViewModel
     }
 
     public SchemaScriptOptions Options { get; private set; }
+
+    /// <summary>Lo último que se leyó (con el área aplicada): de acá sale también la documentación HTML.</summary>
+    public DatabaseSchema? Schema { get; private set; }
+
+    /// <summary>La documentación de la base en HTML, de lo último que se leyó.</summary>
+    public string DocumentationHtml(bool includeSources) =>
+        SchemaDocumentation.Html(Schema ?? throw new InvalidOperationException("Todavía no se leyó la base."), Profile?.Name ?? "", DateTime.Now, includeSources);
 
     public override MaterialIconKind Icon => MaterialIconKind.ScriptTextOutline;
 
@@ -75,12 +82,25 @@ public sealed partial class SchemaScriptTabViewModel : EditorTabViewModel
             });
             var schema = await explorer.ReadSchemaAsync(Options, progress, _cts.Token);
             if (_disposed) return;
+            if (Options.Area is { } areaName)
+            {
+                if (Owner.AreaStore.Areas(profile).FirstOrDefault(a => a.Name == areaName) is not { } area)
+                {
+                    Status = string.Format(Strings.SchemaScriptAreaMissing, areaName);
+                    return;
+                }
+                schema = SchemaFilter.Only(schema, area.Name, await Owner.AreaMembersAsync(profile, area));
+            }
+            Schema = schema;
             var header = SchemaScriptWriter.Header(profile.Name, $"{profile.Host}:{profile.Database}", DateTime.Now, schema.Charset);
+            if (schema.Area is { } areaShown)
+                header += string.Format(Strings.SchemaScriptAreaHeader, Core.Sql.SqlIdentifier.OneLine(areaShown), schema.ForeignKeysOutside) + "\n";
             Document.Text = SchemaScriptWriter.Write(schema, Options, header);
             var objects = schema.Tables.Count + schema.Views.Count + schema.Procedures.Count + schema.Functions.Count + schema.Packages.Count
                           + schema.Domains.Count + schema.Generators.Count + schema.Exceptions.Count + schema.Roles.Count
                           + schema.Tables.Sum(t => t.Triggers.Count) + schema.Views.Sum(v => v.Triggers.Count) + schema.DatabaseTriggers.Count;
-            GeneratedAt = string.Format(Strings.SchemaScriptGeneratedAt, DateTime.Now, objects);
+            GeneratedAt = string.Format(Strings.SchemaScriptGeneratedAt, DateTime.Now, objects)
+                          + (schema.Area is { } a2 ? " · " + string.Format(Strings.SchemaScriptAreaShort, a2) : "");
             Status = string.Format(Strings.SchemaScriptDone, objects, Document.LineCount, clock.Elapsed.TotalSeconds);
         }
         catch (OperationCanceledException)

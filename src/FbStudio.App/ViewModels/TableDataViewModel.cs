@@ -48,6 +48,12 @@ public sealed partial class TableDataViewModel(EditorTabViewModel tab) : Observa
     [ObservableProperty] private bool _hasMore;
     [ObservableProperty] private long? _totalCount;
 
+    /// <summary>«Contar al filtrar»: con un filtro o un WHERE, cuenta solo después de cada lectura (se recuerda en Opciones).</summary>
+    [ObservableProperty] private bool _countOnFilter = tab.Owner.Options.DataCountOnFilter;
+
+    /// <summary>Hay un filtro de columna o un WHERE adicional: lo que se ve no es toda la tabla.</summary>
+    private bool HasFilter => _query is { } q && (!q.Filters.IsEmpty || q.ExtraWhere is not null);
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasPending), nameof(PendingText), nameof(ApplyText))]
     [NotifyCanExecuteChangedFor(nameof(ApplyCommand), nameof(DiscardCommand), nameof(ScriptCommand))]
@@ -128,6 +134,12 @@ public sealed partial class TableDataViewModel(EditorTabViewModel tab) : Observa
             Status = string.Format(Strings.DataLoaded, page.Rows.Count, clock.Elapsed.TotalSeconds)
                      + (ReadOnlyReason is { } why ? " · " + why : Strings.DataEditHint)
                      + (_viewBase is { } baseTable && ReadOnlyReason is null ? string.Format(Strings.DataViewEditsTable, baseTable) : "");
+            // Contar al filtrar: si entró todo en la primera página no hace falta preguntarle al servidor.
+            if (CountOnFilter && HasFilter)
+            {
+                if (HasMore) _ = CountCoreAsync(generation);
+                else Counted(page.Rows.Count);
+            }
         }
         catch (Exception ex)
         {
@@ -203,20 +215,36 @@ public sealed partial class TableDataViewModel(EditorTabViewModel tab) : Observa
     }
 
     [RelayCommand]
-    private async Task CountAsync()
+    private Task CountAsync() => CountCoreAsync(null);
+
+    /// <param name="generation">La lectura que lo pidió (contar al filtrar): si ya hubo otra, el número no corresponde.</param>
+    private async Task CountCoreAsync(int? generation)
     {
         if (tab.Profile is not { } profile || _query is null) return;
         Status = Strings.DataCounting;
         try
         {
-            TotalCount = await Session(profile).CountAsync(_query);
-            Status = string.Format(Strings.DataCounted, TotalCount);
+            var total = await Session(profile).CountAsync(_query);
+            if (generation is { } g && g != _generation) return;
+            Counted(total);
         }
         catch (Exception ex)
         {
-            Status = string.Format(Strings.DataReadFailed, FirstLine(ex.Message));
+            if (generation is null || generation == _generation) Status = string.Format(Strings.DataReadFailed, FirstLine(ex.Message));
         }
         Redraw?.Invoke();
+    }
+
+    private void Counted(long total)
+    {
+        TotalCount = total;
+        Status = string.Format(Strings.DataCounted, total);
+    }
+
+    partial void OnCountOnFilterChanged(bool value)
+    {
+        if (value != tab.Owner.Options.DataCountOnFilter) tab.Owner.SaveSettings(tab.Owner.Options with { DataCountOnFilter = value });
+        if (value && HasFilter && IsLoaded && !IsBusy) _ = CountCoreAsync(_generation);
     }
 
     // ---------- edición ----------

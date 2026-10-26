@@ -89,7 +89,9 @@
           <CheckBox IsChecked="{Binding HighlightCurrentLine}" Content="{x:Static res:Strings.OptionsHighlightLine}" />
           <CheckBox IsChecked="{Binding ScrollPastEnd}" Content="{x:Static res:Strings.OptionsScrollPastEnd}" />
           <CheckBox IsChecked="{Binding ZoomWithCtrlWheel}" Content="{x:Static res:Strings.OptionsZoom}" />
+          <CheckBox IsChecked="{Binding ShowFolding}" Content="{x:Static res:Strings.OptionsShowFolding}" />
           <CheckBox IsChecked="{Binding FormatUppercaseKeywords}" Content="{x:Static res:Strings.OptionsFormatUppercase}" />
+          <CheckBox IsChecked="{Binding RestoreTabs}" Content="{x:Static res:Strings.OptionsRestoreTabs}" ToolTip.Tip="{x:Static res:Strings.OptionsRestoreTabsTip}" />
         </StackPanel>
       </TabItem>
 

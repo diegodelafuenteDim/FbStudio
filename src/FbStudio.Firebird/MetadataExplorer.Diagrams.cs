@@ -26,7 +26,7 @@ public sealed partial class MetadataExplorer
         """;
 
     // Cada FK con sus columnas y las de la clave a la que apunta, en orden.
-    private const string DiagramForeignKeysSql = """
+    internal const string DiagramForeignKeysSql = """
         SELECT TRIM(rc.RDB$CONSTRAINT_NAME), TRIM(rc.RDB$RELATION_NAME), TRIM(uq.RDB$RELATION_NAME), TRIM(s.RDB$FIELD_NAME), TRIM(us.RDB$FIELD_NAME)
         FROM RDB$RELATION_CONSTRAINTS rc
         JOIN RDB$REF_CONSTRAINTS refc ON refc.RDB$CONSTRAINT_NAME = rc.RDB$CONSTRAINT_NAME

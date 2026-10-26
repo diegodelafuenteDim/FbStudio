@@ -22,6 +22,13 @@ public partial class StatisticsTabView : UserControl
         };
         // Las tablas de la base se leen la primera vez que se abre la lista.
         TablesButton.Flyout!.Opened += (_, _) => _ = (DataContext as StatisticsTabViewModel)?.LoadTablesAsync();
+        // Elegir un área tilda sus tablas; la lista vuelve a quedar vacía para elegir otra.
+        AreaPicker.SelectionChanged += async (_, _) =>
+        {
+            if (AreaPicker.SelectedItem is not string area || DataContext is not StatisticsTabViewModel stats) return;
+            AreaPicker.SelectedItem = null;
+            await stats.ChooseAreaAsync(area);
+        };
     }
 
     public ResultGrid.DrawnGrid Tables => TablesGrid;

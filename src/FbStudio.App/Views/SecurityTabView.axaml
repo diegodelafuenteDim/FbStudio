@@ -64,28 +64,44 @@
                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
     </Border>
 
-    <Grid ColumnDefinitions="320,6,*">
+    <Grid ColumnDefinitions="290,6,*">
       <!-- Usuarios y roles (o los objetos PSQL) -->
       <DockPanel>
         <ComboBox DockPanel.Dock="Top" ItemsSource="{Binding GranteeScopes}" SelectedIndex="{Binding GranteeScope}" HorizontalAlignment="Stretch" Margin="0,0,0,6" />
+        <ComboBox DockPanel.Dock="Top" ItemsSource="{Binding ObjectKinds}" SelectedIndex="{Binding ObjectScopeKindIndex}" HorizontalAlignment="Stretch"
+                  Margin="0,0,0,6" IsVisible="{Binding IsObjectScope}" />
         <TextBox DockPanel.Dock="Top" Text="{Binding GranteeFilter}" PlaceholderText="{x:Static res:Strings.SecFilter}" Margin="0,0,0,6" />
         <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
-          <ListBox x:Name="GranteeList" ItemsSource="{Binding Grantees}" SelectedItem="{Binding SelectedGrantee}" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-            <ListBox.ItemTemplate>
-              <DataTemplate x:DataType="vm:GranteeItem">
-                <StackPanel Margin="0,1">
-                  <TextBlock Text="{Binding Name}" />
-                  <TextBlock Text="{Binding Subtitle}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
-                </StackPanel>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
+          <Panel>
+            <ListBox x:Name="GranteeList" ItemsSource="{Binding Grantees}" SelectedItem="{Binding SelectedGrantee}" Background="Transparent"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding IsGranteeScope}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:GranteeItem">
+                  <StackPanel Margin="0,1">
+                    <TextBlock Text="{Binding Name}" />
+                    <TextBlock Text="{Binding Subtitle}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <ListBox x:Name="ObjectList" ItemsSource="{Binding ObjectItems}" SelectedItem="{Binding SelectedObject}" Background="Transparent"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding IsObjectScope}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:SecurityObjectItem">
+                  <StackPanel Margin="0,1">
+                    <TextBlock Text="{Binding Name}" />
+                    <TextBlock Text="{Binding Subtitle}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Panel>
         </Border>
       </DockPanel>
       <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
 
       <!-- Roles y permisos del elegido -->
-      <Panel Grid.Column="2">
+      <Panel Grid.Column="2" IsVisible="{Binding IsGranteeScope}">
         <TextBlock Text="{x:Static res:Strings.SecPickGrantee}" IsVisible="{Binding !HasGrantee}" Opacity="0.7" Margin="12" TextWrapping="Wrap" />
         <DockPanel IsVisible="{Binding HasGrantee}">
           <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
@@ -99,6 +115,34 @@
               <TextBlock Text="{Binding GranteeDetail}" Opacity="0.65" FontSize="12" />
             </StackPanel>
           </DockPanel>
+
+          <!-- Permisos de estructura (DDL): crear, modificar y borrar cualquiera de una clase de objetos -->
+          <Expander DockPanel.Dock="Top" IsVisible="{Binding HasDdl}" Margin="0,0,0,8" HorizontalAlignment="Stretch"
+                    Header="{x:Static res:Strings.SecDdlHeader}" ToolTip.Tip="{x:Static res:Strings.SecDdlTip}">
+            <StackPanel>
+              <Grid ColumnDefinitions="14,190,92,150,150,92" Margin="8,0,0,4">
+                <TextBlock Grid.Column="1" Classes="head" Text="{x:Static res:Strings.SecDdlColClass}" HorizontalAlignment="Left" />
+                <TextBlock Grid.Column="2" Classes="head" Text="CREATE" />
+                <TextBlock Grid.Column="3" Classes="head" Text="ALTER ANY" />
+                <TextBlock Grid.Column="4" Classes="head" Text="DROP ANY" />
+                <TextBlock Grid.Column="5" Classes="head" Text="{x:Static res:Strings.SecColGrantOption}" ToolTip.Tip="{x:Static res:Strings.SecColGrantOptionTip}" />
+              </Grid>
+              <ItemsControl x:Name="DdlList" ItemsSource="{Binding DdlRows}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:DdlPermissionRow">
+                    <Grid ColumnDefinitions="14,190,92,150,150,92" Margin="8,1,0,1">
+                      <TextBlock Text="●" Foreground="{DynamicResource FbsAccentBrush}" IsVisible="{Binding IsChanged}" VerticalAlignment="Center" FontSize="10" />
+                      <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" />
+                      <CheckBox Grid.Column="2" Classes="cell" IsChecked="{Binding Create}" IsVisible="{Binding CanCreateOrDrop}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="3" Classes="cell" IsChecked="{Binding Alter}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="4" Classes="cell" IsChecked="{Binding Drop}" IsVisible="{Binding CanCreateOrDrop}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="5" Classes="cell" IsChecked="{Binding GrantOption}" IsEnabled="{Binding IsEditable}" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Expander>
 
           <StackPanel DockPanel.Dock="Top" IsVisible="{Binding HasRoles}" Margin="0,0,0,8">
             <TextBlock Text="{x:Static res:Strings.SecRoles}" FontWeight="SemiBold" Margin="0,0,0,2" />
@@ -134,7 +178,7 @@
           <!-- Encabezado de las columnas y un renglón por objeto -->
           <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
             <DockPanel>
-              <Grid DockPanel.Dock="Top" ColumnDefinitions="14,*,110,64,64,64,64,92,74,64,92" Margin="8,4,24,4">
+              <Grid DockPanel.Dock="Top" ColumnDefinitions="14,*,96,58,58,58,58,86,68,58,80" Margin="8,4,24,4">
                 <TextBlock Grid.Column="1" Classes="head" Text="{x:Static res:Strings.SecColObject}" HorizontalAlignment="Left" />
                 <TextBlock Grid.Column="2" Classes="head" Text="{x:Static res:Strings.SecColKind}" HorizontalAlignment="Left" />
                 <TextBlock Grid.Column="3" Classes="head" Text="SELECT" />
@@ -149,13 +193,77 @@
               <ListBox x:Name="PermissionList" ItemsSource="{Binding Rows}" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListBox.ItemTemplate>
                   <DataTemplate x:DataType="vm:PermissionRow">
-                    <Grid ColumnDefinitions="14,*,110,64,64,64,64,92,74,64,92">
+                    <Grid ColumnDefinitions="14,*,96,58,58,58,58,86,68,58,80">
                       <TextBlock Text="●" Foreground="{DynamicResource FbsAccentBrush}" IsVisible="{Binding IsChanged}" VerticalAlignment="Center" FontSize="10" />
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0" ToolTip.Tip="{Binding Name}">
                         <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                         <TextBlock Text="{Binding ColumnsNote}" IsVisible="{Binding HasColumns}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
                       </StackPanel>
                       <TextBlock Grid.Column="2" Text="{Binding KindLabel}" Opacity="0.65" VerticalAlignment="Center" />
+                      <CheckBox Grid.Column="3" Classes="cell" IsChecked="{Binding Select}" IsVisible="{Binding CanSelect}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="4" Classes="cell" IsChecked="{Binding Insert}" IsVisible="{Binding CanInsert}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="5" Classes="cell" IsChecked="{Binding Update}" IsVisible="{Binding CanUpdate}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="6" Classes="cell" IsChecked="{Binding Delete}" IsVisible="{Binding CanDelete}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="7" Classes="cell" IsChecked="{Binding References}" IsVisible="{Binding CanReferences}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="8" Classes="cell" IsChecked="{Binding Execute}" IsVisible="{Binding CanExecute}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="9" Classes="cell" IsChecked="{Binding Usage}" IsVisible="{Binding CanUsage}" IsEnabled="{Binding IsEditable}" />
+                      <CheckBox Grid.Column="10" Classes="cell" IsChecked="{Binding GrantOption}" IsEnabled="{Binding IsEditable}" />
+                    </Grid>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </DockPanel>
+          </Border>
+        </DockPanel>
+      </Panel>
+
+      <!-- Por objeto: quién tiene permisos sobre el elegido (los mismos renglones que la otra vista) -->
+      <Panel Grid.Column="2" IsVisible="{Binding IsObjectScope}">
+        <TextBlock Text="{x:Static res:Strings.SecPickObject}" IsVisible="{Binding !HasObject}" Opacity="0.7" Margin="12" TextWrapping="Wrap" />
+        <DockPanel IsVisible="{Binding HasObject}">
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <TextBlock Text="{Binding ObjectTitle}" FontSize="16" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding ObjectDetail}" Opacity="0.65" FontSize="12" />
+          </StackPanel>
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <TextBlock DockPanel.Dock="Left" Text="{x:Static res:Strings.SecPermissions}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0" />
+            <CheckBox DockPanel.Dock="Right" Content="{x:Static res:Strings.SecOnlyGranted}" IsChecked="{Binding OnlyGranted}" Margin="8,0,0,0" />
+            <TextBox Text="{Binding ObjectFilter}" PlaceholderText="{x:Static res:Strings.SecFilter}" />
+          </DockPanel>
+          <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+            <TextBlock Text="{Binding PendingText}" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <Button Classes="tool" Command="{Binding ShowSqlCommand}" Content="{x:Static res:Strings.SecShowSql}" />
+            <Button Classes="accent" Command="{Binding ApplyCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="Check" /><TextBlock Text="{x:Static res:Strings.SecApply}" /></StackPanel>
+            </Button>
+            <Button Classes="tool" Command="{Binding DiscardCommand}" Content="{x:Static res:Strings.SecDiscard}" />
+          </StackPanel>
+          <Border BorderThickness="1" BorderBrush="{DynamicResource SemiColorBorder}" CornerRadius="4">
+            <DockPanel>
+              <Grid DockPanel.Dock="Top" ColumnDefinitions="14,*,96,58,58,58,58,86,68,58,80" Margin="8,4,24,4">
+                <TextBlock Grid.Column="1" Classes="head" Text="{x:Static res:Strings.SecColGrantee}" HorizontalAlignment="Left" />
+                <TextBlock Grid.Column="2" Classes="head" Text="{x:Static res:Strings.SecColKind}" HorizontalAlignment="Left" />
+                <TextBlock Grid.Column="3" Classes="head" Text="SELECT" />
+                <TextBlock Grid.Column="4" Classes="head" Text="INSERT" />
+                <TextBlock Grid.Column="5" Classes="head" Text="UPDATE" />
+                <TextBlock Grid.Column="6" Classes="head" Text="DELETE" />
+                <TextBlock Grid.Column="7" Classes="head" Text="REFERENCES" />
+                <TextBlock Grid.Column="8" Classes="head" Text="EXECUTE" />
+                <TextBlock Grid.Column="9" Classes="head" Text="USAGE" />
+                <TextBlock Grid.Column="10" Classes="head" Text="{x:Static res:Strings.SecColGrantOption}" ToolTip.Tip="{x:Static res:Strings.SecColGrantOptionTip}" />
+              </Grid>
+              <ListBox x:Name="ObjectPermissionList" ItemsSource="{Binding ObjectRows}" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:PermissionRow">
+                    <Grid ColumnDefinitions="14,*,96,58,58,58,58,86,68,58,80">
+                      <TextBlock Text="●" Foreground="{DynamicResource FbsAccentBrush}" IsVisible="{Binding IsChanged}" VerticalAlignment="Center" FontSize="10" />
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0" ToolTip.Tip="{Binding GranteeName}">
+                        <TextBlock Text="{Binding GranteeName}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding GranteeDetail}" IsVisible="{Binding GranteeDetail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                   FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding ColumnsNote}" IsVisible="{Binding HasColumns}" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Text="{Binding GranteeKindLabel}" Opacity="0.65" VerticalAlignment="Center" />
                       <CheckBox Grid.Column="3" Classes="cell" IsChecked="{Binding Select}" IsVisible="{Binding CanSelect}" IsEnabled="{Binding IsEditable}" />
                       <CheckBox Grid.Column="4" Classes="cell" IsChecked="{Binding Insert}" IsVisible="{Binding CanInsert}" IsEnabled="{Binding IsEditable}" />
                       <CheckBox Grid.Column="5" Classes="cell" IsChecked="{Binding Update}" IsVisible="{Binding CanUpdate}" IsEnabled="{Binding IsEditable}" />

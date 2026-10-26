@@ -32,10 +32,10 @@ public enum WireCryptMode
 /// </summary>
 public sealed record ConnectionProfile
 {
-    public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid();
     public required string Name { get; init; }
     public required string Host { get; init; }
-    public int Port { get; init; } = 3050;
+    public int Port { get; set; } = 3050;
     public required string Database { get; init; }
     public required string User { get; init; }
     public string? Role { get; init; }
@@ -45,17 +45,17 @@ public sealed record ConnectionProfile
     /// Si alguna base tuviera columnas NONE con bytes Windows-1252, usar WIN1252: el servidor no translitera
     /// NONE y el cliente decodifica como 1252.
     /// </summary>
-    public string Charset { get; init; } = "ISO8859_1";
+    public string Charset { get; set; } = "ISO8859_1";
 
-    public ProfileEnvironment Environment { get; init; } = ProfileEnvironment.Desarrollo;
+    public ProfileEnvironment Environment { get; set; } = ProfileEnvironment.Desarrollo;
 
     /// <summary>Solo permite consultas: DML, DDL y EXECUTE se bloquean antes de llegar al servidor.</summary>
     public bool ReadOnly { get; init; }
 
-    public WireCryptMode WireCrypt { get; init; } = WireCryptMode.Enabled;
+    public WireCryptMode WireCrypt { get; set; } = WireCryptMode.Enabled;
 
     /// <summary>Guardar las sentencias ejecutadas en el historial local (cifrado). Se puede apagar por perfil.</summary>
-    public bool SaveHistory { get; init; } = true;
+    public bool SaveHistory { get; set; } = true;
 
     public string? Folder { get; init; }
 

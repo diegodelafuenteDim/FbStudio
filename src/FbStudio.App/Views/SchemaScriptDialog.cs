@@ -10,8 +10,10 @@ namespace FbStudio.App.Views;
 /// <summary>«Script de la base…»: qué incluir. Devuelve las opciones elegidas, o null si se cancela.</summary>
 public sealed class SchemaScriptDialog : Window
 {
-    public SchemaScriptDialog(string database, SchemaScriptOptions current)
+    /// <param name="areas">Las áreas de la base: se puede limitar el script a una.</param>
+    public SchemaScriptDialog(string database, SchemaScriptOptions current, IReadOnlyList<string>? areas = null)
     {
+        areas ??= [];
         Title = Strings.SchemaScriptDialogTitle;
         Width = 520;
         SizeToContent = SizeToContent.Height;
@@ -37,6 +39,16 @@ public sealed class SchemaScriptDialog : Window
         var roles = Box(Strings.SchemaScriptRoles, current.Roles);
         var privileges = Box(Strings.SchemaScriptPrivileges, current.Privileges);
 
+        // Toda la base o un área (si la base tiene).
+        var scope = new ComboBox
+        {
+            ItemsSource = new[] { Strings.SchemaScriptWholeDatabase }.Concat(areas.Select(a => string.Format(Strings.SchemaScriptOnlyArea, a))).ToList(),
+            SelectedIndex = current.Area is { } chosen && areas.ToList().IndexOf(chosen) is var at and >= 0 ? at + 1 : 0,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            IsVisible = areas.Count > 0,
+        };
+        ToolTip.SetTip(scope, Strings.SchemaScriptAreaTip);
+
         var ok = new Button { Content = Strings.SchemaScriptGenerate, IsDefault = true, Classes = { "accent" } };
         var cancel = new Button { Content = Strings.Cancel, IsCancel = true };
         ok.Click += (_, _) => Close(new SchemaScriptOptions
@@ -53,6 +65,7 @@ public sealed class SchemaScriptDialog : Window
             Triggers = triggers.IsChecked == true,
             Roles = roles.IsChecked == true,
             Privileges = privileges.IsChecked == true,
+            Area = scope.SelectedIndex > 0 ? areas[scope.SelectedIndex - 1] : null,
         });
         cancel.Click += (_, _) => Close(null);
 
@@ -70,6 +83,7 @@ public sealed class SchemaScriptDialog : Window
             Children =
             {
                 new TextBlock { Text = string.Format(Strings.SchemaScriptDialogText, database), TextWrapping = TextWrapping.Wrap },
+                scope,
                 grid,
                 new TextBlock { Text = Strings.SchemaScriptDialogNote, TextWrapping = TextWrapping.Wrap, Opacity = 0.7, FontSize = 12 },
                 new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = 8, Children = { ok, cancel } },

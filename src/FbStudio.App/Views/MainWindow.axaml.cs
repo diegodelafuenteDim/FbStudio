@@ -36,16 +36,37 @@ public partial class MainWindow : Window
         RunButton.Click += async (_, _) => await RunAsync();
         MenuRun.Click += async (_, _) => await RunAsync();
         MenuRunStatement.Click += async (_, _) => await RunCurrentStatementAsync();
+        MenuPlanOnly.Click += async (_, _) => await ShowPlanOnlyAsync();
         MenuRunScript.Click += async (_, _) => await RunAsScriptAsync();
+        MenuRunFile.Click += async (_, _) => await RunFileAsync();
+        MenuOpenFile.Click += async (_, _) => await OpenSqlFileAsync();
+        MenuFind.Click += (_, _) => CurrentEditorView?.OpenFind(replace: false);
+        MenuReplace.Click += (_, _) => CurrentEditorView?.OpenFind(replace: true);
+        MenuOpenDiagram.Click += async (_, _) => { if (Vm is { } vm) await OpenDiagramFileAsync(vm, SelectedDatabase()?.Profile); };
+        MenuSaveFile.Click += async (_, _) => await SaveSqlFileAsync(saveAs: false);
+        MenuSaveFileAs.Click += async (_, _) => await SaveSqlFileAsync(saveAs: true);
+        MenuRecentFiles.SubmenuOpened += (_, _) => FillRecentFiles();
+        FillRecentFiles();
         MenuFormatSql.Click += (_, _) => CurrentEditorView?.FormatSql();
         MenuInsertTemplate.Click += (_, _) => CurrentEditorView?.ShowTemplates();
+        MenuToggleComment.Click += (_, _) => CurrentEditorView?.ToggleComment();
+        MenuDuplicateLine.Click += (_, _) => CurrentEditorView?.DuplicateLine();
+        MenuMoveLineUp.Click += (_, _) => CurrentEditorView?.MoveLines(up: true);
+        MenuMoveLineDown.Click += (_, _) => CurrentEditorView?.MoveLines(up: false);
+        MenuUppercase.Click += (_, _) => CurrentEditorView?.ChangeCase(upper: true);
+        MenuLowercase.Click += (_, _) => CurrentEditorView?.ChangeCase(upper: false);
+        MenuGoToLine.Click += async (_, _) => await GoToLineAsync();
         MenuGoToDefinition.Click += async (_, _) => { if (CurrentEditorView is { } view) await view.GoToDefinitionAtCaretAsync(); };
         MenuExport.Click += async (_, _) => await ExportAsync(ExportFormat.Csv);
         MenuExportXlsx.Click += async (_, _) => await ExportAsync(ExportFormat.Xlsx);
         MenuExportInsert.Click += async (_, _) => await ExportAsync(ExportFormat.Insert);
+        MenuExportJson.Click += async (_, _) => await ExportAsync(ExportFormat.Json);
+        MenuExportMarkdown.Click += async (_, _) => await ExportAsync(ExportFormat.Markdown);
         FlyoutExportCsv.Click += async (_, _) => await ExportAsync(ExportFormat.Csv);
         FlyoutExportXlsx.Click += async (_, _) => await ExportAsync(ExportFormat.Xlsx);
         FlyoutExportInsert.Click += async (_, _) => await ExportAsync(ExportFormat.Insert);
+        FlyoutExportJson.Click += async (_, _) => await ExportAsync(ExportFormat.Json);
+        FlyoutExportMarkdown.Click += async (_, _) => await ExportAsync(ExportFormat.Markdown);
         ToolRegister.Click += async (_, _) => await OpenProfilesAsync(newRegistration: true);
         MenuRegister.Click += async (_, _) => await OpenProfilesAsync(newRegistration: true);
         WelcomeRegister.Click += async (_, _) => await OpenProfilesAsync(newRegistration: true);
@@ -66,6 +87,7 @@ public partial class MainWindow : Window
         MenuShortcuts.Click += async (_, _) => await ShowShortcutsAsync();
         MenuAbout.Click += async (_, _) => await new AboutDialog().ShowDialog(this);
         MenuWhatsNew.Click += async (_, _) => await new WhatsNewDialog().ShowDialog(this);
+        MenuManual.Click += async (_, _) => await ManualService.OpenAsync(this);
         MenuOptions.Click += async (_, _) => await OpenOptionsAsync();
         MenuMonitor.Click += (_, _) => Vm?.OpenMonitor(SelectedDatabase()?.Profile);
         MenuStatistics.Click += (_, _) => Vm?.OpenStatistics(SelectedDatabase()?.Profile);
@@ -254,6 +276,8 @@ public partial class MainWindow : Window
             SecurityTabViewModel => new SecurityTabView { DataContext = tab },
             AreasTabViewModel => new AreasTabView { DataContext = tab },
             DiagramTabViewModel => new DiagramTabView { DataContext = tab },
+            TestDataTabViewModel => new TestDataTabView { DataContext = tab },
+            DataCompareTabViewModel => new DataCompareTabView { DataContext = tab },
             _ => new EditorTabView { DataContext = tab },
         };
         _views[tab] = view;
@@ -279,6 +303,8 @@ public partial class MainWindow : Window
         // Las conexiones se cierran antes de salir, con lo abierto deshecho. Si el programa terminara primero, el
         // servidor igual las corta al cerrarse el socket, pero sin despedirse. Como mucho 5 s, por si el servidor no responde.
         IsEnabled = false;
+        try { vm.SaveSession(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); }
         await Task.WhenAny(vm.DisposeAsync().AsTask(), Task.Delay(TimeSpan.FromSeconds(5)));
         _closeConfirmed = true;
         Close();
@@ -335,6 +361,58 @@ public partial class MainWindow : Window
         if (Vm?.NewSearchTabFor(SelectedDatabase()?.Profile) is not null) FocusEditorLater();
     }
 
+    /// <summary>El capítulo del manual que corresponde a lo que se está usando (F1): la grilla, la pestaña o el árbol.</summary>
+    internal string ManualChapterHere()
+    {
+        var focused = FocusManager?.GetFocusedElement() as Avalonia.Visual;
+        if (focused is not null && Avalonia.VisualTree.VisualExtensions.GetSelfAndVisualAncestors(focused).Contains(Tree)) return "05-tree";
+        if (FocusedGrid() is not null)
+            return Vm?.SelectedTab is { Data: not null } dataTab && dataTab.SelectedResultTab == EditorTabViewModel.DataTab ? "04-data" : "03-results";
+        return Vm?.SelectedTab switch
+        {
+            null => "README",
+            MonitorTabViewModel or TraceTabViewModel or StatisticsTabViewModel => "06-monitoring",
+            MaintenanceTabViewModel or SecurityTabViewModel => "07-maintenance",
+            SchemaScriptTabViewModel or CompareTabViewModel or DataCompareTabViewModel or ImportTabViewModel or TestDataTabViewModel => "08-scripts",
+            AreasTabViewModel or DiagramTabViewModel or SearchTabViewModel => "05-tree",
+            { Data: not null, SelectedResultTab: EditorTabViewModel.DataTab } => "04-data",
+            _ => "02-editor",
+        };
+    }
+
+    /// <summary>La grilla de resultados que tiene el foco (o donde está el foco), si hay una.</summary>
+    private ResultGrid.DrawnGrid? FocusedGrid() =>
+        Avalonia.VisualTree.VisualExtensions.FindAncestorOfType<ResultGrid.DrawnGrid>(FocusManager?.GetFocusedElement() as Avalonia.Visual, includeSelf: true);
+
+    /// <summary>«¿Dónde se usa?» de una columna del árbol: la lista, y doble clic abre cada objeto.</summary>
+    internal async Task<ColumnUsageWindow?> ShowColumnUsageAsync(MainWindowViewModel vm, Core.Profiles.ConnectionProfile profile, string table, string column)
+    {
+        try
+        {
+            var usage = await vm.ColumnUsageAsync(profile, table, column);
+            var window = new ColumnUsageWindow(table, column, usage, d =>
+                d.Kind == DbObjectKind.Index ? Task.CompletedTask : vm.OpenObjectAsync(profile, new DbObject(d.Kind, d.Name)));
+            window.Show(this);
+            return window;
+        }
+        catch (Exception ex)
+        {
+            vm.Notify(string.Format(Strings.ErrorStatus, ex.Message.Split('\n', 2)[0].Trim()));
+            return null;
+        }
+    }
+
+    /// <summary>Ctrl+G: pide el número de renglón y lleva el cursor ahí.</summary>
+    private async Task GoToLineAsync()
+    {
+        if (CurrentEditorView is not { } view) return;
+        var editor = view.Editor;
+        var current = editor.Document.GetLineByOffset(editor.CaretOffset).LineNumber;
+        var text = await new InputDialog(Strings.GoToLineTitle, string.Format(Strings.GoToLinePrompt, editor.Document.LineCount),
+            current.ToString(System.Globalization.CultureInfo.CurrentCulture)).ShowDialog<string?>(this);
+        if (int.TryParse(text, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.CurrentCulture, out var line)) view.GoTo(line, 1);
+    }
+
     private async Task CloseCurrentTabAsync()
     {
         if (Vm is { SelectedTab: { } tab } vm) await vm.CloseTabAsync(tab);
@@ -360,16 +438,52 @@ public partial class MainWindow : Window
             e.Handled = true;
             OpenSearch();
         }
+        else if (e.Key == Key.F && e.KeyModifiers == KeyModifiers.Control && FocusedGrid() is { } grid)
+        {
+            // Con una grilla elegida, Ctrl+F busca en sus resultados (en el editor, en el texto).
+            e.Handled = true;
+            grid.OpenSearch();
+        }
+        else if (e.Key is Key.F or Key.H && !e.KeyModifiers.HasFlag(KeyModifiers.Alt) && CurrentEditorView is { } findView)
+        {
+            e.Handled = true;
+            findView.OpenFind(replace: e.Key == Key.H);
+        }
         else if (e.Key == Key.Tab)
         {
             e.Handled = true;
             vm.SelectNextTab(e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? -1 : 1);
             FocusEditorLater();
         }
+        else if (e.Key == Key.O && !e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+        {
+            e.Handled = true;
+            await OpenSqlFileAsync();
+        }
+        else if (e.Key == Key.S && !e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+        {
+            e.Handled = true;
+            await SaveSqlFileAsync(saveAs: e.KeyModifiers.HasFlag(KeyModifiers.Shift));
+        }
+        else if (e.Key == Key.T && e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift))
+        {
+            e.Handled = true;
+            if (vm.ReopenClosedTab() is not null) FocusEditorLater();
+        }
         else if (e.Key == Key.T && !e.KeyModifiers.HasFlag(KeyModifiers.Alt))
         {
             e.Handled = true;
             NewTab();
+        }
+        else if (e.Key == Key.E && e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) && CurrentEditorView is not null)
+        {
+            e.Handled = true;
+            await ShowPlanOnlyAsync();
+        }
+        else if (e.Key == Key.G && e.KeyModifiers == KeyModifiers.Control && CurrentEditorView is not null)
+        {
+            e.Handled = true;
+            await GoToLineAsync();
         }
         else if (e.Key is Key.W or Key.F4)
         {
@@ -390,7 +504,13 @@ public partial class MainWindow : Window
         var tab = Vm?.SelectedTab;
         var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
         var alt = e.KeyModifiers.HasFlag(KeyModifiers.Alt);
-        if (e.Key == Key.F9 && ctrl)
+        if (e.Key == Key.F1 && e.KeyModifiers == KeyModifiers.None)
+        {
+            // El capítulo del manual de lo que se está usando.
+            e.Handled = true;
+            await ManualService.OpenAsync(this, ManualChapterHere());
+        }
+        else if (e.Key == Key.F9 && ctrl)
         {
             e.Handled = true;
             await RunAsScriptAsync();
@@ -428,7 +548,8 @@ public partial class MainWindow : Window
     /// </summary>
     public Task RunAsync()
     {
-        if (Vm?.SelectedTab is not { } tab || tab is SchemaScriptTabViewModel or CompareTabViewModel or MaintenanceTabViewModel or TraceTabViewModel or ImportTabViewModel) return Task.CompletedTask;
+        if (Vm?.SelectedTab is not { } tab || tab is SchemaScriptTabViewModel or CompareTabViewModel or MaintenanceTabViewModel or TraceTabViewModel or ImportTabViewModel or TestDataTabViewModel
+            or DataCompareTabViewModel) return Task.CompletedTask;
         if (tab is MonitorTabViewModel monitor) return monitor.RefreshAsync();
         if (tab is SecurityTabViewModel security) return security.RefreshAsync();
         if (tab is StatisticsTabViewModel stats) return stats.ReadHeaderAsync();
@@ -452,10 +573,131 @@ public partial class MainWindow : Window
             : tab.RunTextAsync(editor.Text, 0, ExecutionScope.All, asScript: true);
     }
 
+    private static readonly FilePickerFileType SqlFiles = new(Strings.ExportSqlScript) { Patterns = ["*.sql", "*.txt"] };
+
+    /// <summary>Herramientas → «Abrir diagrama guardado…»: en la base elegida (la del árbol o la de la pestaña).</summary>
+    private async Task OpenDiagramFileAsync(MainWindowViewModel vm, FbStudio.Core.Profiles.ConnectionProfile? profile)
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = Strings.MenuOpenDiagram.TrimEnd('…'),
+            FileTypeFilter = [new FilePickerFileType(Strings.DiagramFileSaved) { Patterns = ["*" + Core.Diagrams.DiagramFile.Extension] }],
+        });
+        if (files.Count > 0 && files[0].TryGetLocalPath() is { } path) vm.OpenDiagramFile(path, profile);
+    }
+
+    /// <summary>Ctrl+O o Consulta → «Abrir archivo .sql…».</summary>
+    private async Task OpenSqlFileAsync()
+    {
+        if (Vm is not { } vm) return;
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = Strings.MenuOpenFile.TrimEnd('…'),
+            FileTypeFilter = [SqlFiles, FilePickerFileTypes.All],
+            AllowMultiple = true,
+        });
+        foreach (var file in files)
+            if (file.TryGetLocalPath() is { } path) vm.OpenSqlFile(path, SelectedDatabase()?.Profile);
+        if (files.Count > 0) FocusEditorLater();
+    }
+
+    /// <summary>
+    /// Ctrl+S o «Guardar»: en su archivo, o pregunta dónde si todavía no tiene (o con «Guardar como»). En la pestaña de un
+    /// objeto guarda una copia del DDL.
+    /// </summary>
+    internal async Task SaveSqlFileAsync(bool saveAs)
+    {
+        if (Vm is not { } vm || vm.SelectedTab is not { } tab || CurrentEditorView is null) return;
+        var path = saveAs || tab.Kind == EditorTabKind.Object ? null : tab.FilePath;
+        if (path is null)
+        {
+            var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = (saveAs ? Strings.MenuSaveFileAs : Strings.MenuSaveFile).TrimEnd('…'),
+                SuggestedFileName = tab.FilePath is { } current ? Path.GetFileName(current) : SuggestedFileName(tab),
+                DefaultExtension = "sql",
+                FileTypeChoices = [SqlFiles],
+            });
+            if (file?.TryGetLocalPath() is not { } chosen) return;
+            path = chosen;
+        }
+        SaveCurrentTabTo(path);
+    }
+
+    /// <summary>Guarda la pestaña elegida en ese archivo y lo suma a los recientes (si es una consulta).</summary>
+    internal void SaveCurrentTabTo(string path)
+    {
+        if (Vm is not { SelectedTab: { } tab } vm) return;
+        try
+        {
+            tab.SaveFile(path);
+            if (tab.Kind == EditorTabKind.Sql) vm.RememberFile(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            tab.Status = string.Format(Strings.FileSaveFailed, Path.GetFileName(path), ex.Message);
+        }
+    }
+
+    /// <summary>«Consulta 3.sql», «TURNOS.sql»: el título sin caracteres que no van en un nombre de archivo.</summary>
+    private static string SuggestedFileName(EditorTabViewModel tab) =>
+        string.Concat((tab.Object?.Name ?? tab.BaseTitle).Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)) + ".sql";
+
+    /// <summary>«Abrir reciente»: los últimos archivos, con su carpeta de tooltip.</summary>
+    private void FillRecentFiles()
+    {
+        var items = new List<Control>();
+        foreach (var path in Vm?.RecentFiles ?? [])
+        {
+            var item = new MenuItem { Header = Path.GetFileName(path) };
+            ToolTip.SetTip(item, path);
+            item.Click += (_, _) =>
+            {
+                if (Vm?.OpenSqlFile(path, SelectedDatabase()?.Profile) is not null) FocusEditorLater();
+            };
+            items.Add(item);
+        }
+        MenuRecentFiles.ItemsSource = items.Count > 0 ? items : [new MenuItem { Header = Strings.MenuRecentNone, IsEnabled = false }];
+    }
+
+    /// <summary>
+    /// Consulta → «Ejecutar script desde archivo…»: en la pestaña de consulta elegida o, si es otra clase de pestaña o
+    /// está ejecutando, en una consulta nueva de la base de lo último que se tocó.
+    /// </summary>
+    private async Task RunFileAsync()
+    {
+        if (Vm is not { } vm) return;
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = Strings.MenuRunFile.TrimEnd('…'),
+            FileTypeFilter = [new FilePickerFileType(Strings.ExportSqlScript) { Patterns = ["*.sql", "*.txt"] }, FilePickerFileTypes.All],
+        });
+        if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
+        var tab = vm.SelectedTab is { Kind: EditorTabKind.Sql, IsRunning: false, Profile: not null } current
+            ? current
+            : vm.NewQueryTabFor(SelectedDatabase()?.Profile);
+        if (tab is not null) await tab.RunFileAsync(path);
+    }
+
+    /// <summary>Ctrl+Shift+E: el plan de la sentencia donde está el cursor (o de la selección), sin ejecutarla.</summary>
+    public Task ShowPlanOnlyAsync()
+    {
+        if (CurrentEditorView is not { Tab: { } tab } view) return Task.CompletedTask;
+        var editor = view.Editor;
+        if (editor.SelectionLength > 0) return tab.ShowPlanOnlyAsync(editor.SelectedText);
+        if (SqlScriptSplitter.AtCaret(editor.Text, editor.CaretOffset) is not { } statement)
+        {
+            tab.Status = Strings.NoStatementAtCursor;
+            return Task.CompletedTask;
+        }
+        return tab.ShowPlanOnlyAsync(statement.Text);
+    }
+
     /// <summary>Ctrl+Enter: solo la sentencia donde está el cursor (o la selección, si hay).</summary>
     public Task RunCurrentStatementAsync()
     {
-        if (Vm?.SelectedTab is not { } tab || tab is SchemaScriptTabViewModel or CompareTabViewModel or MaintenanceTabViewModel or TraceTabViewModel or ImportTabViewModel) return Task.CompletedTask;
+        if (Vm?.SelectedTab is not { } tab || tab is SchemaScriptTabViewModel or CompareTabViewModel or MaintenanceTabViewModel or TraceTabViewModel or ImportTabViewModel or TestDataTabViewModel
+            or DataCompareTabViewModel) return Task.CompletedTask;
         if (tab is MonitorTabViewModel monitor) return monitor.RefreshAsync();
         if (tab is SecurityTabViewModel security) return security.RefreshAsync();
         if (tab is StatisticsTabViewModel stats) return stats.ReadHeaderAsync();
@@ -473,6 +715,19 @@ public partial class MainWindow : Window
 
     private TreeNode? SelectedDatabase() => Vm?.Tree.SelectedNode?.DatabaseNode;
 
+    /// <summary>Los objetos que reciben permisos («Permisos…» en el árbol), con su tipo para la pestaña de seguridad.</summary>
+    private static FbStudio.Core.Security.GrantObjectKind? GrantKind(DbObjectKind kind) => kind switch
+    {
+        DbObjectKind.Table => FbStudio.Core.Security.GrantObjectKind.Table,
+        DbObjectKind.View => FbStudio.Core.Security.GrantObjectKind.View,
+        DbObjectKind.Procedure => FbStudio.Core.Security.GrantObjectKind.Procedure,
+        DbObjectKind.Function => FbStudio.Core.Security.GrantObjectKind.Function,
+        DbObjectKind.Package => FbStudio.Core.Security.GrantObjectKind.Package,
+        DbObjectKind.Generator => FbStudio.Core.Security.GrantObjectKind.Generator,
+        DbObjectKind.Exception => FbStudio.Core.Security.GrantObjectKind.Exception,
+        _ => null,
+    };
+
     private async Task ConnectSelectedAsync()
     {
         if (Vm is not { } vm) return;
@@ -480,7 +735,7 @@ public partial class MainWindow : Window
         else vm.Notify(vm.Tree.IsEmpty ? Strings.RegisterFirst : Strings.PickDatabaseInTree);
     }
 
-    private static ContextMenu BuildTabMenu(MainWindowViewModel vm, EditorTabViewModel tab)
+    internal ContextMenu BuildTabMenu(MainWindowViewModel vm, EditorTabViewModel tab)
     {
         MenuItem Item(string header, Func<Task> action, bool enabled = true)
         {
@@ -491,11 +746,21 @@ public partial class MainWindow : Window
         var index = vm.Tabs.IndexOf(tab);
         var others = vm.Tabs.Where(t => t != tab).ToList();
         var right = vm.Tabs.Skip(index + 1).ToList();
+        var isQuery = tab.Kind == EditorTabKind.Sql && tab is not SearchTabViewModel;
         return new ContextMenu
         {
             Placement = PlacementMode.Pointer,
             ItemsSource = new List<Control>
             {
+                Item(Strings.TabRename, async () =>
+                {
+                    if (TopLevel.GetTopLevel(this) is Window owner
+                        && await new InputDialog(Strings.TabRename.TrimEnd('…'), Strings.TabRenamePrompt, tab.BaseTitle).ShowDialog<string?>(owner) is { } name)
+                        tab.Rename(name);
+                }, tab.CanRename),
+                Item(Strings.TabDuplicate, () => { vm.DuplicateTab(tab); return Task.CompletedTask; }, isQuery),
+                Item(Strings.TabReopenClosed, () => { vm.ReopenClosedTab(); return Task.CompletedTask; }, vm.CanReopenClosedTab),
+                new Separator(),
                 Item(Strings.Close, () => vm.CloseTabAsync(tab)),
                 Item(Strings.CloseOthers, () => vm.CloseTabsAsync(others), others.Count > 0),
                 Item(Strings.CloseToTheRight, () => vm.CloseTabsAsync(right), right.Count > 0),
@@ -559,6 +824,7 @@ public partial class MainWindow : Window
                         await tree.RefreshDatabaseAsync(node);
                         vm.InvalidateCatalog(profile.Id);
                     }));
+                if (!profile.ReadOnly) items.Add(Item(Strings.TreeImportNewTable, Run(() => vm.OpenImport(profile, null))));
                 items.Add(new Separator());
                 items.Add(Group(Strings.TreeGroupTools,
                     Item(Strings.TreeMonitor, Run(() => vm.OpenMonitor(profile))),
@@ -566,6 +832,7 @@ public partial class MainWindow : Window
                     Item(Strings.TreeStatistics, Run(() => vm.OpenStatistics(profile))),
                     Item(Strings.TreeSecurity, Run(() => vm.OpenSecurity(profile))),
                     Item(Strings.TreeAreas, Run(() => vm.OpenAreas(profile))),
+                    Item(Strings.MenuOpenDiagram, () => OpenDiagramFileAsync(vm, profile)),
                     Item(Strings.TreeServerDetails, () => ShowServerDetailsAsync(vm, profile))));
                 items.Add(Group(Strings.TreeGroupMaintenance,
                     Item(Strings.MaintTaskBackup, Run(() => vm.OpenMaintenance(profile, MaintenanceTask.Backup))),
@@ -575,7 +842,11 @@ public partial class MainWindow : Window
                     Item(Strings.MaintTaskSweep, Run(() => vm.OpenMaintenance(profile, MaintenanceTask.Sweep))),
                     Item(Strings.MaintTaskEmptyCopy, Run(() => vm.OpenMaintenance(profile, MaintenanceTask.EmptyCopy))),
                     Item(Strings.MaintTaskProperties, Run(() => vm.OpenMaintenance(profile, MaintenanceTask.Properties)))));
-                var script = new List<Control> { Item(Strings.TreeSchemaScript, () => OpenSchemaScriptAsync(vm, profile)) };
+                var script = new List<Control>
+                {
+                    Item(Strings.TreeSchemaScript, () => OpenSchemaScriptAsync(vm, profile)),
+                    Item(Strings.TreeDocumentation, () => OpenSchemaScriptAsync(vm, profile, documentation: true)),
+                };
                 if (vm.Profiles.Count > 1) script.Add(Item(Strings.TreeCompare, () => OpenCompareAsync(vm, profile)));
                 items.Add(Group(Strings.TreeGroupScript, [.. script]));
                 items.Add(new Separator());
@@ -586,6 +857,9 @@ public partial class MainWindow : Window
                     Item(Strings.TreeExportThis, () => ExportProfilesAsync(vm, [profile.Id]))));
                 break;
             }
+            case TreeNodeKind.Category when node.Category == DbObjectKind.Table && node.DatabaseNode?.Profile is { ReadOnly: false } tablesOf:
+                items.Add(Item(Strings.TreeImportNewTable, Run(() => vm.OpenImport(tablesOf, null))));
+                break;
             case TreeNodeKind.Object when node.Object is { } o:
                 // La pestaña del objeto abre con el DDL arriba y las dependencias abajo: un solo «Abrir».
                 items.Add(Item(DbObjectKinds.IsCompilable(o.Kind) ? Strings.TreeOpenCompilable : Strings.TreeViewDdl,
@@ -598,13 +872,50 @@ public partial class MainWindow : Window
                 items.Add(Item("SELECT FIRST 100 *", () => { tree.RequestSelectFirst100(node); return Task.CompletedTask; },
                     DbObjectKinds.IsRelation(o.Kind)));
                 if (DbObjectKinds.IsRelation(o.Kind))
-                    items.Add(Item(Strings.TreeDiagram, Run(() => vm.OpenDiagram(node.DatabaseNode!.Profile!, new DiagramSource(o.Name)))));
+                {
+                    // La sentencia en una consulta nueva, sin ejecutar; de una vista, solo el SELECT.
+                    var sqlProfile = node.DatabaseNode!.Profile!;
+                    MenuItem Sql(string header, TableSqlKind kind) => Item(header, async () =>
+                    {
+                        if (await vm.GenerateTableSqlAsync(sqlProfile, o, kind) is not null) FocusEditorLater();
+                    });
+                    var sql = new List<Control> { Sql(Strings.TreeSqlSelect, TableSqlKind.Select) };
+                    if (o.Kind == DbObjectKind.Table)
+                        sql.AddRange([Sql("INSERT", TableSqlKind.Insert), Sql(Strings.TreeSqlUpdate, TableSqlKind.Update),
+                            Sql(Strings.TreeSqlDelete, TableSqlKind.Delete), Sql("UPDATE OR INSERT", TableSqlKind.UpdateOrInsert)]);
+                    items.Add(Group(Strings.TreeGenerateSql, [.. sql]));
+                    items.Add(Item(Strings.TreeDiagram, Run(() => vm.OpenDiagram(sqlProfile, new DiagramSource(o.Name)))));
+                }
                 if (o.Kind == DbObjectKind.Table)
                     items.Add(Item(Strings.TreeImportData, () =>
                     {
                         vm.OpenImport(node.DatabaseNode!.Profile!, o.Name);
                         return Task.CompletedTask;
                     }, !node.DatabaseNode!.Profile!.ReadOnly));
+                if (o.Kind is DbObjectKind.Procedure or DbObjectKind.Function)
+                {
+                    // La llamada con sus parámetros, en una consulta nueva sin ejecutar.
+                    var routineProfile = node.DatabaseNode!.Profile!;
+                    MenuItem Call(string header, bool select) => Item(header, async () =>
+                    {
+                        if (await vm.GenerateRoutineSqlAsync(routineProfile, o, select) is not null) FocusEditorLater();
+                    });
+                    var calls = new List<Control>();
+                    if (o.Kind == DbObjectKind.Function) calls.Add(Call("SELECT … FROM RDB$DATABASE", true));
+                    else calls.AddRange([Call("SELECT * FROM …", true), Call("EXECUTE PROCEDURE …", false)]);
+                    items.Add(Group(Strings.TreeGenerateSql, [.. calls]));
+                }
+                if (o.Kind == DbObjectKind.Table && vm.Profiles.Count > 1)
+                    items.Add(Item(Strings.TreeDataCompare, Run(() => vm.OpenDataCompare(node.DatabaseNode!.Profile!, o.Name))));
+                if (o.Kind == DbObjectKind.Table && node.DatabaseNode!.Profile! is { ReadOnly: false, IsProduction: false } testProfile)
+                    items.Add(Item(Strings.TreeTestData, Run(() => vm.OpenTestData(testProfile, o.Name))));
+                if (GrantKind(o.Kind) is { } grantKind)
+                    items.Add(Item(Strings.TreePermissions, async () =>
+                    {
+                        if (vm.OpenSecurity(node.DatabaseNode!.Profile!) is not { } security) return;
+                        await security.Working;
+                        security.ShowObject(grantKind, o.Name);
+                    }));
                 items.Add(Item(Strings.TreeInsertName, () => { CurrentEditorView?.InsertAtCaret(DatabaseTreeViewModel.QuoteIdentifier(o.Name)); return Task.CompletedTask; }));
                 items.Add(Item(Strings.TreeCopyName, async () => { if (Clipboard is { } c) await c.SetTextAsync(o.Name); }));
                 break;
@@ -617,6 +928,8 @@ public partial class MainWindow : Window
                 break;
             }
             case TreeNodeKind.Column when node.Column is { } col:
+                if (node.Parent?.Object is { } owner && node.DatabaseNode?.Profile is { } columnProfile)
+                    items.Add(Item(Strings.TreeColumnUsage, () => ShowColumnUsageAsync(vm, columnProfile, owner.Name, col.Name)));
                 items.Add(Item(Strings.TreeInsertName, () => { CurrentEditorView?.InsertAtCaret(DatabaseTreeViewModel.QuoteIdentifier(col.Name)); return Task.CompletedTask; }));
                 items.Add(Item(Strings.TreeCopyName, async () => { if (Clipboard is { } c) await c.SetTextAsync(col.Name); }));
                 break;
@@ -670,6 +983,8 @@ public partial class MainWindow : Window
         Csv,
         Xlsx,
         Insert,
+        Json,
+        Markdown,
     }
 
     /// <summary>Exporta el resultado de la pestaña: lo cargado en la grilla o, si la consulta trae más, todo (re-ejecutándola).</summary>
@@ -696,6 +1011,12 @@ public partial class MainWindow : Window
                 if (table is null) return;
                 var insert = new InsertScriptExporter(table);
                 (exporter, fileType, suggested) = (insert, Strings.ExportSqlScript, "insert-" + insert.Table.Trim('"').ToLowerInvariant());
+                break;
+            case ExportFormat.Json:
+                (exporter, fileType, suggested) = (new JsonExporter(), "JSON", Strings.ExportFileName);
+                break;
+            case ExportFormat.Markdown:
+                (exporter, fileType, suggested) = (new MarkdownExporter(), "Markdown", Strings.ExportFileName);
                 break;
             default:
                 (exporter, fileType, suggested) = (new CsvExporter(CsvOptions.ExcelAr), "CSV (Excel)", Strings.ExportFileName);
@@ -729,7 +1050,7 @@ public partial class MainWindow : Window
             vm.Notify(Strings.CompareNeedsTwo);
             return;
         }
-        if (await new CompareDialog(vm.Profiles, source).ShowDialog<CompareChoice?>(this) is { } choice)
+        if (await new CompareDialog(vm.Profiles, source, p => vm.AreaStore.Areas(p).Select(a => a.Name).ToList()).ShowDialog<CompareChoice?>(this) is { } choice)
             vm.OpenCompare(choice.Source, choice.Target, choice.Options);
     }
 
@@ -793,15 +1114,19 @@ public partial class MainWindow : Window
     }
 
     /// <summary>«Script de la base…»: qué incluir y, con «Generar», la pestaña con el script.</summary>
-    private async Task OpenSchemaScriptAsync(MainWindowViewModel vm, Core.Profiles.ConnectionProfile? profile)
+    /// <param name="documentation">Después de leer la base, ofrecer guardar la documentación HTML.</param>
+    private async Task OpenSchemaScriptAsync(MainWindowViewModel vm, Core.Profiles.ConnectionProfile? profile, bool documentation = false)
     {
         if (profile is null)
         {
             vm.Notify(Strings.SchemaScriptPickDatabase);
             return;
         }
-        if (await new SchemaScriptDialog(profile.Name, new Core.Metadata.SchemaScriptOptions()).ShowDialog<Core.Metadata.SchemaScriptOptions?>(this) is { } options)
-            vm.OpenSchemaScript(profile, options);
+        var areas = vm.AreaStore.Areas(profile).Select(a => a.Name).ToList();
+        if (await new SchemaScriptDialog(profile.Name, new Core.Metadata.SchemaScriptOptions(), areas).ShowDialog<Core.Metadata.SchemaScriptOptions?>(this) is not { } options
+            || vm.OpenSchemaScript(profile, options) is not { } tab || !documentation) return;
+        await tab.Generating;
+        if (tab.HasScript && _views.TryGetValue(tab, out var view) && view is SchemaScriptTabView scriptView) await scriptView.SaveDocumentationAsync();
     }
 
     /// <summary>«Nueva carpeta…»: nombre y bases que van adentro (viene marcada la base elegida en el árbol).</summary>

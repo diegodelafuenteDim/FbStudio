@@ -87,9 +87,16 @@ public static class SecurityManager
             if (GranteeKindOf(Convert.ToInt32(r[1])) is not { } granteeKind) continue;
             if (ObjectKindOf(Convert.ToInt32(r[3]), r[8] is not null) is not { } objectKind) continue;
             var obj = S(r[2])!;
-            if (IsSystemName(obj) && !(objectKind == GrantObjectKind.Role && obj == "RDB$ADMIN")) continue;
+            if (objectKind == GrantObjectKind.Metadata ? !SecurityScript.DdlClasses.Any(c => c.Name == obj)
+                : IsSystemName(obj) && !(objectKind == GrantObjectKind.Role && obj == "RDB$ADMIN")) continue;
             var privilege = S(r[4]) is { Length: 1 } p ? p[0] : '?';
-            if (objectKind == GrantObjectKind.Role ? privilege != 'M' : !SecurityScript.Privileges.Contains(privilege)) continue;
+            var known = objectKind switch
+            {
+                GrantObjectKind.Role => privilege == 'M',
+                GrantObjectKind.Metadata => SecurityScript.DdlPrivileges.Contains(privilege),
+                _ => SecurityScript.Privileges.Contains(privilege),
+            };
+            if (!known) continue;
             grants.Add(new DbGrant(S(r[0])!, granteeKind, obj, objectKind, privilege, S(r[5]), B(r[6]), S(r[7]) ?? ""));
         }
         await tx.CommitAsync(ct);
@@ -97,7 +104,8 @@ public static class SecurityManager
     }
 
     private static bool IsSystemName(string name) =>
-        name.StartsWith("RDB$", StringComparison.Ordinal) || name.StartsWith("MON$", StringComparison.Ordinal) || name.StartsWith("SEC$", StringComparison.Ordinal);
+        name.StartsWith("RDB$", StringComparison.Ordinal) || name.StartsWith("MON$", StringComparison.Ordinal) || name.StartsWith("SEC$", StringComparison.Ordinal)
+        || name.StartsWith("SQL$", StringComparison.Ordinal);
 
     // Tipos de objeto de Firebird (obj_relation 0, obj_view 1, obj_trigger 2, obj_procedure 5, obj_exception 7, obj_user 8,
     // obj_sql_role 13, obj_generator 14, obj_udf 15, obj_package_header 18).
@@ -123,6 +131,8 @@ public static class SecurityManager
         14 => GrantObjectKind.Generator,
         7 => GrantObjectKind.Exception,
         13 => GrantObjectKind.Role,
+        // Permisos de estructura de Firebird 3: la clase de objetos (obj_database 20 … obj_filters 32).
+        >= 20 and <= 32 => GrantObjectKind.Metadata,
         _ => null,
     };
 

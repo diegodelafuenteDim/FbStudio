@@ -1,3 +1,5 @@
+using FbStudio.Core.Diagrams;
+
 namespace FbStudio.Core.Sql;
 
 /// <summary>Un parámetro de entrada de un procedimiento o una función.</summary>
@@ -51,6 +53,9 @@ public sealed class MetadataCatalog
 
     /// <summary>Firmas por nombre («P_TURNOS_DESDE», «PKG_TURNOS.CANTIDAD»), sin distinguir mayúsculas.</summary>
     public IReadOnlyDictionary<string, RoutineSignature> Signatures { get; init; } = NoSignatures;
+
+    /// <summary>Las FOREIGN KEY y, después, las lógicas de los comentarios «#FK_»: para sugerir el JOIN con su ON.</summary>
+    public IReadOnlyList<DiagramLink> ForeignKeys { get; init; } = [];
 
     /// <param name="packageProcedures">
     /// Procedimientos de paquetes («PKG.PROC») con sus parámetros de salida: sus columnas en el FROM, sin sumarlos a la

@@ -142,6 +142,41 @@ public sealed class DataTabTests(FirebirdFixture fb, HeadlessFixture ui) : IDisp
     }, CancellationToken.None);
 
     [Fact]
+    public Task Contar_al_filtrar_cuenta_solo_con_un_filtro_y_se_recuerda() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        try
+        {
+            var tab = await OpenDataAsync(vm, "TURNOS");
+            var data = tab.Data!;
+            var grid = w.CurrentView.FindControl<FbStudio.App.ResultGrid.DrawnGrid>("DataGrid")!;
+            Assert.False(data.CountOnFilter);
+            data.CountOnFilter = true;
+            Assert.True(vm.Options.DataCountOnFilter);                          // se recuerda para las demás tablas
+            Assert.Null(data.TotalCount);                                        // sin filtro no cuenta
+
+            grid.SetFilter(0, "<1000");                                          // más de una página: le pregunta al servidor
+            await WaitFor(() => !data.IsBusy && data.TotalCount == 1000);
+            Assert.Equal(TableDataViewModel.PageSize, data.Rows.Count);
+            grid.SetFilter(0, "<10");                                            // entra todo en la primera: no hace falta
+            await WaitFor(() => !data.IsBusy && data.TotalCount == 10);
+            grid.SetFilter(0, null);
+            await WaitFor(() => !data.IsBusy && data.Rows.Count == TableDataViewModel.PageSize);
+            Assert.Null(data.TotalCount);
+            data.ExtraWhere = "ID BETWEEN 100 AND 699";                          // el WHERE también cuenta como filtro
+            await data.ReloadAsync();
+            await WaitFor(() => data.TotalCount == 600);
+            data.CountOnFilter = false;
+            Assert.False(vm.Options.DataCountOnFilter);
+        }
+        finally
+        {
+            w.Close();
+            await vm.DisposeAsync();
+        }
+    }, CancellationToken.None);
+
+    [Fact]
     public Task Edita_y_borra_sin_bloquear_y_aplica_todo_junto() => ui.Session.DispatchAsync(async () =>
     {
         await ScalarAsync("RECREATE TABLE UI_DATOS (ID INTEGER NOT NULL PRIMARY KEY, NOMBRE VARCHAR(40), IMPORTE NUMERIC(12,2))");

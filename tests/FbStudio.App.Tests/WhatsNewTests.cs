@@ -83,6 +83,10 @@ public sealed class WhatsNewTests(FirebirdFixture fb, HeadlessFixture ui)
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
         Assert.Equal("Novedades de FbStudio", dialog.Title);
         Assert.Equal(["Próxima versión (en desarrollo)", "Algo nuevo.", "0.1.0 · 2026-10-24  (instalada)", "Primera versión pública."], dialog.Lines);
+        // Arranca en la más nueva, con una tarjeta por cambio; se puede elegir otra versión.
+        Assert.Equal(("Próxima versión", 1), (dialog.ShownVersion, dialog.ShownCards));
+        dialog.ShowVersion(1);
+        Assert.Equal(("0.1.0", 1), (dialog.ShownVersion, dialog.ShownCards));
         dialog.Close();
 
         var english = new WhatsNewDialog(versions, "0.1.0", "en");

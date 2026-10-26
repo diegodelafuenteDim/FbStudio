@@ -44,6 +44,22 @@ public sealed class ImportFileTests : IDisposable
     }
 
     [Fact]
+    public void Detecta_UTF8_aunque_una_tilde_quede_cortada_al_leer_el_principio()
+    {
+        // El primer mega (lo que se mira) termina en la mitad de la «ñ», que ocupa dos bytes.
+        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".sql");
+        try
+        {
+            File.WriteAllText(path, new string('a', (1 << 20) - 1) + "ñ fin", new UTF8Encoding(false));
+            Assert.Equal(65001, ImportFile.DetectEncoding(path).CodePage);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void CSV_en_UTF8_con_comas_y_sin_encabezado()
     {
         var path = Write("datos.csv", "10,ñoño,\"a,b\"\n20,dos,c\n", new UTF8Encoding(true));

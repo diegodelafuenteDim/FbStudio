@@ -41,47 +41,55 @@ familiar to people coming from commercial tools, without licenses or subscriptio
 - **SQL editor** with highlighting, autocompletion (tables, columns, also of subqueries and WITH, procedures,
   functions, packages, generators, with parameter help), F9 to run the selection or the
   whole script (understands `SET TERM` and PSQL blocks), parameters (`?` and `:name`, asked for before running),
-  explicit transactions (Commit / Rollback) and cancellation; a SQL formatter, Ctrl+click (or F12) on a name to open
-  the object, and templates (abbreviation + Tab, or Ctrl+J).
+  explicit transactions (Commit / Rollback) and cancellation; a SQL and PSQL formatter, Ctrl+click (or F12) on a name to
+  open the object, templates (abbreviation + Tab, or Ctrl+J), JOIN suggestions built from the foreign keys, find and
+  replace, block folding, line commands (comment, duplicate, move), the plan of a statement without running it, .sql
+  files, and query tabs that are remembered on close.
 - **Production safety:** every database has an environment (Development, Test, Production, each with its own color),
   read-only registrations, and a confirmation before an UPDATE or DELETE without WHERE or any change in production.
 - **A fast grid** (hand-drawn: it does not choke on a million rows) with sorting, typed column filters (text, numbers,
-  dates with periods such as "this month", values to tick), grouping, totals, columns you reorder by dragging, and copy
-  as text, INSERT or UPDATE.
+  dates with periods such as "this month", values to tick), a filter panel, grouping, totals, columns you reorder by
+  dragging, search with Ctrl+F, copy as text, INSERT, UPDATE, a Markdown table or `COLUMN IN (…)`, the whole value of a
+  cell (long text, JSON, XML, RTF, images, hex), a row shown vertically, and a quick chart.
 - **Table and view data** in pages, with filters and sorting on the server, and editing that never holds row locks:
   changes are applied together (all or nothing).
 - **Registrations backup:** export them (with or without user names, and with passwords encrypted with a passphrase)
   and import them on another computer, Linux or macOS included.
 - **Objects:** database tree with your own folders, DDL of every object, compile procedures, triggers and views,
-  dependencies, and search across all metadata.
+  dependencies, where a column is used, "Generate SQL" for tables, views, procedures and functions, and search across
+  all metadata.
 - **Areas** to find your way in a big database: your own groups of objects, by name patterns such as `LAB_*` or by
   hand (an object can be in several, and triggers and indexes go with their table), plus the procedures, views and
   triggers that use only the area's tables, suggested from the table prefixes. They show up in the tree and filter the
   metadata search, and they live in a file per database that the whole team can share.
 - **Diagrams** of a table and its neighbors or of an area: foreign keys and the "logical" ones written in column
   comments (dashed), heavily referenced tables hidden until you ask for them, automatic layout (MSAGL), drag and zoom,
-  and export to PNG, SVG or an editable draw.io file.
+  the shortest path between two tables, saved diagrams, and export to PNG, SVG, an editable draw.io file or Mermaid.
 - **Monitoring** of connections, transactions (OAT) and locks, with custom queries you can share; kill a connection or
   cancel a statement.
 - **Server details:** version, architecture detected on connect (Classic, SuperClassic or SuperServer), operating
   system and cache, without showing server paths.
 - **Trace:** the statements from any program that take longer than a threshold, live, with an **analysis by query**
   (the same statements together, sorted by total time, with reads, writes, plan and full scans); it also opens saved
-  trace logs.
+  trace logs and compares them with the current one.
 - **Statistics** (header and full, in grids) without installing gstat, of the whole database or only the tables you
   choose, and **compared** with another database side by side.
-- **Full database script** and **database compare** with the script to make them equal.
+- **Full database script**, **HTML documentation** of the database, **database compare** (with the changed lines
+  marked) and **table data compare**, each with the script to make the target equal.
 - **Maintenance:** backup, restore, empty database from the script (copying the tables you choose), online validation
   and sweep, all running on the server, with gbak's rescue options (ignore checksums, restore without NOT NULL, skip
   the data of chosen tables) and validation of chosen tables; database properties (sweep interval, forced writes,
   read-only, cache); a warning if a database was left in nbackup backup mode, and its nbackup history.
-- **Export** to CSV for Excel, Excel (.xlsx) or an INSERT script, including the whole result without loading it in
-  memory.
-- **Import** a CSV or Excel (.xlsx) file into a table: columns matched by name, a preview, and everything in one
-  transaction (a failing row undoes it all, or is skipped and listed).
-- **Users and permissions:** server users, database roles and grants with checkboxes per object; the GRANT/REVOKE
-  script is shown before applying it all in one transaction, and passwords are never displayed.
-- **English and Spanish** interface, light and dark mode.
+- **Export** to CSV for Excel, Excel (.xlsx), an INSERT script, JSON or Markdown, including the whole result without
+  loading it in memory.
+- **Import** a CSV or Excel (.xlsx) file into a table, or into a new table built from the file: columns matched by
+  name, a preview, updating existing rows by key (UPDATE OR INSERT), and everything in one transaction (a failing row
+  undoes it all, or is skipped and listed). **Test data** for a table in development and test databases.
+- **Users and permissions:** server users, database roles and grants with checkboxes per user or per object, plus
+  Firebird 3 structure (DDL) permissions; the GRANT/REVOKE script is shown before applying it all in one transaction,
+  and passwords are never displayed.
+- **English and Spanish** interface and [user manual](docs/manual/en/README.md) (also inside the app: Help → Manual, and
+  F1), light and dark mode.
 
 | | |
 |---|---|
@@ -106,7 +114,8 @@ Nothing else to install: no .NET and no Firebird client (FbStudio talks to the s
 | macOS, Intel | `FbStudio-<version>-osx-x64.zip` | The same as above. |
 
 `https://github.com/diegodelafuenteDim/FbStudio/releases/latest/download/fbstudio_amd64.deb` is always the latest
-`.deb`. What changed in each version: [CHANGELOG.md](CHANGELOG.md) (also in FbStudio, Help → What's new). To check a download, compare it with `SHA256SUMS.txt` from the same release
+`.deb`. The full user manual is in [docs/manual](docs/manual/en/README.md) (also in FbStudio: Help → Manual, and F1 opens the
+chapter for what you are using). What changed in each version: [CHANGELOG.md](CHANGELOG.md) (also in FbStudio, Help → What's new). To check a download, compare it with `SHA256SUMS.txt` from the same release
 (`sha256sum -c SHA256SUMS.txt --ignore-missing`).
 
 ## Build from source
@@ -198,22 +207,30 @@ named for reference only.
 **FbStudio** es un IDE y herramienta de administración para bases **Firebird**, libre y gratis, hecho desde cero en
 .NET 10 y Avalonia, con la interfaz en español y en inglés. Incluye:
 
-- editor de SQL con autocompletado, formateador, Ctrl+clic para abrir un objeto y plantillas;
+- editor de SQL con autocompletado (y el JOIN armado por las FK), formateador de SQL y PSQL, Ctrl+clic para abrir un
+  objeto, plantillas, buscar y reemplazar, plegar bloques, el plan sin ejecutar, archivos .sql y las pestañas que se
+  recuerdan al cerrar;
 - seguridad para producción (entornos, registros de solo lectura, confirmaciones);
-- una grilla rápida con filtros según el tipo de columna y columnas que se reordenan arrastrando;
+- una grilla rápida con filtros según el tipo de columna, panel de filtros, columnas que se reordenan arrastrando,
+  buscar, ver el valor entero de una celda (también RTF, JSON e imágenes), la fila en vertical, copiar como Markdown o
+  `IN (…)` y un gráfico rápido;
 - edición de datos sin dejar registros bloqueados;
 - áreas propias para ordenar una base grande (por prefijo o a mano, un objeto en varias, con los procedimientos que
   usan solo sus tablas), en el árbol y en la búsqueda, guardadas en un archivo por base que se puede compartir;
-- diagramas de una tabla y sus vecinas o de un área (con las FK lógicas de los comentarios), exportables a PNG, SVG y
-  draw.io;
-- monitoreo (OAT, bloqueos), trace con análisis por consulta y estadísticas (de toda la base o de las tablas que se
-  elijan, y comparadas con otra base);
+- diagramas de una tabla y sus vecinas o de un área (con las FK lógicas de los comentarios), el camino entre dos tablas,
+  guardables y exportables a PNG, SVG, draw.io y Mermaid;
+- «Generar SQL» de tablas, vistas, procedimientos y funciones, y dónde se usa cada columna;
+- monitoreo (OAT, bloqueos), trace con análisis por consulta (y comparado con un log guardado) y estadísticas (de toda
+  la base o de las tablas que se elijan, y comparadas con otra base);
 - datos del servidor: versión, tipo (Classic, SuperClassic o SuperServer) y sistema;
 - backup de los registros de conexión (con las contraseñas cifradas con una frase) para pasarlos a otro equipo;
-- script de la base entera y comparación de bases;
+- script de la base entera, documentación en HTML, comparación de bases (con lo que cambia marcado) y de los datos de
+  una tabla;
 - backup, restore, validación, sweep y propiedades de la base;
-- usuarios, roles y permisos (con el SQL a la vista antes de aplicarlo);
-- exportación a CSV, Excel y script INSERT, e importación de un CSV o un Excel a una tabla.
+- usuarios, roles y permisos, también por objeto y los de estructura (con el SQL a la vista antes de aplicarlo);
+- exportación a CSV, Excel, script INSERT, JSON y Markdown; importación de un CSV o un Excel a una tabla (o a una
+  tabla nueva, y actualizando por la clave) y datos de prueba para bases de desarrollo;
+- manual completo en español e inglés, también adentro de la app (Ayuda → Manual y F1).
 
 ![La grilla con un filtro por columna](docs/screenshots/es/grid-column-filter.png)
 
@@ -234,6 +251,8 @@ Además:
     para que recuerde las contraseñas).
   - **macOS:** el `.zip` de tu Mac (`osx-arm64` para Apple Silicon, `osx-x64` para Intel). La primera vez:
     Configuración del Sistema → Privacidad y seguridad → **Abrir igualmente**.
+- **Manual:** [docs/manual](docs/manual/es/README.md), también en FbStudio, en Ayuda → Manual (F1 abre el capítulo de lo
+  que estás usando).
 - **Qué cambió en cada versión:** [CHANGELOG.md](CHANGELOG.md), también en FbStudio, en Ayuda → Novedades.
 - **Compilarlo:** con el SDK de .NET 10, `dotnet run --project src/FbStudio.App`. Los tests necesitan Docker.
 - **Contraseñas:** van al llavero de cada sistema: DPAPI en Windows, `secret-tool` en Linux y el Llavero en macOS.

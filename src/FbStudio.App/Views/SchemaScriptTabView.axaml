@@ -25,6 +25,9 @@
       <Button x:Name="SaveButton" Classes="tool" IsEnabled="{Binding HasScript}" ToolTip.Tip="{x:Static res:Strings.SchemaScriptSaveTip}">
         <StackPanel><mi:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.SchemaScriptSave}" /></StackPanel>
       </Button>
+      <Button x:Name="DocumentationButton" Classes="tool" IsEnabled="{Binding HasScript}" ToolTip.Tip="{x:Static res:Strings.DocButtonTip}">
+        <StackPanel><mi:MaterialIcon Kind="FileDocumentOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.DocButton}" /></StackPanel>
+      </Button>
       <Button x:Name="CopyButton" Classes="tool" IsEnabled="{Binding HasScript}">
         <StackPanel><mi:MaterialIcon Kind="ContentCopy" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.CopyLog}" /></StackPanel>
       </Button>

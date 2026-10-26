@@ -88,6 +88,54 @@ public static class SecurityScript
         return statements;
     }
 
+    /// <summary>Una clase de objetos para los permisos de estructura (DDL) de Firebird 3: cómo la guarda y cómo se escribe.</summary>
+    /// <param name="OnlyAlter">La base: solo ALTER DATABASE (no se crea ni se borra con un permiso).</param>
+    public sealed record DdlClass(string Name, string Sql, bool OnlyAlter = false);
+
+    /// <summary>Las clases de objetos que reciben permisos de estructura, en el orden en que se muestran.</summary>
+    public static IReadOnlyList<DdlClass> DdlClasses { get; } =
+    [
+        new("SQL$TABLES", "TABLE"), new("SQL$VIEWS", "VIEW"), new("SQL$PROCEDURES", "PROCEDURE"), new("SQL$FUNCTIONS", "FUNCTION"),
+        new("SQL$PACKAGES", "PACKAGE"), new("SQL$GENERATORS", "GENERATOR"), new("SQL$DOMAINS", "DOMAIN"), new("SQL$EXCEPTIONS", "EXCEPTION"),
+        new("SQL$ROLES", "ROLE"), new("SQL$CHARSETS", "CHARACTER SET"), new("SQL$COLLATIONS", "COLLATION"), new("SQL$FILTERS", "FILTER"),
+        new("SQL$DATABASE", "DATABASE", OnlyAlter: true),
+    ];
+
+    /// <summary>Las letras de los permisos de estructura: C crear, L modificar cualquiera, O borrar cualquiera.</summary>
+    public const string DdlPrivileges = "CLO";
+
+    /// <summary>«CREATE TABLE», «ALTER ANY PROCEDURE», «DROP ANY DOMAIN», «ALTER DATABASE».</summary>
+    public static string DdlPrivilegeName(char privilege, DdlClass cls) => privilege switch
+    {
+        'C' => $"CREATE {cls.Sql}",
+        'L' => cls.OnlyAlter ? "ALTER DATABASE" : $"ALTER ANY {cls.Sql}",
+        'O' => $"DROP ANY {cls.Sql}",
+        _ => throw new ArgumentOutOfRangeException(nameof(privilege), privilege, null),
+    };
+
+    /// <summary>
+    /// Los GRANT y REVOKE de los permisos de estructura de una clase: de lo que tiene (<paramref name="current"/>) a
+    /// <paramref name="wanted"/> («C», «LO»…). Una sentencia por permiso (Firebird no junta varios de estructura en una).
+    /// Lo que dio otro usuario se quita con GRANTED BY.
+    /// </summary>
+    public static IReadOnlyList<SecurityStatement> DdlChanges(GranteeKind granteeKind, string grantee, DdlClass cls,
+        IReadOnlyCollection<DbGrant> current, string wanted, bool grantOption, string currentUser)
+    {
+        var applicable = cls.OnlyAlter ? "L" : DdlPrivileges;
+        var target = DdlPrivileges.Where(p => wanted.Contains(p) && applicable.Contains(p)).ToList();
+        var to = Grantee(granteeKind, grantee);
+        string By(string grantor) => string.Equals(grantor, currentUser, StringComparison.OrdinalIgnoreCase) ? "" : " GRANTED BY " + SqlIdentifier.Quote(grantor);
+        var statements = new List<SecurityStatement>();
+        foreach (var g in current.Where(g => !target.Contains(g.Privilege)))
+            statements.Add(new($"REVOKE {DdlPrivilegeName(g.Privilege, cls)} FROM {to}{By(g.Grantor)}"));
+        if (!grantOption)
+            foreach (var g in current.Where(g => target.Contains(g.Privilege) && g.GrantOption))
+                statements.Add(new($"REVOKE GRANT OPTION FOR {DdlPrivilegeName(g.Privilege, cls)} FROM {to}{By(g.Grantor)}"));
+        foreach (var p in target.Where(p => !current.Any(g => g.Privilege == p) || (grantOption && !current.Any(g => g.Privilege == p && g.GrantOption))))
+            statements.Add(new($"GRANT {DdlPrivilegeName(p, cls)} TO {to}{(grantOption ? " WITH GRANT OPTION" : "")}"));
+        return statements;
+    }
+
     /// <summary>
     /// El nombre como lo va a guardar Firebird: uno común («pepe») va en mayúsculas, como si se escribiera sin comillas
     /// (si no, quedaría un usuario «pepe» que solo entra escribiéndolo entre comillas). Con espacios u otros signos se

@@ -104,6 +104,123 @@ public class SqlFormatterTests
     }
 
     [Fact]
+    public void Un_CASE_largo_va_con_un_WHEN_por_renglon()
+    {
+        Same("""
+            SELECT
+              id,
+              CASE
+                WHEN estado = 'A' THEN 'Activo'
+                WHEN estado = 'B' THEN 'Dado de baja'
+                WHEN estado = 'S' THEN 'Suspendido por falta de pago'
+                ELSE 'Otro'
+              END AS estado_texto,
+              nombre
+            FROM clientes
+            """,
+            F("select id, case when estado = 'A' then 'Activo' when estado = 'B' then 'Dado de baja' when estado = 'S' then 'Suspendido por falta de pago' else 'Otro' end as estado_texto, nombre from clientes"));
+        // Un CASE simple (con operando) también.
+        Same("""
+            SELECT
+              DECODE(x, 1, 'uno'),
+              CASE tipo
+                WHEN 1 THEN 'Consulta en el consultorio'
+                WHEN 2 THEN 'Práctica de laboratorio'
+                ELSE 'Otra cosa que no está en la lista'
+              END
+            FROM t
+            """,
+            F("select decode(x, 1, 'uno'), case tipo when 1 then 'Consulta en el consultorio' when 2 then 'Práctica de laboratorio' else 'Otra cosa que no está en la lista' end from t"));
+    }
+
+    [Fact]
+    public void Un_procedimiento_se_sangra_por_bloques_con_las_consultas_formateadas()
+    {
+        const string Proc = "create or alter procedure p_total (desde date) returns (total numeric(18,2)) as declare variable x integer; -- lo leído\n" +
+                            "begin total = 0; for select importe from turnos where fecha >= :desde into :x do begin if (x > 0) then total = total + x; " +
+                            "else total = total - 1; end if (total > 100) then begin suspend; end else if (total < 0) then exception e_negativo; " +
+                            "else exit; when any do total = null; end";
+        var formatted = SqlFormatter.Format(Proc).Replace("\r", "");
+        Same("""
+            CREATE OR ALTER PROCEDURE p_total (desde DATE) RETURNS (total NUMERIC(18,2)) AS
+            DECLARE VARIABLE x INTEGER; -- lo leído
+            BEGIN
+              total = 0;
+              FOR SELECT importe
+                  FROM turnos
+                  WHERE fecha >= :desde
+                  INTO :x
+              DO
+              BEGIN
+                IF (x > 0) THEN
+                  total = total + x;
+                ELSE
+                  total = total - 1;
+              END
+              IF (total > 100) THEN
+              BEGIN
+                SUSPEND;
+              END
+              ELSE IF (total < 0) THEN
+                EXCEPTION e_negativo;
+              ELSE
+                EXIT;
+              WHEN ANY DO
+                total = NULL;
+            END
+            """, formatted);
+        Assert.Equal(formatted, SqlFormatter.Format(formatted).Replace("\r", ""));          // formatear dos veces da lo mismo
+    }
+
+    [Fact]
+    public void Triggers_execute_block_bucles_con_etiqueta_y_CASE_adentro()
+    {
+        Same("""
+            CREATE TRIGGER turnos_bi FOR turnos ACTIVE BEFORE INSERT POSITION 0 AS
+            BEGIN
+              IF (NEW.id IS NULL) THEN
+                NEW.id = GEN_ID(g_turnos, 1);
+              NEW.estado = CASE WHEN NEW.fecha < CURRENT_DATE THEN 'V' ELSE 'P' END;
+            END
+            """, SqlFormatter.Format("create trigger turnos_bi for turnos active before insert position 0 as begin if (new.id is null) then new.id = gen_id(g_turnos, 1); new.estado = case when new.fecha < current_date then 'V' else 'P' end; end").Replace("\r", ""));
+        Same("""
+            EXECUTE BLOCK RETURNS (n INTEGER) AS
+            DECLARE i INTEGER = 0;
+            BEGIN
+              siguiente: WHILE (i < 10) DO
+              BEGIN
+                i = i + 1;
+                IF (MOD(i, 2) = 0) THEN
+                  CONTINUE;
+                n = i;
+                SUSPEND;
+              END
+              IN AUTONOMOUS TRANSACTION DO
+                INSERT INTO log (n)
+                VALUES (:n);
+            END
+            """, SqlFormatter.Format("execute block returns (n integer) as declare i integer = 0; begin siguiente: while (i < 10) do begin i = i + 1; if (mod(i, 2) = 0) then continue; n = i; suspend; end in autonomous transaction do insert into log (n) values (:n); end").Replace("\r", ""));
+    }
+
+    [Fact]
+    public void Lo_que_no_reconoce_queda_tal_cual()
+    {
+        // Un subprocedimiento (DECLARE PROCEDURE), un cuerpo externo y un bloque sin cerrar: no se tocan.
+        const string Sub = "create procedure p as declare procedure q as begin end begin execute procedure q; end";
+        const string External = "create procedure p external name 'udf!p' engine udr";
+        const string Open = "create procedure p as begin if (1 = 1) then begin x = 1; end";
+        foreach (var sql in new[] { Sub, External, Open }) Assert.Equal(sql, SqlFormatter.Format(sql));
+        // Sin mayúsculas: las palabras quedan como se escribieron.
+        Same("""
+            create procedure p as
+            begin
+              if (a = 1) then
+                Suspend;
+            end
+            """, SqlFormatter.Format("create procedure p as begin if (a = 1) then Suspend; end", new SqlFormatOptions(UppercaseKeywords: false)).Replace("\r", ""));
+    }
+
+    [Fact]
     public void Sin_mayusculas_las_palabras_quedan_como_se_escribieron()
     {
         Assert.Equal("select a\nfrom t\nwhere b = 1", SqlFormatter.FormatStatement("select a from t where b = 1", new SqlFormatOptions(UppercaseKeywords: false)));
@@ -128,7 +245,12 @@ public class SqlFormatterTests
             FROM x
             WHERE id = 1;
             set term ^ ;
-            create procedure p as begin select 1 from rdb$database into :n; end^
+            CREATE PROCEDURE p AS
+            BEGIN
+              SELECT 1
+              FROM rdb$database
+              INTO :n;
+            END^
             set term ; ^
             -- y otra
             UPDATE x

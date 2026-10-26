@@ -41,19 +41,24 @@ public static class DiagramPainter
         var dashed = new Pen(palette.Line, 1.2, new DashStyle([5, 3.5], 0));
         var highlight = new Pen(palette.Selected, 2);
         var highlightDashed = new Pen(palette.Selected, 2, new DashStyle([4, 3], 0));
+        var path = new Pen(palette.Marker, 3);
+        var pathDashed = new Pen(palette.Marker, 3, new DashStyle([4, 3], 0));
         foreach (var e in scene.Edges)
         {
             var touches = selected is not null && (ReferenceEquals(e.From, selected) || ReferenceEquals(e.To, selected));
-            var pen = touches ? e.Link.IsLogical ? highlightDashed : highlight : e.Link.IsLogical ? dashed : line;
+            var onPath = scene.IsOnPath(e);
+            var pen = onPath ? e.Link.IsLogical ? pathDashed : path
+                : touches ? e.Link.IsLogical ? highlightDashed : highlight : e.Link.IsLogical ? dashed : line;
             var points = DiagramScene.Route(e);
             for (var i = 1; i < points.Count; i++)
                 ctx.DrawLine(pen, new Point(points[i - 1].X, points[i - 1].Y), new Point(points[i].X, points[i].Y));
-            Arrow(ctx, touches ? palette.Selected : palette.Line, points[^2], points[^1]);
+            Arrow(ctx, onPath ? palette.Marker : touches ? palette.Selected : palette.Line, points[^2], points[^1]);
         }
 
         var border = new Pen(palette.Border, 1);
         var outsideBorder = new Pen(palette.Border, 1, new DashStyle([3, 2], 0));
         var selectedBorder = new Pen(palette.Selected, 2.5);
+        var pathBorder = new Pen(palette.Marker, 2.5);
         foreach (var n in scene.Nodes)
         {
             var rect = new Rect(n.X, n.Y, n.Width, n.Height);
@@ -62,7 +67,7 @@ public static class DiagramPainter
             ctx.DrawRectangle(n.IsView ? palette.ViewHeader : palette.Header, null, head, 4, 4);
             if (n.Rows.Count > 0 || n.HiddenColumns > 0)
                 ctx.DrawLine(border, new Point(n.X, n.Y + DiagramMetrics.HeaderHeight), new Point(n.X + n.Width, n.Y + DiagramMetrics.HeaderHeight));
-            ctx.DrawRectangle(null, ReferenceEquals(n, selected) ? selectedBorder : n.IsOutside ? outsideBorder : border, rect, 4, 4);
+            ctx.DrawRectangle(null, ReferenceEquals(n, selected) ? selectedBorder : scene.IsOnPath(n) ? pathBorder : n.IsOutside ? outsideBorder : border, rect, 4, 4);
             ctx.DrawText(Text(n.Name, FaceBold, DiagramMetrics.HeaderFontSize, n.IsOutside ? palette.Muted : palette.Text),
                 new Point(n.X + DiagramMetrics.PaddingX, n.Y + 5));
 

@@ -143,6 +143,63 @@ public sealed class FilterPopupTests(FirebirdFixture fb, HeadlessFixture ui) : I
     }, CancellationToken.None);
 
     [Fact]
+    public Task El_panel_de_filtros_lista_las_columnas_y_escribe_el_mismo_filtro() => ui.Session.DispatchAsync(async () =>
+    {
+        var grid = new DrawnGrid();
+        var w = new Window { Content = grid, Width = 1200, Height = 600 };
+        w.Show();
+        grid.SetData(Cols(), Data());
+        Pump();
+        Assert.Null(grid.FilterPanel);                                          // se arma recién al abrirlo
+        grid.IsFilterPanelOpen = true;
+        Pump();
+        var panel = grid.FilterPanel!;
+        Assert.Equal([0, 1, 2, 3, 4], panel.ShownColumns);
+
+        // Escribir en el cuadro de una columna y Enter: el mismo filtro que en la fila de filtros.
+        var box = panel.BoxFor(2)!;
+        box.Focus();
+        box.Text = ">15";
+        w.KeyPress(Avalonia.Input.Key.Enter, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.Enter, null);
+        await grid.PendingBuild;
+        Pump();
+        Assert.Equal(">15", grid.Spec.Filters[2].Text);
+        Assert.Equal([1, 2, 3], grid.VisibleRowIndexes());
+
+        // Lo que se pone en la grilla aparece en el panel; «Solo las que tienen filtro» y buscar la columna.
+        grid.SetFilter(1, "=CAJA");
+        await grid.PendingBuild;
+        Pump();
+        Assert.Equal("=CAJA", panel.BoxFor(1)!.Text);
+        panel.OnlyFiltered = true;
+        Assert.Equal([1, 2], panel.ShownColumns);
+        panel.OnlyFiltered = false;
+        panel.SearchText = "fe";
+        Assert.Equal([3], panel.ShownColumns);                                  // FECHA
+
+        // El ▾ de la columna abre su ventanita, al lado del panel.
+        grid.OpenFilterPopup(3, panel.BoxFor(3)!);
+        Pump();
+        Assert.NotNull(grid.CurrentFilterPopup);
+        grid.CurrentFilterPopup!.Apply();
+        await grid.PendingBuild;
+
+        grid.ClearFilters();
+        await grid.PendingBuild;
+        Pump();
+        panel.SearchText = "";
+        Assert.All(panel.ShownColumns, c => Assert.Equal("", panel.BoxFor(c)!.Text));
+
+        // Desde el encabezado («Filtrar en el panel de filtros»): lo abre con el foco en esa columna.
+        grid.IsFilterPanelOpen = false;
+        grid.ShowFilterPanelFor(4);
+        Pump();
+        Assert.True(grid.IsFilterPanelOpen);
+        Assert.True(panel.BoxFor(4)!.IsFocused);
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
     public Task En_Datos_los_valores_salen_del_servidor_a_pedido() => ui.Session.DispatchAsync(async () =>
     {
         var store = AppServices.CreateProfileStore(_folder);
