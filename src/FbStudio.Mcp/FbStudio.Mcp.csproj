@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Conector MCP (F-37, D-114): solo estructura, rendimiento y monitoreo; ninguna herramienta ejecuta SQL ni lee filas. -->
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="FbStudio.Mcp.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FbStudio.Core\FbStudio.Core.csproj" />
+    <ProjectReference Include="..\FbStudio.Firebird\FbStudio.Firebird.csproj" />
+    <ProjectReference Include="..\FbStudio.Workspace\FbStudio.Workspace.csproj" />
+  </ItemGroup>
+</Project>

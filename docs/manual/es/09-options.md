@@ -134,6 +134,13 @@ mantienen abierta mientras trabajan. Más en [Monitoreo y rendimiento](06-monito
 Cada registro puede no guardar historial: apagá **Guardar historial de sentencias** en su registro. El historial se ve
 con `Ctrl+4` (ver [El editor de SQL](02-editor.md)).
 
+### Asistentes (MCP)
+
+Las bases habilitadas para asistentes de IA, la configuración MCP lista para copiar (**Copiar**), el largo máximo de cada
+respuesta (40.000 caracteres de fábrica), si el monitoreo muestra quién tiene cada conexión (prendido de fábrica) y las
+últimas llamadas del asistente. Todo sobre el conector, en
+[Asistentes de IA (MCP)](10-assistants.md).
+
 ### Lo que se recuerda sin la ventana
 
 Algunas preferencias se guardan junto con las opciones aunque no estén en esta ventana:
@@ -342,6 +349,7 @@ de tu perfil ya es privada.
 | `grid-layouts.json` | El orden, el ancho y las columnas ocultas de la pestaña Datos, por base y tabla (las últimas 500 tablas). |
 | `monitor-queries.json` | Las consultas propias del monitoreo; valen para todas las bases. |
 | `areas` | Una carpeta con las áreas de cada base, un `.json` por registro. Una base que usa otro archivo de áreas (por ejemplo, uno compartido por el equipo) lo lee de donde lo elegiste. |
+| `mcp-log.jsonl` | Las llamadas de los asistentes de IA al conector MCP; lo que pidieron y los errores, cifrados (ver [El registro de llamadas](10-assistants.md#el-registro-de-llamadas)). |
 | `errors.log` | Los errores no previstos, con las contraseñas tapadas, para adjuntar en un reporte. Pasado 1 MB se borra y empieza de nuevo. |
 
 Fuera de esa carpeta, FbStudio escribe el manual (**Ayuda › Manual** y `F1`) como HTML en una carpeta `FbStudio` dentro

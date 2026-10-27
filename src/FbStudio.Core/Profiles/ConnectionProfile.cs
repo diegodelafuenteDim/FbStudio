@@ -57,6 +57,12 @@ public sealed record ConnectionProfile
     /// <summary>Guardar las sentencias ejecutadas en el historial local (cifrado). Se puede apagar por perfil.</summary>
     public bool SaveHistory { get; set; } = true;
 
+    /// <summary>
+    /// Disponible para asistentes de IA por el conector MCP (F-37, D-114): solo estructura, rendimiento y monitoreo,
+    /// nunca datos de las tablas. Apagado por defecto.
+    /// </summary>
+    public bool AssistantAccess { get; set; }
+
     public string? Folder { get; init; }
 
     /// <summary>

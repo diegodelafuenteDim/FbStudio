@@ -15,5 +15,6 @@ in production. It runs on Windows, Linux and macOS, in English and Spanish.
 7. [Maintenance and permissions](07-maintenance.md): backup, restore, nbackup, validation, sweep, properties, users and permissions.
 8. [Scripts, comparisons and import](08-scripts.md): the database script, comparing databases and data, documentation, importing and test data.
 9. [Options, shortcuts and privacy](09-options.md): the application options, every shortcut, and what is stored where.
+10. [AI assistants (MCP)](10-assistants.md): let an AI assistant look at the structure of your databases, without seeing data.
 
 > **Shortcut:** in FbStudio, `F1` opens the chapter for whatever you are using, and **Help › Manual** opens this index.

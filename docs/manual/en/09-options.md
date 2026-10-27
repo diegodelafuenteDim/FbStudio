@@ -133,6 +133,13 @@ keeps it open while it works. More in [Monitoring and performance](06-monitoring
 Each registration can opt out of the history: turn off **Keep statement history** in its registration. You see the
 history with `Ctrl+4` (see [The SQL editor](02-editor.md)).
 
+### Assistants (MCP)
+
+The databases enabled for AI assistants, the MCP configuration ready to copy (**Copy**), the maximum length of each
+answer (40,000 characters by default), whether monitoring shows who holds each connection (on by default) and the
+assistant's recent calls. Everything about the connector is in
+[AI assistants (MCP)](10-assistants.md).
+
 ### What is remembered outside the window
 
 Some preferences are saved along with the options even though they are not in this window:
@@ -341,6 +348,7 @@ your profile folder is already private.
 | `grid-layouts.json` | The column order, widths and hidden columns of the Data tab, per database and table (the last 500 tables). |
 | `monitor-queries.json` | Your own monitoring queries; they apply to all databases. |
 | `areas` | A folder with the areas of each database, one `.json` per registration. A database that uses another areas file (for example, one shared by the team) reads it from wherever you chose. |
+| `mcp-log.jsonl` | The calls of AI assistants to the MCP connector; what they asked for and the errors, encrypted (see [The call log](10-assistants.md#the-call-log)). |
 | `errors.log` | Unexpected errors, with passwords masked, to attach to a bug report. Once it passes 1 MB, it is deleted and starts over. |
 
 Outside that folder, FbStudio writes the manual (**Help › Manual** and `F1`) as HTML into a `FbStudio` folder inside the

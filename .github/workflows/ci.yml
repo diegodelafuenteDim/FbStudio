@@ -44,7 +44,7 @@ jobs:
           retention-days: 7
 
   windows:
-    name: Windows (core and workspace)
+    name: Windows (core, workspace and MCP)
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
@@ -57,9 +57,15 @@ jobs:
       # Firebird and UI tests need Linux containers: they run in the Linux job.
       - run: dotnet test tests/FbStudio.Core.Tests -c Release
       - run: dotnet test tests/FbStudio.Workspace.Tests -c Release
+      - run: dotnet test tests/FbStudio.Mcp.Tests -c Release
+      - name: FbStudio.exe (a GUI executable) answers as an MCP server over stdin/stdout
+        shell: bash
+        run: |
+          dotnet build src/FbStudio.App -c Release -o build-app
+          tools/mcp-smoke.sh build-app/FbStudio.exe
 
   macos:
-    name: macOS (core and workspace)
+    name: macOS (core, workspace and MCP)
     runs-on: macos-latest
     timeout-minutes: 20
     steps:
@@ -71,6 +77,7 @@ jobs:
           global-json-file: global.json
       - run: dotnet test tests/FbStudio.Core.Tests -c Release
       - run: dotnet test tests/FbStudio.Workspace.Tests -c Release
+      - run: dotnet test tests/FbStudio.Mcp.Tests -c Release
 
   # Packages only on request (Actions → CI → Run workflow) or for a version tag (v0.2.0): each set is ~210 MB of storage.
   packages:
@@ -97,6 +104,7 @@ jobs:
           test -x /opt/fbstudio/FbStudio
           test "$(readlink -f /usr/bin/fbstudio)" = /opt/fbstudio/FbStudio
           desktop-file-validate /usr/share/applications/fbstudio.desktop 2>/dev/null || grep -q '^Exec=fbstudio' /usr/share/applications/fbstudio.desktop
+          tools/mcp-smoke.sh fbstudio
           sudo apt-get remove -y fbstudio
           test ! -e /usr/bin/fbstudio
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -145,6 +153,11 @@ jobs:
             cat "$tmp/run.log"
             exit 1
           fi
+      - name: The packaged app answers as an MCP server
+        run: |
+          tmp="$(mktemp -d)"
+          ditto -x -k artifacts/FbStudio-*-osx-arm64.zip "$tmp"
+          tools/mcp-smoke.sh "$tmp/FbStudio.app/Contents/MacOS/FbStudio"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: FbStudio-packages-macos

@@ -15,5 +15,6 @@ producción. Funciona en Windows, Linux y macOS, en español e inglés.
 7. [Mantenimiento y permisos](07-maintenance.md): backup, restore, nbackup, validación, sweep, propiedades, usuarios y permisos.
 8. [Scripts, comparaciones e importación](08-scripts.md): script de la base, comparar bases y datos, documentación, importar y datos de prueba.
 9. [Opciones, atajos y privacidad](09-options.md): las opciones del sistema, todos los atajos y qué se guarda dónde.
+10. [Asistentes de IA (MCP)](10-assistants.md): que un asistente de IA consulte la estructura de tus bases, sin ver datos.
 
 > **Atajo:** en FbStudio, `F1` abre el capítulo de lo que estás usando, y **Ayuda › Manual** abre este índice.

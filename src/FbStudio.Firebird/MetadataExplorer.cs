@@ -304,9 +304,13 @@ public sealed partial class MetadataExplorer(ConnectionProfile profile, string p
 
     /// <summary>Varias lecturas en una misma transacción de solo lectura, de a una por vez sobre la conexión del explorador.</summary>
     private Task<T> WithTransactionAsync<T>(Func<FbConnection, FbTransaction, Task<T>> work, CancellationToken ct) =>
+        WithTransactionAsync(Transactions.ReadOnly, work, ct);
+
+    /// <summary>Lo mismo con otra transacción de solo lectura (la de foto, para que MON$ sea una sola foto).</summary>
+    private Task<T> WithTransactionAsync<T>(FbTransactionOptions options, Func<FbConnection, FbTransaction, Task<T>> work, CancellationToken ct) =>
         WithConnectionAsync(async connection =>
         {
-            await using var tx = await connection.BeginTransactionAsync(Transactions.ReadOnly, ct);
+            await using var tx = await connection.BeginTransactionAsync(options, ct);
             var result = await work(connection, tx);
             await tx.CommitAsync(ct);
             return result;

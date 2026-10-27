@@ -1162,10 +1162,19 @@ public partial class MainWindow : Window
     {
         if (Vm is not { } vm) return;
         var languageBefore = vm.Options.Language;
-        var result = await new OptionsWindow(new OptionsViewModel(vm.Options)).ShowDialog<AppSettings?>(this);
+        var result = await new OptionsWindow(new OptionsViewModel(vm.Options, AssistantsInfoFor(vm))).ShowDialog<AppSettings?>(this);
         if (result is null) return;
         vm.SaveSettings(result);
         if (vm.Options.Language != languageBefore) await OfferRestartAsync(vm);
+    }
+
+    /// <summary>Lo de la pestaña «Asistentes (MCP)»: las bases habilitadas, cómo se lanza el conector y sus últimas llamadas.</summary>
+    private static AssistantsInfo AssistantsInfoFor(MainWindowViewModel vm)
+    {
+        var (command, arguments) = McpSetup.Launch();
+        var enabled = vm.ProfileStore.Load().Where(p => p.AssistantAccess).Select(p => p.Name).Order(StringComparer.CurrentCultureIgnoreCase).ToList();
+        var calls = AppServices.CreateMcpCallLog(null, vm.Options.HistoryRetentionDays).Read();
+        return new AssistantsInfo(enabled, command, arguments, calls);
     }
 
     private Task ShowShortcutsAsync() => ShortcutsWindow().ShowDialog(this);

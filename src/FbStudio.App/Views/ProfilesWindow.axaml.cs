@@ -97,6 +97,7 @@ public partial class ProfilesWindow : Window
         WireCryptBox.SelectedItem = WireCryptMode.Enabled;
         ReadOnlyBox.IsChecked = false;
         SaveHistoryBox.IsChecked = true;
+        AssistantAccessBox.IsChecked = false;
         TestResult.Text = "";
         _filling = false;
     }
@@ -120,6 +121,7 @@ public partial class ProfilesWindow : Window
         WireCryptBox.SelectedItem = p.WireCrypt;
         ReadOnlyBox.IsChecked = p.ReadOnly;
         SaveHistoryBox.IsChecked = p.SaveHistory;
+        AssistantAccessBox.IsChecked = p.AssistantAccess;
         TestResult.Text = "";
         _filling = false;
     }
@@ -160,6 +162,7 @@ public partial class ProfilesWindow : Window
             WireCrypt = WireCryptBox.SelectedItem is WireCryptMode wc ? wc : WireCryptMode.Enabled,
             ReadOnly = ReadOnlyBox.IsChecked == true,
             SaveHistory = SaveHistoryBox.IsChecked == true,
+            AssistantAccess = AssistantAccessBox.IsChecked == true,
         };
     }
 

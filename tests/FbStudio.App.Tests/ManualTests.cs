@@ -7,7 +7,7 @@ namespace FbStudio.App.Tests;
 public class ManualTests
 {
     private static readonly string[] Expected =
-        ["README", "01-start", "02-editor", "03-results", "04-data", "05-tree", "06-monitoring", "07-maintenance", "08-scripts", "09-options"];
+        ["README", "01-start", "02-editor", "03-results", "04-data", "05-tree", "06-monitoring", "07-maintenance", "08-scripts", "09-options", "10-assistants"];
 
     [Fact]
     public void Los_dos_idiomas_tienen_los_mismos_capitulos_y_la_misma_cantidad_de_titulos()

@@ -193,6 +193,45 @@
           <TextBlock Classes="note" Text="{x:Static res:Strings.OptionsRetentionNote}" />
         </StackPanel>
       </TabItem>
+
+      <TabItem Header="{x:Static res:Strings.OptionsAssistants}">
+        <ScrollViewer>
+          <StackPanel>
+            <TextBlock Classes="note" Text="{x:Static res:Strings.AssistantsIntro}" Opacity="0.85" FontSize="13" />
+            <Grid ColumnDefinitions="250,*">
+              <TextBlock Classes="label" Text="{x:Static res:Strings.AssistantsEnabled}" VerticalAlignment="Top" />
+              <TextBlock Grid.Column="1" x:Name="AssistantsDatabasesText" Text="{Binding AssistantsDatabases}" TextWrapping="Wrap" Margin="0,6" />
+            </Grid>
+            <TextBlock Classes="label" Text="{x:Static res:Strings.AssistantsConfig}" FontWeight="SemiBold" Margin="0,10,0,4" />
+            <TextBox x:Name="AssistantsConfigBox" Text="{Binding AssistantsConfig, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True"
+                     FontFamily="Cascadia Mono,Consolas,Menlo,monospace" MinHeight="120" />
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,6,0,0">
+              <Button x:Name="CopyAssistantsConfigButton" Content="{x:Static res:Strings.AssistantsCopy}" />
+              <TextBlock x:Name="AssistantsCopied" Classes="note" VerticalAlignment="Center" Margin="0" />
+            </StackPanel>
+            <TextBlock Classes="note" Text="{x:Static res:Strings.AssistantsConfigNote}" />
+            <Grid ColumnDefinitions="250,Auto,Auto">
+              <TextBlock Classes="label" Text="{x:Static res:Strings.AssistantsLimit}" />
+              <NumericUpDown Grid.Column="1" Value="{Binding McpResponseLimit}" Minimum="5000" Maximum="200000" Increment="5000"
+                             FormatString="0" Width="140" Margin="0,4" />
+              <TextBlock Grid.Column="2" Classes="label" Text="{x:Static res:Strings.AssistantsCharacters}" Margin="8,6,0,6" />
+            </Grid>
+            <TextBlock Classes="note" Text="{x:Static res:Strings.AssistantsLimitNote}" />
+            <CheckBox IsChecked="{Binding McpShowClients}" Content="{x:Static res:Strings.AssistantsShowClients}" />
+            <TextBlock Classes="note" Text="{x:Static res:Strings.AssistantsShowClientsNote}" />
+            <TextBlock Classes="label" Text="{x:Static res:Strings.AssistantsCalls}" FontWeight="SemiBold" Margin="0,10,0,4" />
+            <TextBlock Classes="note" Text="{x:Static res:Strings.AssistantsNoCalls}" IsVisible="{Binding !HasAssistantsCalls}" />
+            <ItemsControl x:Name="AssistantsCallsList" ItemsSource="{Binding AssistantsCalls}" IsVisible="{Binding HasAssistantsCalls}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <SelectableTextBlock Text="{Binding}" TextWrapping="Wrap" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12" Margin="0,2" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Classes="note" Text="{x:Static res:Strings.AssistantsCallsNote}" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
     </TabControl>
   </DockPanel>
 </Window>

@@ -17,6 +17,12 @@ public partial class OptionsWindow : Window
         ShowInTaskbar = false;
         OkButton.Click += (_, _) => Close(options.ToSettings());
         CancelButton.Click += (_, _) => Close(null);
+        CopyAssistantsConfigButton.Click += async (_, _) =>
+        {
+            if (GetTopLevel(this)?.Clipboard is not { } clipboard) return;
+            await Avalonia.Input.Platform.ClipboardExtensions.SetTextAsync(clipboard, options.AssistantsConfig);
+            AssistantsCopied.Text = FbStudio.App.Resources.Strings.AssistantsCopied;
+        };
     }
 
     public OptionsViewModel Options => (OptionsViewModel)DataContext!;

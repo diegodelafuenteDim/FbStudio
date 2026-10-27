@@ -105,6 +105,12 @@ public sealed record AppSettings
     /// <summary>Al cerrar, guardar las pestañas de consulta (con su texto y su base) para volver a abrirlas la próxima vez.</summary>
     public bool RestoreTabs { get; set; } = true;
 
+    /// <summary>Largo máximo de cada respuesta del conector MCP (D-114): más que esto se recorta, con un aviso.</summary>
+    public int McpResponseLimit { get; set; } = 40_000;
+
+    /// <summary>En el monitoreo del conector MCP, mostrar usuario, equipo y programa de cada conexión (D-118).</summary>
+    public bool McpShowClients { get; set; } = true;
+
     /// <summary>Los últimos archivos .sql abiertos o guardados, el más reciente primero; null si ninguno.</summary>
     public IReadOnlyList<string>? RecentFiles { get; init; }
 
@@ -134,6 +140,7 @@ public sealed record AppSettings
         EditorFontFamily = string.IsNullOrWhiteSpace(EditorFontFamily) ? DefaultFont : EditorFontFamily.Trim(),
         EditorFontSize = Math.Clamp(EditorFontSize, 8, 40),
         TabSize = Math.Clamp(TabSize, 1, 16),
+        McpResponseLimit = Math.Clamp(McpResponseLimit, 5_000, 200_000),
         RecentFiles = RecentFiles?.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase).Take(MaxRecentFiles).ToList() is { Count: > 0 } recent ? recent : null,
         Templates = Templates?.Where(t => !string.IsNullOrWhiteSpace(t.Abbreviation) && t.Text is not null)

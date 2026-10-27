@@ -38,7 +38,7 @@
       </Border>
       <TextBlock x:Name="TestResult" DockPanel.Dock="Bottom" TextWrapping="Wrap" Margin="0,8,0,0" />
       <ScrollViewer>
-      <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+      <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
             x:Name="Form">
         <Grid.Styles>
           <Style Selector="TextBlock.label">
@@ -73,6 +73,8 @@
         <ComboBox Grid.Row="10" Grid.Column="1" x:Name="WireCryptBox" Width="200" />
         <CheckBox Grid.Row="11" Grid.Column="1" x:Name="ReadOnlyBox" Content="{x:Static res:Strings.ProfileReadOnly}" />
         <CheckBox Grid.Row="12" Grid.Column="1" x:Name="SaveHistoryBox" Content="{x:Static res:Strings.ProfileSaveHistory}" />
+        <CheckBox Grid.Row="13" Grid.Column="1" x:Name="AssistantAccessBox" Content="{x:Static res:Strings.ProfileAssistantAccess}"
+                  ToolTip.Tip="{x:Static res:Strings.ProfileAssistantAccessTip}" />
       </Grid>
       </ScrollViewer>
     </DockPanel>

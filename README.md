@@ -88,6 +88,9 @@ familiar to people coming from commercial tools, without licenses or subscriptio
 - **Users and permissions:** server users, database roles and grants with checkboxes per user or per object, plus
   Firebird 3 structure (DDL) permissions; the GRANT/REVOKE script is shown before applying it all in one transaction,
   and passwords are never displayed.
+- **AI assistants (MCP):** FbStudio itself is an MCP server (`FbStudio mcp`), so an assistant compatible with MCP can
+  read the structure, plans, monitoring and statistics of the databases you enable for it, without running SQL or
+  reading table rows ([chapter 10 of the manual](docs/manual/en/10-assistants.md)).
 - **English and Spanish** interface and [user manual](docs/manual/en/README.md) (also inside the app: Help → Manual, and
   F1), light and dark mode.
 
@@ -230,6 +233,9 @@ named for reference only.
 - usuarios, roles y permisos, también por objeto y los de estructura (con el SQL a la vista antes de aplicarlo);
 - exportación a CSV, Excel, script INSERT, JSON y Markdown; importación de un CSV o un Excel a una tabla (o a una
   tabla nueva, y actualizando por la clave) y datos de prueba para bases de desarrollo;
+- conector para asistentes de IA (MCP): el propio FbStudio es un servidor MCP (`FbStudio mcp`) y un asistente
+  compatible puede leer la estructura, los planes, el monitoreo y las estadísticas de las bases que le habilites, sin
+  ejecutar SQL ni leer filas ([capítulo 10 del manual](docs/manual/es/10-assistants.md));
 - manual completo en español e inglés, también adentro de la app (Ayuda → Manual y F1).
 
 ![La grilla con un filtro por columna](docs/screenshots/es/grid-column-filter.png)

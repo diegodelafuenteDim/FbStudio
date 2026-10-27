@@ -131,6 +131,7 @@ derecha, el formulario del registro elegido y los botones **Probar conexión**, 
 | **Cifrado de la conexión** | **Si el servidor lo acepta (Enabled)** (de fábrica), **Obligatorio (Required)** o **Sin cifrar (Disabled)**. |
 | **Solo lectura (bloquea DML, DDL y EXECUTE)** | Apagado de fábrica. |
 | **Guardar historial de sentencias (cifrado; los días se eligen en Opciones)** | Prendido de fábrica. |
+| **Disponible para asistentes de IA (MCP)** | Apagado de fábrica. Ver [Disponible para asistentes de IA (MCP)](#disponible-para-asistentes-de-ia-mcp). |
 
 > **Ojo:** conviene escribir el alias en **Base (alias o ruta)**: ese texto se ve en la franja y en el tooltip del árbol.
 > Donde FbStudio lee por su cuenta la ruta de la base en el servidor (estadísticas, mantenimiento, trace), la cambia por
@@ -167,6 +168,12 @@ cancela una sentencia. La franja suma « · solo lectura».
 
 > **Ojo:** el solo lectura es una red de seguridad de FbStudio, no reemplaza los permisos de la base. Para una base de
 > producción que solo consultás, combiná **Producción** con **Solo lectura**.
+
+### Disponible para asistentes de IA (MCP)
+
+Con esta casilla, un asistente de IA compatible con MCP puede consultarle a FbStudio la estructura de la base: objetos,
+DDL, dependencias, planes, monitoreo y estadísticas. Nunca recibe datos de las tablas ni puede cambiar nada, y no ve el servidor, la ruta, el
+usuario ni la contraseña. Viene apagada. Cómo conectarlo y qué ve, en [Asistentes de IA (MCP)](10-assistants.md).
 
 ### Cifrado de la conexión
 

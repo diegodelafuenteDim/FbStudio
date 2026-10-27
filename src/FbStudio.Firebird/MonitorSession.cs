@@ -27,18 +27,7 @@ public sealed class MonitorSession(ConnectionProfile profile, string password) :
     public Task<MonitorSummary> SummaryAsync(CancellationToken ct = default) =>
         WithSnapshotAsync(async (connection, tx) =>
         {
-            await using var cmd = new FbCommand(MonitorQueries.SummarySql, connection, tx);
-            await using var r = await cmd.ExecuteReaderAsync(ct);
-            await r.ReadAsync(ct);
-            long L(int i) => r.IsDBNull(i) ? 0 : Convert.ToInt64(r.GetValue(i));
-            string? S(int i) => r.IsDBNull(i) ? null : r.GetString(i).Trim();
-            var summary = new MonitorSummary(L(0), L(1), L(2), L(3), (int)L(4), (int)L(5), (int)L(6),
-                r.IsDBNull(7) ? null : L(7), L(8), r.GetString(9).Trim(), S(10))
-            {
-                OatUser = S(11), OatIp = S(12), OatProcess = S(13), OatSystem = L(14) == 1,
-                WaitingStatements = (int)L(15), LongestWaitSeconds = r.IsDBNull(16) ? null : L(16), IsOwner = L(17) == 1,
-                BackupState = BackupStates.From(r.IsDBNull(18) ? 0 : (int)L(18)), OatHost = S(19),
-            };
+            var summary = await MonitorReads.SummaryAsync(connection, tx, ct);
             OwnAttachment = summary.OwnAttachment;
             return summary;
         }, ct);

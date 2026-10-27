@@ -12,6 +12,40 @@ Qué cambió en cada versión de FbStudio, en inglés y en español. La sección
 
 ### Español
 
+## [0.4.0] - 2026-10-27
+
+### English
+
+- Connector for AI assistants (MCP): FbStudio itself is the MCP server (`FbStudio mcp`, nothing else to install), so an
+  assistant compatible with MCP can look at the databases you enable for it, to understand their structure, check a
+  plan or see what holds the server back. It never runs SQL or reads table rows: there is no tool for that, and the
+  plan is only prepared, never executed.
+- Its 11 tools: the enabled databases, the schema (whole or by area), the details of an object, metadata search,
+  dependencies, where a column is used, the foreign key path between two tables, the plan of a statement, database
+  information, a monitoring snapshot (OAT, open transactions, running statements with their values replaced by "?") and
+  statistics (the header, or up to 20 tables).
+- Each registration has "Available to AI assistants (MCP)", off by default. Errors leave out the server, the path, the
+  user and the values. Tools › Options › Assistants (MCP) has the configuration to copy into the assistant, the
+  enabled databases, the maximum length of each answer, whether monitoring shows who holds each connection, and the
+  recent calls (stored encrypted like the history).
+- Manual: new chapter 10, "AI assistants (MCP)", on how to set it up in Windows, Linux and macOS.
+
+### Español
+
+- Conector para asistentes de IA (MCP): el propio FbStudio hace de servidor MCP (`FbStudio mcp`, sin instalar nada más),
+  para que un asistente compatible con MCP pueda mirar las bases que le habilites, entender su estructura, revisar un
+  plan o ver qué está frenando al servidor. Nunca ejecuta SQL ni lee filas de las tablas: no hay ninguna herramienta
+  para eso, y el plan solo se prepara, no se ejecuta.
+- Sus 11 herramientas: las bases habilitadas, la estructura (entera o por área), el detalle de un objeto, la búsqueda en
+  los metadatos, las dependencias, dónde se usa una columna, el camino de claves foráneas entre dos tablas, el plan de
+  una sentencia, los datos de la base, una foto del monitoreo (OAT, transacciones abiertas, sentencias en curso con los
+  valores cambiados por «?») y las estadísticas (el encabezado, o hasta 20 tablas).
+- Cada registro tiene «Disponible para asistentes de IA (MCP)», apagado de fábrica. Los errores no muestran el
+  servidor, la ruta, el usuario ni los valores. Herramientas › Opciones › Asistentes (MCP) tiene la configuración para
+  copiar en el asistente, las bases habilitadas, el largo máximo de cada respuesta, si el monitoreo muestra quién tiene
+  cada conexión y las últimas llamadas (guardadas cifradas como el historial).
+- Manual: capítulo 10 nuevo, «Asistentes de IA (MCP)», con cómo configurarlo en Windows, Linux y macOS.
+
 ## [0.3.0] - 2026-10-26
 
 ### English

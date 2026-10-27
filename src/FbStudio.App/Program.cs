@@ -26,6 +26,22 @@ internal static class Program
             return 0;
         }
 
+        // FbStudio mcp [--data <carpeta>]
+        // El conector MCP (D-114): lo lanza un asistente de IA y le habla por la entrada y la salida estándar, sin
+        // ventanas. --data usa otra carpeta de datos en lugar de la de siempre (pruebas, o FbStudio portable).
+        if (args.Length >= 1 && args[0] == "mcp")
+        {
+            var folder = args.Length >= 3 && args[1] == "--data" ? args[2] : ProfileStore.DefaultFolder;
+            var profiles = AppServices.CreateProfileStore(folder);
+            var areas = AppServices.CreateAreaStore(folder);
+            var settings = AppServices.CreateSettingsStore(folder).Current;
+            var log = AppServices.CreateMcpCallLog(folder, settings.HistoryRetentionDays);
+            log.Purge();
+            var context = new FbStudio.Mcp.ConnectorContext(profiles.Load, areas.Areas, profiles.GetPassword, log, settings.McpResponseLimit,
+                settings.McpShowClients);
+            return FbStudio.Mcp.McpHost.RunAsync(context, folder, Console.Error).GetAwaiter().GetResult();
+        }
+
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         return 0;
     }

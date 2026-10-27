@@ -25,9 +25,10 @@ public sealed partial class OptionsViewModel : ObservableObject
     /// <summary>Lo guardado al abrir: lo que la ventana no muestra (archivos recientes, lo que se recuerda de Datos, la última versión vista…) sigue igual.</summary>
     private readonly AppSettings _current;
 
-    public OptionsViewModel(AppSettings current)
+    public OptionsViewModel(AppSettings current, AssistantsInfo? assistants = null)
     {
         _current = current;
+        Assistants = assistants ?? AssistantsInfo.Empty;
         _folderColors = current.FolderColors; // se cambian desde el árbol: acá solo pasan
         var installed = InstalledFonts();
         Fonts = MonospaceFonts.Where(f => installed is null || installed.Contains(f))
@@ -36,6 +37,22 @@ public sealed partial class OptionsViewModel : ObservableObject
     }
 
     public IReadOnlyList<int> RowLimits => AppSettings.RowLimits;
+
+    /// <summary>La pestaña «Asistentes (MCP)» (D-117): solo para mirar y copiar, salvo el largo de las respuestas.</summary>
+    public AssistantsInfo Assistants { get; }
+
+    public string AssistantsDatabases => Assistants.EnabledDatabases.Count == 0
+        ? Strings.AssistantsNoneEnabled
+        : string.Join(", ", Assistants.EnabledDatabases);
+
+    public string AssistantsConfig => McpSetup.Config(Assistants.Command, Assistants.Arguments);
+
+    public IReadOnlyList<string> AssistantsCalls => Assistants.Calls.Select(McpSetup.Line).ToList();
+
+    public bool HasAssistantsCalls => Assistants.Calls.Count > 0;
+
+    [ObservableProperty] private decimal? _mcpResponseLimit;
+    [ObservableProperty] private bool _mcpShowClients;
     public IReadOnlyList<string> Themes { get; } = [Strings.ThemeSystem, Strings.ThemeLight, Strings.ThemeDark];
 
     /// <summary>En el mismo orden que <see cref="UiLanguage.Codes"/>; cada idioma con su propio nombre.</summary>
@@ -177,6 +194,8 @@ public sealed partial class OptionsViewModel : ObservableObject
         OatWarnMinutes = s.OatWarnMinutes;
         OatDangerMinutes = s.OatDangerMinutes;
         OatIgnoreMaintenance = s.OatIgnoreMaintenance;
+        McpResponseLimit = s.McpResponseLimit;
+        McpShowClients = s.McpShowClients;
     }
 
     /// <summary>Un campo numérico vacío vuelve a su valor por defecto.</summary>
@@ -216,6 +235,8 @@ public sealed partial class OptionsViewModel : ObservableObject
             OatWarnMinutes = (int?)OatWarnMinutes ?? d.OatWarnMinutes,
             OatDangerMinutes = (int?)OatDangerMinutes ?? d.OatDangerMinutes,
             OatIgnoreMaintenance = OatIgnoreMaintenance,
+            McpResponseLimit = (int?)McpResponseLimit ?? d.McpResponseLimit,
+            McpShowClients = McpShowClients,
         }).Normalized();
     }
 

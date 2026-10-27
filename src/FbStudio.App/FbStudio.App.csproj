@@ -46,5 +46,6 @@
     <ProjectReference Include="..\FbStudio.Core\FbStudio.Core.csproj" />
     <ProjectReference Include="..\FbStudio.Firebird\FbStudio.Firebird.csproj" />
     <ProjectReference Include="..\FbStudio.Workspace\FbStudio.Workspace.csproj" />
+    <ProjectReference Include="..\FbStudio.Mcp\FbStudio.Mcp.csproj" />
   </ItemGroup>
 </Project>

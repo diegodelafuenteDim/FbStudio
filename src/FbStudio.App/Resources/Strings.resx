@@ -248,6 +248,57 @@
   <data name="AreasUseOwnFile" xml:space="preserve">
     <value>Volver al archivo de esta PC</value>
   </data>
+  <data name="AssistantsCallChars" xml:space="preserve">
+    <value>{0} car.</value>
+  </data>
+  <data name="AssistantsCallError" xml:space="preserve">
+    <value>error</value>
+  </data>
+  <data name="AssistantsCalls" xml:space="preserve">
+    <value>Últimas llamadas</value>
+  </data>
+  <data name="AssistantsCallsNote" xml:space="preserve">
+    <value>Lo que pidió cada llamada y los errores se guardan cifrados como el historial, y se borran con el mismo plazo (pestaña Historial).</value>
+  </data>
+  <data name="AssistantsCharacters" xml:space="preserve">
+    <value>caracteres</value>
+  </data>
+  <data name="AssistantsConfig" xml:space="preserve">
+    <value>Configuración para el asistente</value>
+  </data>
+  <data name="AssistantsConfigNote" xml:space="preserve">
+    <value>Va en la configuración de servidores MCP del asistente (por ejemplo, el archivo .mcp.json de un proyecto). No lleva servidor, usuario ni contraseña: FbStudio usa sus registros y su llavero. Si movés FbStudio a otra carpeta, copiala de nuevo.</value>
+  </data>
+  <data name="AssistantsCopied" xml:space="preserve">
+    <value>Copiado.</value>
+  </data>
+  <data name="AssistantsCopy" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="AssistantsEnabled" xml:space="preserve">
+    <value>Bases habilitadas</value>
+  </data>
+  <data name="AssistantsIntro" xml:space="preserve">
+    <value>Un asistente de IA compatible con MCP puede consultarle a FbStudio la estructura de las bases que tienen prendida «Disponible para asistentes de IA (MCP)» en su registro: objetos, DDL, dependencias, planes, monitoreo y estadísticas. Nunca recibe datos de las tablas ni puede cambiar nada.</value>
+  </data>
+  <data name="AssistantsLimit" xml:space="preserve">
+    <value>Largo máximo de cada respuesta</value>
+  </data>
+  <data name="AssistantsLimitNote" xml:space="preserve">
+    <value>Lo que pase de esto se recorta, con un aviso de cómo pedir menos. Se aplica a las sesiones nuevas del asistente.</value>
+  </data>
+  <data name="AssistantsNoCalls" xml:space="preserve">
+    <value>Todavía no hubo llamadas.</value>
+  </data>
+  <data name="AssistantsNoneEnabled" xml:space="preserve">
+    <value>Ninguna: se habilitan en el registro de cada base.</value>
+  </data>
+  <data name="AssistantsShowClients" xml:space="preserve">
+    <value>En el monitoreo, mostrar quién tiene cada conexión (usuario, equipo y programa)</value>
+  </data>
+  <data name="AssistantsShowClientsNote" xml:space="preserve">
+    <value>Sirve para saber quién frena la OAT. Apagado, el asistente ve solo los números de conexión. El SQL de las sentencias en curso sale siempre con los valores cambiados por «?». Se aplica a las sesiones nuevas del asistente.</value>
+  </data>
   <data name="AutoCommittedSuffix" xml:space="preserve">
     <value> · confirmado (autocommit)</value>
   </data>
@@ -3158,6 +3209,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="OpenTransactionTitle" xml:space="preserve">
     <value>Transacción abierta</value>
   </data>
+  <data name="OptionsAssistants" xml:space="preserve">
+    <value>Asistentes (MCP)</value>
+  </data>
   <data name="OptionsDataApply" xml:space="preserve">
     <value>Al aplicar cambios en la pestaña Datos</value>
   </data>
@@ -3382,6 +3436,12 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="PlanTab" xml:space="preserve">
     <value>Plan</value>
+  </data>
+  <data name="ProfileAssistantAccess" xml:space="preserve">
+    <value>Disponible para asistentes de IA (MCP)</value>
+  </data>
+  <data name="ProfileAssistantAccessTip" xml:space="preserve">
+    <value>Un asistente de IA conectado a FbStudio por MCP puede ver la estructura de esta base. Nunca datos de las tablas ni cambios.</value>
   </data>
   <data name="ProfileDatabase" xml:space="preserve">
     <value>Base (alias o ruta)</value>

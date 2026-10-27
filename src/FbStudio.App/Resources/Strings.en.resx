@@ -248,6 +248,57 @@
   <data name="AreasUseOwnFile" xml:space="preserve">
     <value>Back to this PC's file</value>
   </data>
+  <data name="AssistantsCallChars" xml:space="preserve">
+    <value>{0} chars</value>
+  </data>
+  <data name="AssistantsCallError" xml:space="preserve">
+    <value>error</value>
+  </data>
+  <data name="AssistantsCalls" xml:space="preserve">
+    <value>Recent calls</value>
+  </data>
+  <data name="AssistantsCallsNote" xml:space="preserve">
+    <value>What each call asked for and the errors are stored encrypted like the history, and are deleted after the same period (History tab).</value>
+  </data>
+  <data name="AssistantsCharacters" xml:space="preserve">
+    <value>characters</value>
+  </data>
+  <data name="AssistantsConfig" xml:space="preserve">
+    <value>Configuration for the assistant</value>
+  </data>
+  <data name="AssistantsConfigNote" xml:space="preserve">
+    <value>It goes in the assistant's MCP server configuration (for example, a project's .mcp.json file). It has no server, user or password: FbStudio uses its registrations and its keychain. If you move FbStudio to another folder, copy it again.</value>
+  </data>
+  <data name="AssistantsCopied" xml:space="preserve">
+    <value>Copied.</value>
+  </data>
+  <data name="AssistantsCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="AssistantsEnabled" xml:space="preserve">
+    <value>Enabled databases</value>
+  </data>
+  <data name="AssistantsIntro" xml:space="preserve">
+    <value>An AI assistant compatible with MCP can ask FbStudio about the structure of the databases that have "Available to AI assistants (MCP)" ticked in their registration: objects, DDL, dependencies, plans, monitoring and statistics. It never receives table data and cannot change anything.</value>
+  </data>
+  <data name="AssistantsLimit" xml:space="preserve">
+    <value>Maximum length of each answer</value>
+  </data>
+  <data name="AssistantsLimitNote" xml:space="preserve">
+    <value>Anything longer is cut, with a note on how to ask for less. It applies to new assistant sessions.</value>
+  </data>
+  <data name="AssistantsNoCalls" xml:space="preserve">
+    <value>No calls yet.</value>
+  </data>
+  <data name="AssistantsNoneEnabled" xml:space="preserve">
+    <value>None: enable them in each database registration.</value>
+  </data>
+  <data name="AssistantsShowClients" xml:space="preserve">
+    <value>In monitoring, show who holds each connection (user, computer and program)</value>
+  </data>
+  <data name="AssistantsShowClientsNote" xml:space="preserve">
+    <value>It helps to find who holds back the OAT. Off, the assistant only sees connection numbers. The SQL of running statements always comes with values replaced by "?". It applies to new assistant sessions.</value>
+  </data>
   <data name="AutoCommittedSuffix" xml:space="preserve">
     <value> · committed (autocommit)</value>
   </data>
@@ -3158,6 +3209,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="OpenTransactionTitle" xml:space="preserve">
     <value>Open transaction</value>
   </data>
+  <data name="OptionsAssistants" xml:space="preserve">
+    <value>Assistants (MCP)</value>
+  </data>
   <data name="OptionsDataApply" xml:space="preserve">
     <value>When applying changes in the Data tab</value>
   </data>
@@ -3382,6 +3436,12 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="PlanTab" xml:space="preserve">
     <value>Plan</value>
+  </data>
+  <data name="ProfileAssistantAccess" xml:space="preserve">
+    <value>Available to AI assistants (MCP)</value>
+  </data>
+  <data name="ProfileAssistantAccessTip" xml:space="preserve">
+    <value>An AI assistant connected to FbStudio through MCP can see the structure of this database. Never table data, and no changes.</value>
   </data>
   <data name="ProfileDatabase" xml:space="preserve">
     <value>Database (alias or path)</value>

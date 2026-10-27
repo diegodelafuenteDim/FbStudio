@@ -46,6 +46,16 @@ public static class AppServices
         return Protector(folder) is { } protector ? new HistoryStore(Path.Combine(folder, "history.db"), protector, TimeSpan.FromDays(retentionDays)) : null;
     }
 
+    /// <summary>
+    /// Las llamadas de los asistentes al conector MCP (D-117), con lo que pidieron cifrado como el historial; la retención
+    /// es la del historial.
+    /// </summary>
+    public static McpCallLog CreateMcpCallLog(string? folder = null, int retentionDays = 90)
+    {
+        folder ??= ProfileStore.DefaultFolder;
+        return new McpCallLog(folder, Protector(folder), TimeSpan.FromDays(retentionDays));
+    }
+
     /// <summary>Las pestañas de la última vez, cifradas como el historial (sin cifrado, solo en memoria).</summary>
     public static SessionStore CreateSessionStore(string? folder = null)
     {

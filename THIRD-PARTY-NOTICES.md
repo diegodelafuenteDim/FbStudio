@@ -16,6 +16,7 @@ FbStudio uses these NuGet packages as published, unmodified. Each one keeps its 
 | [System.Security.Cryptography.ProtectedData](https://github.com/dotnet/runtime) | Password encryption on Windows (DPAPI) | MIT |
 | [SkiaSharp](https://github.com/mono/SkiaSharp) and HarfBuzzSharp | Drawing | MIT |
 | ANGLE (Avalonia.Angle.Windows.Natives) | Graphics acceleration on Windows | BSD-3-Clause |
+| [ModelContextProtocol.Core](https://github.com/modelcontextprotocol/csharp-sdk) (MCP C# SDK) | Connection with AI assistants (`FbStudio mcp`) | Apache-2.0 |
 | Tests only: xUnit, Microsoft.NET.Test.Sdk, [Testcontainers](https://github.com/testcontainers/testcontainers-dotnet) | Testing | Apache-2.0 / MIT |
 
 All other indirect dependencies are MIT or Apache-2.0. On Linux, passwords are stored through `secret-tool`

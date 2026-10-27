@@ -133,6 +133,7 @@ the right are the form for the selected registration and the **Test connection**
 | **Connection encryption** | **If the server accepts it (Enabled)** (default), **Required** or **Not encrypted (Disabled)**. |
 | **Read-only (blocks DML, DDL and EXECUTE)** | Off by default. |
 | **Keep statement history (encrypted; the number of days is set in Options)** | On by default. |
+| **Available to AI assistants (MCP)** | Off by default. See [Available to AI assistants (MCP)](#available-to-ai-assistants-mcp). |
 
 > **Note:** it is best to type the alias in **Database (alias or path)**: that text appears in the banner and in the
 > tree tooltip. Wherever FbStudio reads the database path on the server by itself (statistics, maintenance, trace), it
@@ -168,6 +169,12 @@ connection or cancel a statement. The banner adds " · read-only".
 
 > **Note:** read-only is a FbStudio safety net; it does not replace the database permissions. For a production
 > database you only query, combine **Production** with **Read-only**.
+
+### Available to AI assistants (MCP)
+
+With this box, an AI assistant compatible with MCP can ask FbStudio about the structure of the database: objects, DDL,
+dependencies, plans, monitoring and statistics. It never receives table data and cannot change anything, and it does not see the server, the path,
+the user or the password. It is off by default. How to connect it and what it sees: [AI assistants (MCP)](10-assistants.md).
 
 ### Connection encryption
 

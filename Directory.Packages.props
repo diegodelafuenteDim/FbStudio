@@ -6,6 +6,8 @@
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <!-- Acomodo automático de los diagramas (F-8): Microsoft Automatic Graph Layout, MIT -->
     <PackageVersion Include="Msagl" Version="1.2.1" />
+    <!-- Conector MCP (F-37, D-114): SDK oficial de Model Context Protocol para .NET, Apache-2.0 -->
+    <PackageVersion Include="ModelContextProtocol.Core" Version="2.3.0" />
     <!-- UI -->
     <PackageVersion Include="Avalonia" Version="12.1.4" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />

@@ -167,7 +167,7 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
                 outcome.PrepareTime = sw.Elapsed;
                 if (!options.Script)
                 {
-                    (outcome.Plan, outcome.PlanIsExplained) = await GetPlanAsync(cmd, ct);
+                    (outcome.Plan, outcome.PlanIsExplained) = await QueryPlans.ReadAsync(cmd, ct);
                     onPlan?.Invoke(outcome.Plan, outcome.PlanIsExplained); // antes de ejecutar: sirve para avisar de una lectura completa
                 }
 
@@ -376,7 +376,7 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
             {
                 await using var cmd = new FbCommand(sql, _connection, tx);
                 await cmd.PrepareAsync(ct);
-                return await GetPlanAsync(cmd, ct);
+                return await QueryPlans.ReadAsync(cmd, ct);
             }
             finally
             {
@@ -384,23 +384,6 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
             }
         }
         finally { _gate.Release(); }
-    }
-
-    private static async Task<(string?, bool)> GetPlanAsync(FbCommand cmd, CancellationToken ct)
-    {
-        try
-        {
-            var explained = await cmd.GetCommandExplainedPlanAsync(ct);
-            if (!string.IsNullOrWhiteSpace(explained)) return (explained.Trim(), true);
-        }
-        catch (FbException) { /* servidor anterior a 3.0 */ }
-
-        try
-        {
-            var classic = await cmd.GetCommandPlanAsync(ct);
-            return (string.IsNullOrWhiteSpace(classic) ? null : classic.Trim(), false);
-        }
-        catch (FbException) { return (null, false); }
     }
 
     private sealed record Counters(Dictionary<string, long> Seq, Dictionary<string, long> Idx, long Fetches, long Reads, long Writes);
