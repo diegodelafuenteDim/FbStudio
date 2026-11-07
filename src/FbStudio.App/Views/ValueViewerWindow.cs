@@ -94,7 +94,8 @@ public sealed class ValueViewerWindow : Window
         top.Children.Add(info);
 
         _copy = new Button { Content = Strings.ValueViewerCopy };
-        _copy.Click += async (_, _) => { if (ShownText is { } t && Clipboard is { } c) await c.SetTextAsync(t); };
+        // Lo elegido en el texto, si hay; si no, todo lo que se ve.
+        _copy.Click += async (_, _) => { if (CopyText is { } t && Clipboard is { } c) await c.SetTextAsync(t); };
         var save = new Button { Content = Strings.ValueViewerSave, IsEnabled = _content.Kind != CellContentKind.Null };
         save.Click += async (_, _) => await SaveAsync();
         var close = new Button { Content = Strings.Close, IsCancel = true };
@@ -122,6 +123,9 @@ public sealed class ValueViewerWindow : Window
 
     /// <summary>El texto que se está mostrando; null si se muestra una imagen.</summary>
     public string? ShownText { get; private set; }
+
+    /// <summary>Lo que copia «Copiar»: lo elegido en el texto que se ve o, sin selección, todo.</summary>
+    public string? CopyText => _body.Content == _text && _text.SelectedText is { Length: > 0 } selected ? selected : ShownText;
 
     public void SelectView(string name)
     {

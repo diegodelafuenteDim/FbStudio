@@ -422,8 +422,11 @@
   <data name="BannerEncrypted" xml:space="preserve">
     <value> · conexión cifrada</value>
   </data>
-  <data name="BannerNoDatabaseInTab" xml:space="preserve">
-    <value>Pestaña sin base: hacé doble clic en una base del árbol para conectarla</value>
+  <data name="BannerNoDatabaseBeforeHint" xml:space="preserve">
+    <value> (antes: {0}): elegí una base en esta lista o con doble clic en el árbol</value>
+  </data>
+  <data name="BannerNoDatabaseHint" xml:space="preserve">
+    <value>: elegí una base en esta lista o con doble clic en el árbol</value>
   </data>
   <data name="BannerNoDatabases" xml:space="preserve">
     <value>Sin bases registradas: tocá «Registrar» para cargar la primera</value>
@@ -490,6 +493,18 @@
   </data>
   <data name="ChartValues" xml:space="preserve">
     <value>Valor (Y, suma):</value>
+  </data>
+  <data name="ChooseDatabaseCancelled" xml:space="preserve">
+    <value>No se cambió la base de la consulta.</value>
+  </data>
+  <data name="ChooseDatabaseTitle" xml:space="preserve">
+    <value>Cambiar la base de la consulta</value>
+  </data>
+  <data name="ChooseProductionConfirm" xml:space="preserve">
+    <value>«{0}» va a ejecutarse en PRODUCCIÓN: {1}. Revisá el texto antes de ejecutarlo.</value>
+  </data>
+  <data name="ChooseProductionYes" xml:space="preserve">
+    <value>Usar producción</value>
   </data>
   <data name="Close" xml:space="preserve">
     <value>Cerrar</value>
@@ -811,6 +826,9 @@
   </data>
   <data name="CopyLog" xml:space="preserve">
     <value>Copiar</value>
+  </data>
+  <data name="CopyLogTip" xml:space="preserve">
+    <value>Copia lo elegido; sin selección, todo el registro, con la fecha y la base.</value>
   </data>
   <data name="CopyName" xml:space="preserve">
     <value>{0} (copia)</value>
@@ -1340,11 +1358,29 @@
   <data name="DiscardAndReload" xml:space="preserve">
     <value>Descartar y recargar</value>
   </data>
+  <data name="DisconnectAndUndo" xml:space="preserve">
+    <value>Desconectar y deshacer</value>
+  </data>
+  <data name="DisconnectedClosingAndKeeping" xml:space="preserve">
+    <value>Desconectado de {0}: se cerraron {1} pestaña(s) y {2} consulta(s) quedaron abiertas sin base.</value>
+  </data>
   <data name="DisconnectedClosingTabs" xml:space="preserve">
     <value>Desconectado de {0}: se cerraron sus {1} pestaña(s).</value>
   </data>
   <data name="DisconnectedFrom" xml:space="preserve">
     <value>Desconectado de {0}.</value>
+  </data>
+  <data name="DisconnectedKeepingQueries" xml:space="preserve">
+    <value>Desconectado de {0}: {1} consulta(s) quedaron abiertas sin base.</value>
+  </data>
+  <data name="DisconnectKeepsQueries" xml:space="preserve">
+    <value>Las consultas quedan abiertas, sin base y con su texto.</value>
+  </data>
+  <data name="DisconnectPending" xml:space="preserve">
+    <value>Al desconectar {0} hay trabajo sin confirmar: {1}. Las transacciones se deshacen (rollback) y los cambios sin compilar o sin aplicar se pierden.</value>
+  </data>
+  <data name="DisconnectTitle" xml:space="preserve">
+    <value>Desconectar {0}</value>
   </data>
   <data name="DisconnectWhileRunning" xml:space="preserve">
     <value>No se desconectó {0}: la pestaña «{1}» está ejecutando. Cancelala o esperá a que termine.</value>
@@ -1369,6 +1405,9 @@
   </data>
   <data name="DontClose" xml:space="preserve">
     <value>No cerrar</value>
+  </data>
+  <data name="DontDisconnect" xml:space="preserve">
+    <value>No desconectar</value>
   </data>
   <data name="DontExit" xml:space="preserve">
     <value>No salir</value>
@@ -2174,6 +2213,63 @@
   <data name="IsolationTableStability" xml:space="preserve">
     <value>Snapshot table stability</value>
   </data>
+  <data name="IsqlAutoDdl" xml:space="preserve">
+    <value>{0}: no se ejecuta; FbStudio no confirma el DDL solo: queda en la transacción hasta el COMMIT (como AUTODDL OFF).</value>
+  </data>
+  <data name="IsqlBailOff" xml:space="preserve">
+    <value>{0}: desde acá, el script sigue aunque haya errores.</value>
+  </data>
+  <data name="IsqlBailOn" xml:space="preserve">
+    <value>{0}: desde acá, el script se detiene en el primer error.</value>
+  </data>
+  <data name="IsqlClientLib" xml:space="preserve">
+    <value>{0}: orden de otras herramientas, no de isql; no se ejecuta.</value>
+  </data>
+  <data name="IsqlDialect" xml:space="preserve">
+    <value>{0}: no se ejecuta; FbStudio ya trabaja en dialecto 3.</value>
+  </data>
+  <data name="IsqlDisplay" xml:space="preserve">
+    <value>{0}: cambia cómo muestra isql los resultados; no se ejecuta.</value>
+  </data>
+  <data name="IsqlEnd" xml:space="preserve">
+    <value>{0}: el script termina acá; lo pendiente queda en la transacción (Commit/Rollback).</value>
+  </data>
+  <data name="IsqlInput" xml:space="preserve">
+    <value>{0}: FbStudio no corre otros archivos desde un script; corré cada uno con Consulta › Ejecutar script desde archivo…</value>
+  </data>
+  <data name="IsqlInteractive" xml:space="preserve">
+    <value>{0}: orden interactiva de isql; FbStudio no la ejecuta.</value>
+  </data>
+  <data name="IsqlNames" xml:space="preserve">
+    <value>{0}: no se ejecuta; la conexión usa el charset del registro ({1}).</value>
+  </data>
+  <data name="IsqlNamesDiffers" xml:space="preserve">
+    <value>{0}: no se ejecuta; ⚠ la conexión usa {1}, no el charset que pide el script (los textos con tildes pueden quedar distintos).</value>
+  </data>
+  <data name="IsqlOnlyInScript" xml:space="preserve">
+    <value>{0}: orden de isql; vale dentro de un script (varias sentencias con F9, Ctrl+F9 o desde un archivo).</value>
+  </data>
+  <data name="IsqlOtherDatabase" xml:space="preserve">
+    <value>{0}: el script corre en la base de la pestaña; FbStudio no conecta, crea ni borra bases desde un script.</value>
+  </data>
+  <data name="IsqlOtherDialect" xml:space="preserve">
+    <value>{0}: el script es para otro dialecto; FbStudio trabaja en dialecto 3.</value>
+  </data>
+  <data name="IsqlOutput" xml:space="preserve">
+    <value>{0}: FbStudio no escribe la salida en un archivo; el registro queda en Mensajes y se puede guardar.</value>
+  </data>
+  <data name="IsqlOutputOff" xml:space="preserve">
+    <value>{0}: no se ejecuta; el registro queda en Mensajes.</value>
+  </data>
+  <data name="IsqlPlanOnly" xml:space="preserve">
+    <value>{0}: isql solo prepararía las sentencias y FbStudio las ejecutaría; para ver el plan sin ejecutar, Ctrl+Shift+E.</value>
+  </data>
+  <data name="IsqlShell" xml:space="preserve">
+    <value>{0}: FbStudio no ejecuta comandos del sistema.</value>
+  </data>
+  <data name="IsqlShow" xml:space="preserve">
+    <value>{0}: lista cosas en la consola de isql; no se ejecuta (mirá el árbol).</value>
+  </data>
   <data name="KeepEditing" xml:space="preserve">
     <value>Seguir editando</value>
   </data>
@@ -2224,6 +2320,9 @@
   </data>
   <data name="LogSaved" xml:space="preserve">
     <value>Registro guardado en {0}</value>
+  </data>
+  <data name="LogSelectionCopied" xml:space="preserve">
+    <value>Se copió lo elegido del registro.</value>
   </data>
   <data name="MaintBackupDone" xml:space="preserve">
     <value>Backup terminado: {0} ({1:N1} s).</value>
@@ -3158,6 +3257,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="NoDatabase" xml:space="preserve">
     <value>Sin base</value>
   </data>
+  <data name="NoDatabaseBefore" xml:space="preserve">
+    <value>Sin base (antes: {0})</value>
+  </data>
   <data name="NoPlan" xml:space="preserve">
     <value>(sin plan)</value>
   </data>
@@ -3312,10 +3414,10 @@ ORDER BY a.MON$TIMESTAMP</value>
     <value>Seguir con la siguiente sentencia</value>
   </data>
   <data name="OptionsScriptNote" xml:space="preserve">
-    <value>Una sentencia que falla se deshace sola; lo anterior y la transacción siguen en pie. Al final el registro lista los errores y el cursor va al primero. También se cambia desde el menú Consulta.</value>
+    <value>En producción el script siempre se detiene, y un SET BAIL ON u OFF escrito en el script manda desde su línea. Al detenerse, se deshace lo que el script dejó sin confirmar (lo que confirmaron sus COMMIT queda). Al seguir, la sentencia que falla se deshace sola y lo demás queda para Commit o Rollback. También se cambia desde el menú Consulta.</value>
   </data>
   <data name="OptionsScriptOnError" xml:space="preserve">
-    <value>Ante un error en un script</value>
+    <value>Ante un error en un script (Desarrollo y Prueba)</value>
   </data>
   <data name="OptionsScriptStop" xml:space="preserve">
     <value>Parar en el primer error</value>
@@ -3416,8 +3518,23 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="PendingUnsaved" xml:space="preserve">
     <value>cambios sin guardar</value>
   </data>
+  <data name="PickDatabaseFixedTip" xml:space="preserve">
+    <value>Esta pestaña es de esta base y no se cambia. Para otra base, abrí una consulta (Ctrl+T).</value>
+  </data>
   <data name="PickDatabaseInTree" xml:space="preserve">
     <value>Elegí una base en el árbol (o hacé doble clic en ella).</value>
+  </data>
+  <data name="PickDatabaseNoProfiles" xml:space="preserve">
+    <value>No hay bases registradas</value>
+  </data>
+  <data name="PickDatabaseRunningTip" xml:space="preserve">
+    <value>Está ejecutando: esperá a que termine (o cancelala) para cambiar de base.</value>
+  </data>
+  <data name="PickDatabaseTip" xml:space="preserve">
+    <value>Elegí en qué base se ejecuta esta consulta. Se conecta recién al ejecutar.</value>
+  </data>
+  <data name="PickDatabaseTransactionTip" xml:space="preserve">
+    <value>Tiene una transacción abierta: hacé Commit o Rollback para cambiar de base.</value>
   </data>
   <data name="PlanDetailed" xml:space="preserve">
     <value>Plan detallado</value>
@@ -3451,6 +3568,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="ProfileDeleteYes" xml:space="preserve">
     <value>Borrar el registro</value>
+  </data>
+  <data name="ProfileDeleted" xml:space="preserve">
+    <value>Se borró el registro «{0}».</value>
   </data>
   <data name="ProfileEnvironment" xml:space="preserve">
     <value>Entorno</value>
@@ -3535,6 +3655,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="ProfileWireCrypt" xml:space="preserve">
     <value>Cifrado de la conexión</value>
+  </data>
+  <data name="QueryPickDatabase" xml:space="preserve">
+    <value>Esta consulta no tiene base: elegila en la franja de arriba o con doble clic en el árbol.</value>
   </data>
   <data name="QueryTabTitle" xml:space="preserve">
     <value>Consulta {0}</value>
@@ -3785,6 +3908,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="ScopeStatement" xml:space="preserve">
     <value>se ejecutó solo la sentencia del cursor (línea {0})</value>
   </data>
+  <data name="ScriptBailOffProduction" xml:space="preserve">
+    <value>Línea {0}: {1}: desde ahí el script sigue aunque haya errores.</value>
+  </data>
   <data name="ScriptBlocked" xml:space="preserve">
     <value>Bloqueado (no se ejecutó ninguna sentencia del script): {0}</value>
   </data>
@@ -3797,11 +3923,20 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="ScriptCancelledInConfirmation" xml:space="preserve">
     <value>No se ejecutó el script (cancelado en la confirmación).</value>
   </data>
+  <data name="ScriptEndedAt" xml:space="preserve">
+    <value>terminó en el {1} de la línea {0}</value>
+  </data>
   <data name="ScriptErrorAt" xml:space="preserve">
     <value>1 con error (línea {0})</value>
   </data>
   <data name="ScriptErrorsAt" xml:space="preserve">
     <value>{0} con error (líneas {1})</value>
+  </data>
+  <data name="ScriptFailedInside" xml:space="preserve">
+    <value>Error en la línea {2}, dentro del {1} que empieza en la línea {0}:</value>
+  </data>
+  <data name="ScriptFailedStatement" xml:space="preserve">
+    <value>Error en la sentencia de la línea {0} ({1}):</value>
   </data>
   <data name="ScriptFileEmpty" xml:space="preserve">
     <value>{0} no tiene sentencias para ejecutar.</value>
@@ -3821,6 +3956,12 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="ScriptGridlessAuto" xml:space="preserve">
     <value>sin grilla: más de {0} sentencias</value>
   </data>
+  <data name="ScriptIsqlRejected" xml:space="preserve">
+    <value>No se ejecutó ninguna sentencia: {1} (línea {0}) es una orden de isql que FbStudio no ejecuta.</value>
+  </data>
+  <data name="ScriptIsqlSkipped" xml:space="preserve">
+    <value>órdenes de isql sin ejecutar: {0}</value>
+  </data>
   <data name="ScriptLimitReached" xml:space="preserve">
     <value> (límite alcanzado)</value>
   </data>
@@ -3833,11 +3974,26 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="ScriptLogError" xml:space="preserve">
     <value>✗ línea {0} · {1}: {2}</value>
   </data>
+  <data name="ScriptLogIsql" xml:space="preserve">
+    <value>ℹ línea {0} · {1}</value>
+  </data>
   <data name="ScriptLogOk" xml:space="preserve">
     <value>✓ línea {0} · {1}</value>
   </data>
   <data name="ScriptModifiesProduction" xml:space="preserve">
     <value>El script tiene {0} sentencia(s) que modifican PRODUCCIÓN ({1}).</value>
+  </data>
+  <data name="ScriptNoAutoCommit" xml:space="preserve">
+    <value>los scripts no usan el autocommit</value>
+  </data>
+  <data name="ScriptNothingPending" xml:space="preserve">
+    <value>no quedó nada pendiente del script</value>
+  </data>
+  <data name="ScriptNothingPendingAfterCommit" xml:space="preserve">
+    <value>No quedó nada pendiente: lo anterior ya estaba confirmado por el COMMIT de la línea {0}.</value>
+  </data>
+  <data name="ScriptNothingPendingDetail" xml:space="preserve">
+    <value>No quedó nada del script sin confirmar.</value>
   </data>
   <data name="ScriptNoWhere" xml:space="preserve">
     <value>Línea {0}: {1} sin WHERE (afecta TODAS las filas).</value>
@@ -3865,6 +4021,24 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="ScriptSummary" xml:space="preserve">
     <value>Script: {0} de {1} sentencias en {2:N1} s</value>
+  </data>
+  <data name="ScriptUndoFailed" xml:space="preserve">
+    <value>No se pudo deshacer lo pendiente del script ({0}): la transacción sigue abierta; hacé Rollback.</value>
+  </data>
+  <data name="ScriptUndoFailedShort" xml:space="preserve">
+    <value>no se pudo deshacer lo pendiente</value>
+  </data>
+  <data name="ScriptUndone" xml:space="preserve">
+    <value>se deshizo lo pendiente del script</value>
+  </data>
+  <data name="ScriptUndoneAfterCommit" xml:space="preserve">
+    <value>Se deshizo lo que hizo el script después del COMMIT de la línea {0}; lo anterior ya estaba confirmado.</value>
+  </data>
+  <data name="ScriptUndoneAll" xml:space="preserve">
+    <value>Se deshizo todo lo que hizo el script: no había confirmado nada.</value>
+  </data>
+  <data name="ScriptUndoneKeptBefore" xml:space="preserve">
+    <value>Se deshizo lo que hizo el script; lo que ya estaba pendiente antes de empezar sigue en la transacción abierta.</value>
   </data>
   <data name="SearchAreaAll" xml:space="preserve">
     <value>Todas las áreas</value>
@@ -4855,14 +5029,29 @@ Arrastrar al editor      Escribir el nombre de la tabla, el objeto o la columna 
   <data name="TabCloseTip" xml:space="preserve">
     <value>Cerrar (Ctrl+W)</value>
   </data>
+  <data name="TabDatabaseChanged" xml:space="preserve">
+    <value>— A las {2:HH:mm} la consulta pasó de {0} a {1}.</value>
+  </data>
   <data name="TabDatabaseIs" xml:space="preserve">
     <value>Base de esta pestaña: {0}. F9 ejecuta.</value>
+  </data>
+  <data name="TabDatabaseSet" xml:space="preserve">
+    <value>— A las {1:HH:mm} la consulta pasó a {0}.</value>
+  </data>
+  <data name="TabDetached" xml:space="preserve">
+    <value>— Desconectada de {0} a las {1:HH:mm}. La consulta quedó sin base, con su texto.</value>
+  </data>
+  <data name="TabDetachedRolledBack" xml:space="preserve">
+    <value>— Desconectada de {0} a las {1:HH:mm}: lo que no se había confirmado se deshizo (rollback). La consulta quedó sin base, con su texto.</value>
   </data>
   <data name="TabDuplicate" xml:space="preserve">
     <value>Duplicar</value>
   </data>
   <data name="TabHasNoEditor" xml:space="preserve">
     <value>La pestaña elegida no tiene editor</value>
+  </data>
+  <data name="TabLeftWithoutDatabase" xml:space="preserve">
+    <value>Sin base: se desconectó {0}. Elegí una base en la franja de arriba o con doble clic en el árbol.</value>
   </data>
   <data name="TableSqlNoColumns" xml:space="preserve">
     <value>No se encontraron las columnas de {0}: puede que ya no exista (recargá los metadatos).</value>
@@ -4881,6 +5070,9 @@ Arrastrar al editor      Escribir el nombre de la tabla, el objeto o la columna 
   </data>
   <data name="TabReopenClosed" xml:space="preserve">
     <value>Reabrir la pestaña cerrada (Ctrl+Shift+T)</value>
+  </data>
+  <data name="TabResultsCleared" xml:space="preserve">
+    <value> Los resultados, el plan y las estadísticas de {0} se borraron.</value>
   </data>
   <data name="TemplateNone" xml:space="preserve">
     <value>No hay plantillas: se agregan en Herramientas → Opciones → Plantillas.</value>
@@ -5339,7 +5531,7 @@ Arrastrar al editor      Escribir el nombre de la tabla, el objeto o la columna 
     <value>En producción y en registros de solo lectura siempre es con Commit explícito y read committed.</value>
   </data>
   <data name="TransactionModeTip" xml:space="preserve">
-    <value>Autocommit confirma cada sentencia que escribe al terminar bien. El aislamiento vale para la próxima transacción de escritura: read committed ve lo que otros confirman; snapshot, la foto del momento en que empezó; snapshot table stability además bloquea las tablas que lee.</value>
+    <value>Autocommit confirma cada sentencia que escribe al terminar bien; los scripts no lo usan: corren con sus propios COMMIT, como en producción. El aislamiento vale para la próxima transacción de escritura: read committed ve lo que otros confirman; snapshot, la foto del momento en que empezó; snapshot table stability además bloquea las tablas que lee.</value>
   </data>
   <data name="TransactionOpenBanner" xml:space="preserve">
     <value>Transacción de escritura ABIERTA: confirmá (Commit) o deshacé (Rollback)</value>
@@ -5388,6 +5580,9 @@ Arrastrar al editor      Escribir el nombre de la tabla, el objeto o la columna 
   </data>
   <data name="TreeDataCompare" xml:space="preserve">
     <value>Comparar datos con otra base…</value>
+  </data>
+  <data name="TreeDeleteRegistration" xml:space="preserve">
+    <value>Borrar registro…</value>
   </data>
   <data name="TreeDependencies" xml:space="preserve">
     <value>Dependencias (usa / es usado por)</value>
@@ -5528,7 +5723,7 @@ Arrastrar al editor      Escribir el nombre de la tabla, el objeto o la columna 
     <value>Trace (sentencias en vivo)</value>
   </data>
   <data name="TreeUseInTab" xml:space="preserve">
-    <value>Usar esta base en la pestaña</value>
+    <value>Usar esta base en una consulta</value>
   </data>
   <data name="TreeViewData" xml:space="preserve">
     <value>Ver datos (editar sin bloquear)</value>

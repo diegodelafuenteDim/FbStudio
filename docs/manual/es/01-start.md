@@ -200,6 +200,8 @@ para que los acentos se lean bien.
   registro aparece en el árbol.
 - **Nuevo** limpia el formulario para un registro nuevo.
 - **Borrar** quita el registro elegido y su contraseña guardada en este equipo, después de preguntar. La base no se toca.
+  También se borra con clic derecho en la base › **Registro › Borrar registro…**, con la misma pregunta; si la base
+  está conectada, antes se desconecta (ver [Desconectar](#desconectar)).
 
 Para hacer otro registro parecido (otra base del mismo servidor, otro usuario u otro rol), usá clic derecho en la base ›
 **Registro › Clonar registro… (y abrir sus propiedades)**: hace una copia con todo, contraseña incluida, llamada
@@ -217,13 +219,15 @@ Al conectar, FbStudio:
 2. Lee los datos del servidor: al lado de la base aparece «conectada · Firebird 3.0.x · Classic» (o el tipo de servidor
    que sea) y el tooltip suma el sistema, la ODS, el dialecto, el tamaño de página, el charset y si la conexión va
    cifrada. Si la base quedó en modo backup de nbackup, al lado aparece «⚠ modo backup» y el tooltip explica qué hacer.
-3. Pone la base en la pestaña de consulta elegida, si está libre (sin transacción abierta ni algo ejecutándose). Si no,
-   o si es otro tipo de pestaña, abre una consulta nueva en esa base. Sin pestañas, abre la primera.
+3. Pone la base en la consulta elegida si no tiene base o tiene el editor vacío (y no tiene una transacción abierta ni
+   algo ejecutándose). Si no, o si es otro tipo de pestaña, abre una consulta nueva en esa base: el doble clic nunca le
+   cambia la base a una consulta con texto. Sin pestañas, abre la primera.
 
 Cada pestaña de consulta abre su propia conexión la primera vez que ejecutás algo, con su propia transacción. Las
 herramientas (monitoreo, trace, mantenimiento…) abren la suya: no hace falta conectar la base antes.
 
-Con la base ya conectada, el clic derecho ofrece **Usar esta base en la pestaña** y **Recargar metadatos** (vuelve a
+Con la base ya conectada, el clic derecho ofrece **Usar esta base en una consulta** (lo mismo que el doble clic) y
+**Recargar metadatos** (vuelve a
 leer los objetos, por ejemplo después de crear una tabla desde otro programa).
 
 Si la base no tiene contraseña guardada, la barra de estado lo dice: completala en el registro. Si no se puede conectar,
@@ -232,12 +236,23 @@ probado con Firebird 3.x y algunas lecturas de metadatos pueden fallar.
 
 ### Desconectar
 
-Clic derecho en la base › **Desconectar**, o **Base de datos › Desconectar la base elegida**. Se cierran todas las
-pestañas de esa base (consultas, objetos, búsqueda, monitoreo…) y la conexión del árbol.
+Clic derecho en la base › **Desconectar**, o **Base de datos › Desconectar la base elegida**. Se cierra la conexión
+del árbol y:
 
-- Si alguna pestaña tiene una transacción abierta o cambios sin guardar, pregunta una sola vez y las nombra. Al cerrar,
-  las transacciones se deshacen (rollback).
+- las consultas con texto o con un archivo .sql quedan abiertas, **sin base** y con su texto (ver
+  [Consultas sin base](02-editor.md#consultas-sin-base));
+- se cierran las demás pestañas de esa base: las consultas vacías, los objetos, la búsqueda, el monitoreo y las
+  herramientas.
+
+Antes:
+
+- Si hay una transacción abierta, cambios sin compilar o datos sin aplicar en la pestaña **Datos**, pregunta una sola
+  vez y los nombra: **Desconectar y deshacer** sigue y **No desconectar** deja todo como está. Lo abierto se deshace
+  (rollback), nunca se confirma.
 - Si alguna pestaña está ejecutando, no se desconecta nada: cancelala o esperá a que termine.
+
+Al volver a conectar la base, las consultas que quedaron sin base no la retoman solas: elegila en la franja o con
+doble clic en el árbol.
 
 ### Al salir
 
@@ -321,8 +336,12 @@ Producción, o los que elijas en **Herramientas › Opciones…**, pestaña **Ge
 El texto dice el entorno (en producción, **PRODUCCIÓN**), el nombre del registro y `usuario@servidor:puerto/base`, por
 ejemplo «Desarrollo · Ventas · SYSDBA@servidor:3050/ventas». Si el registro es de solo lectura, suma « · solo lectura».
 
+El nombre de la base es una lista (**▾**): en una consulta, elegir otra base ahí le cambia la base, en el mismo lugar
+donde mirás para confirmarla (ver [Elegir la base desde la franja](02-editor.md#elegir-la-base-desde-la-franja)).
+
 Cuando no hay base, la franja dice qué hacer: sin bases registradas, registrar la primera; sin pestañas, hacer doble clic
-en una base para conectarte; en una pestaña sin base, hacer doble clic en una base para usarla ahí.
+en una base para conectarte; en una consulta sin base, dice **Sin base** (y de qué base quedó, si se desconectó):
+elegí una en esa lista o con doble clic en el árbol.
 
 ### Si la conexión va cifrada
 
@@ -356,8 +375,9 @@ Podés tener varias bases conectadas y trabajar con todas al mismo tiempo:
 - Cada pestaña tiene su base, su conexión y su transacción. El borde de la pestaña lleva el color del entorno y el
   tooltip dice a qué base pertenece.
 - La franja muestra siempre la base de la pestaña elegida; las demás conectadas aparecen como chips.
-- Doble clic en otra base del árbol: la pestaña elegida pasa a esa base si está libre; si tiene una transacción abierta
-  o está ejecutando, la base se abre en una pestaña nueva y la anterior sigue con la suya.
+- Doble clic en otra base del árbol: la consulta elegida pasa a esa base si no tiene base o tiene el editor vacío; si
+  tiene texto, una transacción abierta o está ejecutando, la base se abre en una consulta nueva y la anterior sigue con
+  la suya. Para cambiarle la base a una consulta con texto, usá la lista de la franja.
 - **Consulta › Pestaña nueva** (`Ctrl+T`) o el botón **+** abren una consulta en la base de lo último que tocaste: la
   elegida en el árbol, si hiciste clic en el árbol después de pasar por la pestaña; si no, la de la pestaña elegida. Lo
   mismo vale para **Consulta › Buscar en metadatos…** (`Ctrl+Shift+F`).

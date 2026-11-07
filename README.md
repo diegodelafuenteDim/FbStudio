@@ -40,7 +40,7 @@ familiar to people coming from commercial tools, without licenses or subscriptio
 
 - **SQL editor** with highlighting, autocompletion (tables, columns, also of subqueries and WITH, procedures,
   functions, packages, generators, with parameter help), F9 to run the selection or the
-  whole script (understands `SET TERM` and PSQL blocks), parameters (`?` and `:name`, asked for before running),
+  whole script (understands `SET TERM`, PSQL blocks and isql commands such as `SET BAIL`), parameters (`?` and `:name`, asked for before running),
   explicit transactions (Commit / Rollback) and cancellation; a SQL and PSQL formatter, Ctrl+click (or F12) on a name to
   open the object, templates (abbreviation + Tab, or Ctrl+J), JOIN suggestions built from the foreign keys, find and
   replace, block folding, line commands (comment, duplicate, move), the plan of a statement without running it, .sql
@@ -210,8 +210,8 @@ named for reference only.
 **FbStudio** es un IDE y herramienta de administración para bases **Firebird**, libre y gratis, hecho desde cero en
 .NET 10 y Avalonia, con la interfaz en español y en inglés. Incluye:
 
-- editor de SQL con autocompletado (y el JOIN armado por las FK), formateador de SQL y PSQL, Ctrl+clic para abrir un
-  objeto, plantillas, buscar y reemplazar, plegar bloques, el plan sin ejecutar, archivos .sql y las pestañas que se
+- editor de SQL con autocompletado (y el JOIN armado por las FK), scripts con las órdenes de isql (`SET TERM`,
+  `SET BAIL`…), formateador de SQL y PSQL, Ctrl+clic para abrir un objeto, plantillas, buscar y reemplazar, plegar bloques, el plan sin ejecutar, archivos .sql y las pestañas que se
   recuerdan al cerrar;
 - seguridad para producción (entornos, registros de solo lectura, confirmaciones);
 - una grilla rápida con filtros según el tipo de columna, panel de filtros, columnas que se reordenan arrastrando,

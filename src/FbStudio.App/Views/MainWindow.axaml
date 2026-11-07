@@ -56,6 +56,31 @@
     <Style Selector="Button.chip.prod">
       <Setter Property="Background" Value="{DynamicResource FbsBannerProdBrush}" />
     </Style>
+    <!-- El nombre de la base en la franja (D-123): texto blanco sobre el color del entorno, sin el fondo del tema. Con
+         plantilla propia, así el tema no lo pinta de gris al pasar el mouse ni al quedar deshabilitado. -->
+    <Style Selector="Button.bannerpick">
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Padding" Value="4,0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="PART_Border" Background="Transparent" CornerRadius="3" Padding="{TemplateBinding Padding}"
+                  BorderBrush="#99FFFFFF" BorderThickness="0,0,0,1">
+            <ContentPresenter Content="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.bannerpick:pointerover /template/ Border#PART_Border">
+      <Setter Property="Background" Value="#33FFFFFF" />
+    </Style>
+    <Style Selector="Button.bannerpick:disabled">
+      <Setter Property="Cursor" Value="Arrow" />
+    </Style>
+    <Style Selector="Button.bannerpick:disabled /template/ Border#PART_Border">
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
     <Style Selector="Border#TxBadge > TextBlock">
       <Setter Property="Foreground" Value="White" />
     </Style>
@@ -343,7 +368,21 @@
     <Border x:Name="EnvBanner" DockPanel.Dock="Top" Padding="10,4"
             Classes.prod="{Binding IsProduction}" Classes.test="{Binding IsTest}" Classes.dev="{Binding IsDevelopment}">
       <Grid ColumnDefinitions="Auto,*,Auto">
-        <TextBlock Text="{Binding Banner}" Foreground="White" FontWeight="SemiBold" ToolTip.Tip="{Binding BannerTip}" VerticalAlignment="Center" />
+        <!-- El nombre de la base es la lista para elegir la base de la consulta (D-123): se cambia donde se mira para
+             confirmarla. Con una transacción abierta, ejecutando o en la pestaña de un objeto queda fija (sin ▾). -->
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Text="{Binding BannerPrefix}" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center" />
+          <Button x:Name="BannerDatabaseButton" Classes="bannerpick" IsVisible="{Binding HasBannerDatabase}"
+                  IsEnabled="{Binding SelectedTab.CanPickDatabase, FallbackValue=False}"
+                  ToolTip.Tip="{Binding SelectedTab.PickDatabaseTip, FallbackValue={x:Null}}" ToolTip.ShowOnDisabled="True">
+            <StackPanel Orientation="Horizontal" Spacing="2">
+              <TextBlock Text="{Binding BannerDatabase}" FontWeight="SemiBold" VerticalAlignment="Center" />
+              <mi:MaterialIcon Kind="MenuDown" Width="16" Height="16" VerticalAlignment="Center"
+                               IsVisible="{Binding SelectedTab.CanPickDatabase, FallbackValue=False}" />
+            </StackPanel>
+          </Button>
+          <TextBlock Text="{Binding BannerSuffix}" Foreground="White" FontWeight="SemiBold" ToolTip.Tip="{Binding BannerTip}" VerticalAlignment="Center" />
+        </StackPanel>
         <!-- Las otras bases conectadas (F-21): un clic lleva a su pestaña. La de la pestaña sigue siendo la franja. -->
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="16,0,8,0" VerticalAlignment="Center" IsVisible="{Binding HasOtherConnections}">
           <TextBlock Text="{x:Static res:Strings.BannerAlsoConnected}" Foreground="White" Opacity="0.85" FontSize="12" VerticalAlignment="Center" />
@@ -445,7 +484,7 @@
                   <Border BorderThickness="0,0,0,3" Padding="8,3,2,3" Classes="tone"
                           Classes.success="{Binding IsSuccessTone}" Classes.warning="{Binding IsWarningTone}" Classes.danger="{Binding IsDangerTone}"
                           Classes.dev="{Binding IsDevTone}" Classes.test="{Binding IsTestTone}" Classes.prod="{Binding IsProdTone}"
-                          ToolTip.Tip="{Binding Profile.Display, FallbackValue={x:Static res:Strings.NoDatabase}}">
+                          ToolTip.Tip="{Binding ProfileTip}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <mi:MaterialIcon Kind="{Binding Icon}" Width="15" Height="15" />
                       <TextBlock Text="●" Foreground="{DynamicResource FbsDangerBrush}" FontWeight="Bold" VerticalAlignment="Center" IsVisible="{Binding InTransaction}"

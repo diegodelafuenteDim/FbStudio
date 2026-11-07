@@ -13,8 +13,25 @@ namespace FbStudio.Firebird;
 /// al servidor por sentencia) y las filas de un SELECT solo se cuentan, no se mandan a la grilla.
 /// </param>
 /// <param name="Parameters">Los valores de los «?» de la sentencia, en orden (null = NULL); ver <see cref="SqlParameters"/>.</param>
+/// <param name="InScript">
+/// Es parte de un script (con grilla o sin ella): no se aplica el autocommit, así un script corre igual en los tres
+/// entornos, con sus propios COMMIT (D-120).
+/// </param>
 public sealed record ExecuteOptions(int MaxRows = 10_000, int BatchSize = 500, int FetchSize = 200, bool Script = false,
-    IReadOnlyList<object?>? Parameters = null);
+    IReadOnlyList<object?>? Parameters = null, bool InScript = false);
+
+/// <summary>Qué deshizo <see cref="QuerySession.UndoScriptAsync"/> al cortarse un script por un error (D-120).</summary>
+public enum ScriptUndo
+{
+    /// <summary>No había transacción abierta: no quedaba nada pendiente.</summary>
+    Nothing,
+
+    /// <summary>Volvió al savepoint del comienzo: lo que estaba pendiente antes del script sigue en la transacción.</summary>
+    ToScriptStart,
+
+    /// <summary>Hizo rollback de la transacción, que el script abrió (al empezar o después de su último COMMIT).</summary>
+    Transaction,
+}
 
 /// <summary>
 /// Una sesión por pestaña de editor: una conexión, a lo sumo una transacción de escritura abierta
@@ -40,6 +57,12 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
     private FbConnection? _monitor;
     private FbTransaction? _tx;
     private long _attachmentId;
+
+    /// <summary>Savepoint que marca un script al empezar con una transacción ya abierta (D-120).</summary>
+    private const string ScriptSavepoint = "FBSTUDIO_SCRIPT";
+
+    /// <summary>La transacción en la que se marcó <see cref="ScriptSavepoint"/>; null si no se marcó.</summary>
+    private FbTransaction? _scriptTx;
 
     public ConnectionProfile Profile { get; } = profile;
     public string? ServerVersion { get; private set; }
@@ -116,6 +139,13 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
         // Defensa en profundidad: la UI ya evaluó SafetyPolicy, pero la sesión no confía en eso (ni en la clasificación
         // que le pasan: la rehace con el texto que va a mandar).
         var classified = StatementClassifier.Classify(sql);
+        if (classified.Kind == StatementKind.Isql)
+        {
+            // Una orden de isql no es SQL: el script la resuelve antes y nunca llega acá (D-120).
+            batches.TryComplete();
+            outcome.Error = string.Format(CoreStrings.IsqlNotSent, classified.Keyword);
+            return outcome;
+        }
         if (classified.Modifies && !statement.Modifies) statement = classified;
         if (Profile.ReadOnly && (statement.Modifies || classified.ChangesSequences))
         {
@@ -130,19 +160,22 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
             await OpenAsync(ct);
             var connection = _connection!;
 
-            if (statement.Kind == StatementKind.Transaction)
+            if (statement.Kind == StatementKind.Transaction && statement.Keyword is "COMMIT" or "ROLLBACK" or "SET TRANSACTION")
             {
                 if (statement.Keyword == "COMMIT") await CommitCoreAsync(ct);
                 else if (statement.Keyword == "ROLLBACK") await RollbackCoreAsync();
                 return outcome;
             }
+            // SAVEPOINT, RELEASE SAVEPOINT y ROLLBACK TO SAVEPOINT van al servidor dentro de la transacción de escritura;
+            // un SAVEPOINT la abre si no hay una (en una de solo lectura se perdería enseguida).
+            var opensWriteTx = statement.Modifies || statement.Keyword == "SAVEPOINT";
 
             var before = options.Script ? null : await SnapshotAsync(ct);
 
             FbTransaction tx;
             var readOnlyTx = false;
             if (_tx is not null) tx = _tx;
-            else if (statement.Modifies)
+            else if (opensWriteTx)
             {
                 _tx = tx = await connection.BeginTransactionAsync(
                     Transactions.ReadWrite(LockTimeout, Profile.IsProduction ? TransactionIsolation.ReadCommitted : Isolation), ct);
@@ -179,10 +212,12 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
                     else outcome.RecordsAffected = reader.RecordsAffected; // en un SELECT no tiene sentido
                 }
                 if (readOnlyTx) await tx.CommitAsync(CancellationToken.None);
+                var openedHere = startedTxHere;
                 startedTxHere = false; // salió bien: la transacción de escritura queda abierta a propósito…
-                if (AutoCommit && !Profile.IsProduction && !readOnlyTx && _tx is not null)
+                // …salvo con autocommit, si esta sentencia la abrió: se confirma ya (si el commit falla, se deshace y sale
+                // el error). En un script no (D-120), y tampoco se confirma lo que dejó abierto un script.
+                if (AutoCommit && openedHere && !options.InScript && statement.Modifies && !Profile.IsProduction && _tx is not null)
                 {
-                    // …salvo con autocommit: se confirma ya (si el commit falla, se deshace y sale el error).
                     try
                     {
                         await CommitCoreAsync(ct);
@@ -243,6 +278,66 @@ public sealed class QuerySession(ConnectionProfile profile, string password) : I
     {
         if (values is null) return;
         foreach (var value in values) cmd.Parameters.Add(new FbParameter { Value = value ?? DBNull.Value });
+    }
+
+    /// <summary>
+    /// Al empezar un script (D-120): si ya hay una transacción de escritura abierta, marca un savepoint, así un corte por
+    /// error deshace solo lo del script y no lo que estaba pendiente de antes.
+    /// </summary>
+    public async Task BeginScriptAsync(CancellationToken ct = default)
+    {
+        await _gate.WaitAsync(ct);
+        try
+        {
+            _scriptTx = null;
+            if (_tx is null) return;
+            await using var cmd = new FbCommand($"SAVEPOINT {ScriptSavepoint}", _connection, _tx);
+            await cmd.ExecuteNonQueryAsync(ct);
+            _scriptTx = _tx;
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>
+    /// Un script se cortó por un error (D-120): deshace lo que hizo desde su último COMMIT. Si sigue en la transacción
+    /// que ya estaba abierta al empezar, vuelve al savepoint; si no, hace rollback de la transacción (la abrió el script).
+    /// </summary>
+    public async Task<ScriptUndo> UndoScriptAsync()
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            if (_tx is null) return ScriptUndo.Nothing;
+            if (_tx == _scriptTx)
+            {
+                await using var cmd = new FbCommand($"ROLLBACK TO SAVEPOINT {ScriptSavepoint}", _connection, _tx);
+                await cmd.ExecuteNonQueryAsync();
+                return ScriptUndo.ToScriptStart;
+            }
+            await RollbackCoreAsync();
+            return ScriptUndo.Transaction;
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Al terminar un script, de la forma que sea: suelta el savepoint del comienzo si sigue en esa transacción.</summary>
+    public async Task EndScriptAsync()
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            if (_tx is not null && _tx == _scriptTx)
+            {
+                try
+                {
+                    await using var cmd = new FbCommand($"RELEASE SAVEPOINT {ScriptSavepoint} ONLY", _connection, _tx);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                catch (FbException) { /* si la conexión se cortó, el savepoint se va con la transacción */ }
+            }
+            _scriptTx = null;
+        }
+        finally { _gate.Release(); }
     }
 
     public async Task CommitAsync(CancellationToken ct = default)

@@ -197,7 +197,10 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
 
     public TextDocument Document { get; }
     public MainWindowViewModel Owner => _owner;
-    public virtual MaterialIconKind Icon => Object is { } o ? DatabaseTreeViewModel.IconFor(o.Kind) : MaterialIconKind.FileDocumentEditOutline;
+    /// <summary>El ícono de la pestaña: el del objeto o, en una consulta, una hoja; sin base, una base tachada (D-123).</summary>
+    public virtual MaterialIconKind Icon => Object is { } o ? DatabaseTreeViewModel.IconFor(o.Kind)
+        : Kind == EditorTabKind.Sql && Profile is null ? MaterialIconKind.DatabaseOffOutline
+        : MaterialIconKind.FileDocumentEditOutline;
     public AvaloniaList<object[]> Rows { get; } = [];
     /// <summary>
     /// Catálogo de la base para autocompletar: compartido entre pestañas y cargado en segundo plano la primera vez
@@ -261,9 +264,40 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Title), nameof(TitleText), nameof(EnvironmentTone), nameof(IsSuccessTone), nameof(IsWarningTone), nameof(IsDangerTone),
-        nameof(IsDevTone), nameof(IsTestTone), nameof(IsProdTone), nameof(CompileHint), nameof(CanChooseTransactionMode), nameof(TransactionModeTip))]
+        nameof(IsDevTone), nameof(IsTestTone), nameof(IsProdTone), nameof(CompileHint), nameof(CanChooseTransactionMode), nameof(TransactionModeTip),
+        nameof(Icon), nameof(ProfileTip), nameof(CanPickDatabase), nameof(PickDatabaseTip))]
     [NotifyCanExecuteChangedFor(nameof(CompileCommand))]
     private ConnectionProfile? _profile;
+
+    /// <summary>
+    /// La base que tenía la consulta antes de quedar sin base (se desconectó o se borró su registro, D-123); null si nunca
+    /// tuvo o si ya se eligió otra. Se muestra en la franja y en la pestaña: «Sin base (antes: Base de pruebas)».
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ProfileTip))]
+    private string? _previousProfileName;
+
+    /// <summary>El tooltip de la pestaña: la base y dónde está o, sin base, de cuál quedó (D-123).</summary>
+    public string ProfileTip => Profile?.Display
+        ?? (PreviousProfileName is { } previous ? string.Format(Strings.NoDatabaseBefore, previous) : Strings.NoDatabase);
+
+    /// <summary>
+    /// La base de la consulta se puede cambiar desde la franja (D-123): solo en una consulta (no en la pestaña de un objeto
+    /// o de una herramienta) y sin transacción abierta ni algo ejecutándose, la misma regla que el doble clic del árbol.
+    /// </summary>
+    public bool CanPickDatabase => Kind == EditorTabKind.Sql && CanChangeProfile;
+
+    /// <summary>Por qué se puede o no cambiar la base desde la franja.</summary>
+    public string PickDatabaseTip => Kind != EditorTabKind.Sql ? Strings.PickDatabaseFixedTip
+        : IsRunning ? Strings.PickDatabaseRunningTip
+        : InTransaction ? Strings.PickDatabaseTransactionTip
+        : Strings.PickDatabaseTip;
+
+    /// <summary>
+    /// La base de donde salieron los resultados, el plan y las estadísticas que se ven: si la consulta pasa a otra, se borran
+    /// para no leerlos como si fueran de la nueva (D-123). Al quedar sin base se conservan.
+    /// </summary>
+    private Guid? _resultsProfileId;
 
     [ObservableProperty] private bool _isSelected;
 
@@ -305,13 +339,13 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand), nameof(CommitCommand), nameof(RollbackCommand), nameof(CompileCommand))]
-    [NotifyPropertyChangedFor(nameof(CanChangeProfile), nameof(CanChooseTransactionMode))]
+    [NotifyPropertyChangedFor(nameof(CanChangeProfile), nameof(CanChooseTransactionMode), nameof(CanPickDatabase), nameof(PickDatabaseTip))]
     private bool _isRunning;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CommitCommand), nameof(RollbackCommand))]
     [NotifyPropertyChangedFor(nameof(CanChangeProfile), nameof(TransactionText), nameof(Title), nameof(IsTransactionOld), nameof(IsTransactionVeryOld),
-        nameof(CanChooseTransactionMode), nameof(TransactionModeTip))]
+        nameof(CanChooseTransactionMode), nameof(TransactionModeTip), nameof(CanPickDatabase), nameof(PickDatabaseTip))]
     private bool _inTransaction;
 
     /// <summary>
@@ -480,6 +514,11 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
             AutoCommit = false;
             IsolationIndex = 0;
         }
+        if (value is not null)
+        {
+            PreviousProfileName = null;
+            if (_resultsProfileId is { } from && from != value.Id) ClearResults();
+        }
         CanExportFull = false;
         if (_session is not null)
         {
@@ -487,6 +526,48 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
             _session = null;
             await old.DisposeAsync();
         }
+    }
+
+    /// <summary>Borra los resultados, el plan y las estadísticas (son de otra base); los mensajes quedan, como registro.</summary>
+    private void ClearResults()
+    {
+        _resultsProfileId = null;
+        Rows.Clear();
+        _lastSql = null;
+        _lastParameters = null;
+        _lastStatement = null;
+        _lastColumns = [];
+        _planWarning = null;
+        ColumnsChanged?.Invoke([]);
+        Plan = "";
+        Stats = "";
+    }
+
+    /// <summary>Lo que se ve en Resultados, Plan o Estadísticas salió de otra base (al pasar a esta se borra).</summary>
+    internal bool HasResultsFromAnotherDatabase(Guid profileId) =>
+        _resultsProfileId is { } from && from != profileId && (Rows.Count > 0 || Plan.Length > 0 || Stats.Length > 0);
+
+    /// <summary>Suma un renglón al final de Mensajes, separado de lo que había.</summary>
+    internal void AppendMessage(string line) => Messages = Messages.Length == 0 ? line : Messages.TrimEnd() + Environment.NewLine + Environment.NewLine + line;
+
+    /// <summary>
+    /// Se desconectó la base (o se borró su registro): la consulta queda abierta, sin base y con su texto (D-123). Lo que
+    /// no se confirmó se deshace (rollback) al cerrar la conexión de la pestaña; los resultados quedan a la vista.
+    /// </summary>
+    internal async Task DetachAsync(DateTime now)
+    {
+        if (Profile is not { } profile) return;
+        var hadTransaction = InTransaction;
+        if (_session is { } session)
+        {
+            _session = null;
+            await session.DisposeAsync(); // con transacción abierta: rollback
+        }
+        InTransaction = false;
+        PreviousProfileName = profile.Name; // antes de sacar la base: la franja ya la nombra al enterarse
+        Profile = null;
+        AppendMessage(string.Format(hadTransaction ? Strings.TabDetachedRolledBack : Strings.TabDetached, profile.Name, now));
+        Status = string.Format(Strings.TabLeftWithoutDatabase, profile.Name);
     }
 
     /// <summary>
@@ -504,11 +585,19 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         if (IsRunning || RefuseReadOnlyObject()) return null;
         if (Profile is not { } profile)
         {
-            Status = _owner.Tree.IsEmpty ? Strings.RegisterFirst : Strings.SearchPickDatabase;
+            Status = _owner.Tree.IsEmpty ? Strings.RegisterFirst : Kind == EditorTabKind.Sql ? Strings.QueryPickDatabase : Strings.SearchPickDatabase;
             return null;
         }
 
         var statement = StatementClassifier.Classify(sql);
+        if (statement.Isql is { } isql)
+        {
+            // Una orden de isql sola no va al servidor: SET BAIL y EXIT valen dentro de un script (D-120).
+            Status = IsqlNotes.Alone(isql, profile);
+            Messages = Status;
+            SelectedResultTab = MessagesTab;
+            return null;
+        }
         var decision = SafetyPolicy.Evaluate(profile, statement, Context(profile, statement, sql, InTransaction));
         if (decision.Verdict == SafetyVerdict.Block)
         {
@@ -572,11 +661,16 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Manda una sentencia (ya aprobada por la política de seguridad) y la registra en el historial.</summary>
     /// <param name="parameters">Los valores de los «?» (F-25).</param>
     /// <param name="historySql">Lo que se guarda en el historial: el SQL como se escribió, con sus «:nombre».</param>
+    /// <param name="inScript">
+    /// Es parte de un script: sin autocommit (D-120) y sin entrada propia en el historial, que guarda el script entero
+    /// al final (D-121).
+    /// </param>
     private async Task<QueryOutcome> ExecuteOneAsync(ConnectionProfile profile, string sql, StatementInfo statement, CancellationToken ct,
-        IReadOnlyList<object?>? parameters = null, string? historySql = null)
+        IReadOnlyList<object?>? parameters = null, string? historySql = null, bool inScript = false)
     {
         var clock = Stopwatch.StartNew();
         var session = await EnsureSessionAsync(profile, ct);
+        _resultsProfileId = profile.Id;
         Status = string.Format(Strings.Running, statement.Keyword);
         _runKeyword = statement.Keyword;
         _planWarning = null;
@@ -586,7 +680,7 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
 
         var channel = Channel.CreateBounded<object[][]>(new BoundedChannelOptions(64) { SingleReader = true, SingleWriter = true });
         var pump = Task.Run(() => PumpToUiAsync(channel.Reader, clock));
-        var options = new ExecuteOptions(MaxRows: _owner.RowLimit, Parameters: parameters);
+        var options = new ExecuteOptions(MaxRows: _owner.RowLimit, Parameters: parameters, InScript: inScript);
         QueryOutcome outcome;
         try
         {
@@ -608,7 +702,7 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         // Un CREATE/ALTER/DROP puede cambiar tablas y procedimientos: el autocompletado se vuelve a leer.
         if (statement.Kind == StatementKind.Ddl && outcome.Error is null) _owner.InvalidateCatalog(profile.Id);
         Remember(sql, statement, outcome, parameters);
-        _owner.Record(profile, historySql ?? sql, statement, outcome);
+        if (!inScript) _owner.Record(profile, historySql ?? sql, statement, outcome);
         return outcome;
     }
 
@@ -621,7 +715,7 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         if (IsRunning || RefuseReadOnlyObject()) return;
         if (Profile is not { } profile)
         {
-            Status = _owner.Tree.IsEmpty ? Strings.RegisterFirst : Strings.SearchPickDatabase;
+            Status = _owner.Tree.IsEmpty ? Strings.RegisterFirst : Kind == EditorTabKind.Sql ? Strings.QueryPickDatabase : Strings.SearchPickDatabase;
             return;
         }
         var statement = StatementClassifier.Classify(sql);
@@ -639,6 +733,7 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         {
             var session = await EnsureSessionAsync(profile, _cts.Token);
             var (plan, explained) = await session.PlanAsync(toPrepare, _cts.Token);
+            _resultsProfileId = profile.Id;
             Plan = FormatPlan(plan, explained);
             var scans = PlanAnalyzer.FullScans(plan);
             _planWarning = scans.Count == 0 ? null : string.Format(Strings.PlanFullScanWarning, string.Join(", ", scans));
@@ -710,9 +805,10 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
 
     /// <summary>
     /// F9: ejecuta un texto (todo el editor, la selección o la sentencia del cursor). Con una sola
-    /// sentencia es una ejecución normal; con varias, un script en orden, en la misma transacción, que se detiene en el
-    /// primer error o sigue (Opciones → Consultas). Un COMMIT o ROLLBACK escrito en el script se ejecuta como cualquier
-    /// sentencia. Ctrl+F9, o un script de más de <see cref="LongScript"/> sentencias, corre sin grilla.
+    /// sentencia es una ejecución normal; con varias, un script en orden, en la misma transacción y sin autocommit, que se
+    /// detiene en el primer error (y deshace lo pendiente del script) o sigue: SET BAIL del script, si no producción, si
+    /// no Opciones → Consultas (D-120). Un COMMIT o ROLLBACK escrito en el script se ejecuta como cualquier sentencia.
+    /// Ctrl+F9, o un script de más de <see cref="LongScript"/> sentencias, corre sin grilla.
     /// </summary>
     /// <param name="text">Texto a ejecutar.</param>
     /// <param name="offset">Dónde empieza <paramref name="text"/> dentro del editor (para las líneas y los errores).</param>
@@ -802,10 +898,12 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         bool gridless, bool automatic, ScriptFile? file = null)
     {
         int LineOf(int offset) => file?.Line(offset) ?? this.LineOf(offset);
+        // El renglón de una sentencia es el de su primera palabra, no el del comentario que la precede.
+        int StatementLine(StatementSpan s) => LineOf(s.Start + FirstTokenOffset(s.Text));
 
         if (Profile is not { } profile)
         {
-            Status = _owner.Tree.IsEmpty ? Strings.RegisterFirst : Strings.SearchPickDatabase;
+            Status = _owner.Tree.IsEmpty ? Strings.RegisterFirst : Kind == EditorTabKind.Sql ? Strings.QueryPickDatabase : Strings.SearchPickDatabase;
             return;
         }
 
@@ -814,6 +912,17 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         {
             Status = Strings.ParamsOnlySingle;
             Messages = Status;
+            SelectedResultTab = MessagesTab;
+            return;
+        }
+
+        // Órdenes de isql que FbStudio no ejecuta (SHELL, INPUT, CONNECT…): no corre nada (D-120).
+        var rejected = statements.Where(s => s.Info.Isql is { IsRejected: true }).ToList();
+        if (rejected.Count > 0)
+        {
+            Status = string.Format(Strings.ScriptIsqlRejected, StatementLine(rejected[0].Span), rejected[0].Info.Isql!.Name);
+            Messages = Status + Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine,
+                rejected.Select(r => string.Format(Strings.ScriptLineReason, StatementLine(r.Span), IsqlNotes.Note(r.Info.Isql!, profile, bail: false))));
             SelectedResultTab = MessagesTab;
             return;
         }
@@ -827,12 +936,12 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
             var context = Context(profile, info, span.Text, open);
             decisions.Add((span, info, context, SafetyPolicy.Evaluate(profile, info, context)));
             if (info.Kind == StatementKind.Transaction && info.Keyword is "COMMIT" or "ROLLBACK") open = false;
-            else if (info.Modifies) open = true;
+            else if (info.Modifies || info.Keyword == "SAVEPOINT") open = true;
         }
         var blocked = decisions.FirstOrDefault(d => d.Decision.Verdict == SafetyVerdict.Block);
         if (blocked.Decision is not null)
         {
-            Messages = string.Format(Strings.ScriptLineReason, LineOf(blocked.Span.Start), string.Join(Environment.NewLine, blocked.Decision.Reasons));
+            Messages = string.Format(Strings.ScriptLineReason, StatementLine(blocked.Span), string.Join(Environment.NewLine, blocked.Decision.Reasons));
             Status = string.Format(Strings.ScriptBlocked, blocked.Decision.Reasons[0]);
             SelectedResultTab = MessagesTab;
             return;
@@ -843,9 +952,21 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
             var reasons = new List<string>();
             var production = risky.Count(d => profile.IsProduction && d.Info.Modifies);
             if (production > 0) reasons.Add(string.Format(Strings.ScriptModifiesProduction, production, profile.Name));
-            reasons.AddRange(risky.Where(d => d.Info.AffectsAllRows).Select(d => string.Format(Strings.ScriptNoWhere, LineOf(d.Span.Start), d.Info.Keyword)));
+            reasons.AddRange(risky.Where(d => d.Info.AffectsAllRows).Select(d => string.Format(Strings.ScriptNoWhere, StatementLine(d.Span), d.Info.Keyword)));
             reasons.AddRange(risky.Where(d => d.Context.Routines.Count > 0)
-                .Select(d => string.Format(Strings.ScriptRoutineInTransaction, LineOf(d.Span.Start), string.Join(", ", d.Context.Routines))));
+                .Select(d => string.Format(Strings.ScriptRoutineInTransaction, StatementLine(d.Span), string.Join(", ", d.Context.Routines))));
+            // En producción se detiene en el primer error, salvo que el script diga SET BAIL OFF y siga algo después.
+            if (profile.IsProduction)
+            {
+                var willBail = true;
+                for (var k = 0; k < statements.Count; k++)
+                {
+                    if (statements[k].Info.Isql is not { Kind: IsqlKind.Bail } bailCommand) continue;
+                    willBail = bailCommand.Switch ?? !willBail;
+                    if (!willBail && statements.Skip(k + 1).Any(s => s.Info.Kind != StatementKind.Isql))
+                        reasons.Add(string.Format(Strings.ScriptBailOffProduction, StatementLine(statements[k].Span), bailCommand.Text));
+                }
+            }
             if (!await _owner.ConfirmAsync(new SafetyDecision(SafetyVerdict.Confirm, reasons)))
             {
                 Status = Strings.ScriptCancelledInConfirmation;
@@ -853,7 +974,9 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
             }
         }
 
-        var stopOnError = _owner.Options.ScriptStopOnError;
+        // Ante un error (D-120): en producción se detiene siempre; en Desarrollo y Prueba, lo que diga Opciones. Un SET BAIL
+        // ON u OFF del script manda desde su línea, en cualquier entorno.
+        var bail = profile.IsProduction || _owner.Options.ScriptStopOnError;
         var detailed = !gridless || statements.Count <= LogEachStatementUpTo;
         IsRunning = true;
         _cts = new CancellationTokenSource();
@@ -869,8 +992,19 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         long affected = 0;
         var byKeyword = new Dictionary<string, (int Count, long Rows)>(StringComparer.Ordinal);
         (StatementInfo Info, QueryOutcome Outcome)? lastWithRows = null;
+        var ignored = 0;                    // órdenes de isql que no se ejecutan
+        (int Line, string Name)? ended = null; // un QUIT o EXIT terminó el script
+        int? lastCommitLine = null;         // el último COMMIT que hizo el script
+        var pending = false;                // el script escribió algo que todavía no confirmó
+        (StatementSpan Span, StatementInfo Info, int Line, int ErrorLine)? failed = null;
+        ScriptUndo? undo = null;
+        string? undoError = null;
+        QuerySession? session = null;
         try
         {
+            // Si ya había una transacción abierta, un savepoint: el corte deshace solo lo del script.
+            session = await EnsureSessionAsync(profile, _cts.Token);
+            await session.BeginScriptAsync(_cts.Token);
             for (var i = 0; i < statements.Count; i++)
             {
                 var (span, info) = statements[i];
@@ -879,7 +1013,22 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
                     cancelled = true;
                     break;
                 }
-                var line = LineOf(span.Start);
+                var line = StatementLine(span);
+                if (info.Isql is { } isql)
+                {
+                    // Una orden de isql no va al servidor: SET BAIL cambia qué pasa ante un error, QUIT/EXIT termina y
+                    // las demás se anotan (las rechazadas ya frenaron el script antes de empezar).
+                    if (isql.Kind == IsqlKind.Bail) bail = isql.Switch ?? !bail;
+                    else if (isql.IsIgnored) ignored++;
+                    log.AppendLine(string.Format(Strings.ScriptLogIsql, line, IsqlNotes.Note(isql, profile, bail)));
+                    done++;
+                    if (isql.Kind == IsqlKind.End)
+                    {
+                        ended = (line, isql.Name);
+                        break;
+                    }
+                    continue;
+                }
                 // Sin grilla puede haber miles de sentencias: el avance se muestra cada 200 ms.
                 if (!gridless || i == 0 || progress.ElapsedMilliseconds >= 200)
                 {
@@ -890,29 +1039,35 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
                 }
                 var outcome = gridless
                     ? await ExecuteInScriptAsync(profile, span.Text, info, _cts.Token)
-                    : await ExecuteOneAsync(profile, span.Text, info, _cts.Token);
+                    : await ExecuteOneAsync(profile, span.Text, info, _cts.Token, inScript: true);
                 if (outcome.Error is not null)
                 {
-                    errorLines.Add(line);
+                    // El renglón exacto si Firebird lo dice (en un EXECUTE BLOCK, el de la EXCEPTION); cuenta desde el
+                    // principio del texto mandado, comentario incluido.
+                    var position = FirebirdErrorPosition.Parse(outcome.Error);
+                    var errorLine = position is { } p ? LineOf(span.Start) + p.Line - 1 : line;
+                    errorLines.Add(errorLine);
                     log.AppendLine(string.Format(Strings.ScriptLogError, line, info.Keyword, ShortError(outcome.Error)));
                     if (firstError is null)
                     {
                         // El cursor va al primer error (salvo en un script de un archivo, que no está en el editor); si es
                         // un bloqueo, se dice quién tiene el registro.
                         firstError = outcome.Error;
+                        failed = (span, info, line, errorLine);
                         lockNote = await DescribeLockAsync(outcome.Error);
-                        if (file is null && FirebirdErrorPosition.Parse(outcome.Error) is { } position)
+                        if (file is null && position is { } at)
                         {
-                            var at = position.InDocument(Document.Text, span.Start);
-                            GoTo(at.Line, at.Column);
+                            var there = at.InDocument(Document.Text, span.Start);
+                            GoTo(there.Line, there.Column);
                         }
                         else if (file is null)
                         {
                             GoTo(line, 1);
                         }
                     }
-                    // Una sentencia que falla se deshace sola: la transacción y lo anterior siguen en pie.
-                    if (stopOnError)
+                    // Una sentencia que falla se deshace sola. Si sigue, lo anterior queda en la transacción; si se
+                    // detiene, abajo se deshace lo pendiente del script.
+                    if (bail)
                     {
                         stopped = true;
                         break;
@@ -926,6 +1081,15 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
                     break;
                 }
                 done++;
+                if (info.Kind == StatementKind.Transaction && info.Keyword is "COMMIT" or "ROLLBACK")
+                {
+                    pending = false;
+                    if (info.Keyword == "COMMIT") lastCommitLine = line;
+                }
+                else if (info.Modifies || info.Keyword == "SAVEPOINT")
+                {
+                    pending = true;
+                }
                 if (outcome.RecordsAffected > 0) affected += outcome.RecordsAffected;
                 var k = byKeyword.GetValueOrDefault(info.Keyword);
                 byKeyword[info.Keyword] = (k.Count + 1, k.Rows + (outcome.Columns.Length > 0 ? outcome.RowsFetched : Math.Max(0, outcome.RecordsAffected)));
@@ -941,6 +1105,18 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         }
         finally
         {
+            // Se detuvo por un error: se deshace lo que el script dejó sin confirmar (como isql con SET BAIL ON). Lo que
+            // confirmaron sus COMMIT queda, y lo que la pestaña tenía pendiente de antes también (D-120).
+            if (stopped && session is not null)
+            {
+                try { undo = await session.UndoScriptAsync(); }
+                catch (Exception ex) { undoError = ex.Message.Split('\n', 2)[0].Trim(); }
+            }
+            if (session is not null)
+            {
+                try { await session.EndScriptAsync(); }
+                catch (Exception) { /* la conexión pudo cortarse: el savepoint se va con ella */ }
+            }
             InTransaction = _session?.InTransaction == true;
             IsRunning = false;
             _cts.Dispose();
@@ -959,13 +1135,26 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
             summary += " · " + string.Format(Strings.ScriptErrorsAt, errorLines.Count, ListLines(errorLines));
         else if (stopped)
             summary += " · " + (errorLines.Count > 0 ? string.Format(Strings.ScriptStoppedAtLine, errorLines[0]) : Strings.ScriptStopped);
+        if (stopped)
+            summary += " · " + (undoError is not null ? Strings.ScriptUndoFailedShort : pending ? Strings.ScriptUndone : Strings.ScriptNothingPending);
+        if (ended is { } end) summary += " · " + string.Format(Strings.ScriptEndedAt, end.Line, end.Name);
+        if (ignored > 0) summary += " · " + string.Format(Strings.ScriptIsqlSkipped, ignored);
         if (lockNote is not null) summary += " · " + lockNote;
         else if (cancelled) summary += " · " + Strings.ScriptCancelled;
         if (gridless) summary += " · " + (automatic ? string.Format(Strings.ScriptGridlessAuto, LongScript) : Strings.ScriptGridless);
         if (InTransaction) summary += Strings.TransactionOpenSuffix;
+        if (InTransaction && AutoCommit) summary += " · " + Strings.ScriptNoAutoCommit;
         if (notice is not null) summary += " · " + notice;
 
         var head = new StringBuilder(summary).AppendLine().AppendLine();
+        if (stopped)
+        {
+            var detail = undoError is not null ? string.Format(Strings.ScriptUndoFailed, undoError)
+                : !pending ? lastCommitLine is { } kept ? string.Format(Strings.ScriptNothingPendingAfterCommit, kept) : Strings.ScriptNothingPendingDetail
+                : undo == ScriptUndo.ToScriptStart ? Strings.ScriptUndoneKeptBefore
+                : lastCommitLine is { } committed ? string.Format(Strings.ScriptUndoneAfterCommit, committed) : Strings.ScriptUndoneAll;
+            head.AppendLine(detail).AppendLine();
+        }
         if (!detailed)
         {
             // Script largo: un renglón por tipo de sentencia; abajo, solo los errores.
@@ -973,20 +1162,32 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
                 head.AppendLine(string.Format(Strings.ScriptByKeyword, keyword, count, rows));
             head.AppendLine();
         }
-        if (firstError is not null) log.AppendLine().AppendLine(firstError);
+        if (failed is { } f)
+        {
+            // La sentencia que falló: dónde, cómo empieza y el error completo.
+            log.AppendLine().AppendLine(f.ErrorLine == f.Line
+                ? string.Format(Strings.ScriptFailedStatement, f.Line, f.Info.Keyword)
+                : string.Format(Strings.ScriptFailedInside, f.Line, f.Info.Keyword, f.ErrorLine));
+            log.AppendLine(Excerpt(f.Span.Text[FirstTokenOffset(f.Span.Text)..])).AppendLine();
+            log.AppendLine(firstError);
+        }
+        else if (firstError is not null)
+        {
+            log.AppendLine().AppendLine(firstError);
+        }
         Messages = head.ToString() + log;
         Status = summary;
         SelectedResultTab = !gridless && errorLines.Count == 0 && !stopped && lastWithRows is not null ? 0 : MessagesTab;
 
-        // Sin grilla, el historial guarda el script entero una vez (no miles de entradas).
-        if (gridless)
-            _owner.RecordScript(profile, file is null ? text : string.Format(Strings.ScriptFileHistory, file.Name, statements.Count), new QueryOutcome
-            {
-                TotalTime = clock.Elapsed,
-                RecordsAffected = (int)Math.Min(affected, int.MaxValue),
-                Cancelled = cancelled,
-                Error = firstError,
-            });
+        // El historial guarda el script una vez, entero como se ejecutó (la selección o todo el editor), con grilla o
+        // sin ella (D-121); de un archivo, su nombre (D-92).
+        _owner.RecordScript(profile, file is null ? text : string.Format(Strings.ScriptFileHistory, file.Name, statements.Count), new QueryOutcome
+        {
+            TotalTime = clock.Elapsed,
+            RecordsAffected = (int)Math.Min(affected, int.MaxValue),
+            Cancelled = cancelled,
+            Error = firstError,
+        });
     }
 
     /// <summary>
@@ -1008,6 +1209,17 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
         return useful.Count > 0 ? string.Join(" · ", useful) : error.Split('\n', 2)[0].Trim();
     }
 
+    /// <summary>Dónde empieza la primera palabra de una sentencia, pasados los comentarios del principio.</summary>
+    private static int FirstTokenOffset(string statement) => SqlLexer.Tokenize(statement).Select(t => t.Start).FirstOrDefault();
+
+    /// <summary>Los primeros renglones de una sentencia, con sangría, para el registro (y «…» si sigue).</summary>
+    internal static string Excerpt(string statement, int lines = 6)
+    {
+        var all = statement.Replace("\r\n", "\n").Split('\n');
+        var shown = all.Take(lines).Select(l => "    " + l.TrimEnd());
+        return string.Join(Environment.NewLine, all.Length > lines ? shown.Append("    …") : shown);
+    }
+
     /// <summary>«3, 7, 12» (y «…» pasadas las diez).</summary>
     private static string ListLines(List<int> lines) =>
         string.Join(", ", lines.Take(10)) + (lines.Count > 10 ? ", …" : "");
@@ -1020,7 +1232,7 @@ public partial class EditorTabViewModel : ObservableObject, IAsyncDisposable
     {
         var session = await EnsureSessionAsync(profile, ct);
         var discard = Channel.CreateUnbounded<object[][]>();
-        var options = new ExecuteOptions(MaxRows: _owner.RowLimit, Script: true);
+        var options = new ExecuteOptions(MaxRows: _owner.RowLimit, Script: true, InScript: true);
         var outcome = await Task.Run(() => session.ExecuteAsync(sql, statement, options, _ => { }, discard.Writer, ct));
         if (statement.Kind == StatementKind.Ddl && outcome.Error is null) _owner.InvalidateCatalog(profile.Id);
         return outcome;

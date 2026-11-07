@@ -100,7 +100,7 @@ templates, if a new version of FbStudio improves them, you get the improvements 
 | **Open write transaction: amber after** | After these minutes, the open transaction notice in the banner turns amber. From 1 to 1,440. | 5 minutes |
 | **…and red, with a notice, after** | After these minutes, it turns red and the status bar warns you once. It cannot be less than the previous value; up to 10,080. | 15 minutes |
 | **When applying changes in the Data tab** | **Show the commands first (run them, copy them or take them to a query tab)** or **Run them directly**. | Show the commands first |
-| **On an error in a script** | **Stop at the first error** or **Continue with the next statement**. | Stop at the first error |
+| **On an error in a script (Development and Test)** | **Stop at the first error** or **Continue with the next statement**. On production it always stops, and a `SET BAIL` in the script rules over this option. | Stop at the first error |
 
 About the open transaction: a forgotten transaction, with several people working, holds back the OAT and the server's
 garbage collection (see [The database banner](01-start.md#the-database-banner)).
@@ -109,8 +109,9 @@ When you apply changes in the Data tab, both ways run the same thing: everything
 checking that nobody else has changed the row. With production or with deletions, you are still asked for confirmation
 (see [The Data tab](04-data.md)).
 
-On an error in a script: a statement that fails is undone on its own; what came before and the transaction stay in
-place. At the end, the log lists the errors and the cursor goes to the first one. It is the same option as
+On an error in a script: when it stops, what the script left uncommitted is undone (what its `COMMIT`s confirmed
+stays); when it goes on, the failing statement is undone on its own and what came before waits for Commit or Rollback.
+See [Errors in a script](02-editor.md#errors-in-a-script). It is the same option as
 **Query › Continue on errors in scripts**.
 
 ### Monitoring
@@ -261,7 +262,7 @@ Nothing is saved to the database until you click **Apply** (see [The Data tab](0
 
 | Shortcut | What it does |
 |---|---|
-| `Enter` or double-click on a database | Connects it and uses it in the tab. |
+| `Enter` or double-click on a database | Connects it and uses it in the selected query if it has no database or an empty editor; otherwise it opens a new query. |
 | `Enter` or double-click on an object | Opens it in its own tab (DDL and dependencies; procedures, triggers, views and functions are edited and compiled there). |
 | `Enter` or double-click on a column | Types its name in the editor. |
 | `Enter` or double-click on a folder or an object type | Expands or collapses it. |

@@ -52,9 +52,37 @@ public sealed class MonitorTabTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         return Convert.ToInt64(rows[0][0]);
     }
 
+    /// <summary>
+    /// Espera a que no quede abierta ninguna transacción de otra prueba que cuente para la OAT (una ventana cerrada sin
+    /// esperar puede estar todavía deshaciendo la suya). Las de solo lectura con lectura confirmada no cuentan. Si no se
+    /// cierran a tiempo, falla diciendo de qué conexión son.
+    /// </summary>
+    private async Task WaitForNoOtherTransactionsAsync(int timeoutMs = 15_000)
+    {
+        await using var probe = fb.NewSession();
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        while (true)
+        {
+            var (_, rows) = await FirebirdFixture.RunAsync(probe, """
+                SELECT t.MON$TRANSACTION_ID, TRIM(a.MON$REMOTE_PROCESS), DATEDIFF(SECOND FROM t.MON$TIMESTAMP TO CURRENT_TIMESTAMP)
+                FROM MON$TRANSACTIONS t
+                JOIN MON$ATTACHMENTS a ON a.MON$ATTACHMENT_ID = t.MON$ATTACHMENT_ID
+                WHERE t.MON$ATTACHMENT_ID <> CURRENT_CONNECTION AND a.MON$SYSTEM_FLAG = 0
+                  AND NOT (t.MON$READ_ONLY = 1 AND t.MON$ISOLATION_MODE IN (2, 3))
+                """);
+            if (rows.Count == 0) return;
+            if (sw.ElapsedMilliseconds > timeoutMs)
+                throw new TimeoutException("Quedaron transacciones abiertas de otras pruebas: "
+                    + string.Join("; ", rows.Select(r => $"#{r[0]} de «{r[1]}», hace {r[2]} s")));
+            await Task.Delay(100);
+            Pump();
+        }
+    }
+
     [Fact]
     public Task Muestra_la_OAT_y_corta_la_conexion_que_la_tiene() => ui.Session.DispatchAsync(async () =>
     {
+        await WaitForNoOtherTransactionsAsync();                           // la OAT tiene que ser la de esta prueba
         await using var holder = fb.NewSession();
         await FirebirdFixture.RunAsync(holder, "UPDATE TURNOS SET OBS = OBS WHERE ID = 10");
         var holderTx = holder.TransactionId!.Value;

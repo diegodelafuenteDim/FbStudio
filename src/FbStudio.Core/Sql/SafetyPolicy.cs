@@ -42,7 +42,10 @@ public static class SafetyPolicy
         if (profile.ReadOnly && statement.ChangesSequences)
             return new SafetyDecision(SafetyVerdict.Block, [string.Format(Resources.CoreStrings.SafetyReadOnlySequence, profile.Name)]);
 
-        if (statement.Kind == StatementKind.Transaction && statement.Keyword is "SET TRANSACTION" or "SAVEPOINT" or "RELEASE")
+        // Las órdenes de isql no van al servidor: el script las interpreta, las ignora o no corre (D-120).
+        if (statement.Kind == StatementKind.Isql) return SafetyDecision.Allow;
+
+        if (statement.Kind == StatementKind.Transaction && statement.Keyword == "SET TRANSACTION")
             return new SafetyDecision(SafetyVerdict.Block,
                 [string.Format(Resources.CoreStrings.SafetyNotSupported, statement.Keyword)]);
 

@@ -422,8 +422,11 @@
   <data name="BannerEncrypted" xml:space="preserve">
     <value> · encrypted connection</value>
   </data>
-  <data name="BannerNoDatabaseInTab" xml:space="preserve">
-    <value>Tab without a database: double-click a database in the tree to connect it</value>
+  <data name="BannerNoDatabaseBeforeHint" xml:space="preserve">
+    <value> (was: {0}): pick one from this list or double-click one in the tree</value>
+  </data>
+  <data name="BannerNoDatabaseHint" xml:space="preserve">
+    <value>: pick one from this list or double-click one in the tree</value>
   </data>
   <data name="BannerNoDatabases" xml:space="preserve">
     <value>No registered databases: click “Register” to add the first one</value>
@@ -490,6 +493,18 @@
   </data>
   <data name="ChartValues" xml:space="preserve">
     <value>Value (Y, sum):</value>
+  </data>
+  <data name="ChooseDatabaseCancelled" xml:space="preserve">
+    <value>The query's database was not changed.</value>
+  </data>
+  <data name="ChooseDatabaseTitle" xml:space="preserve">
+    <value>Change the query's database</value>
+  </data>
+  <data name="ChooseProductionConfirm" xml:space="preserve">
+    <value>«{0}» will run on PRODUCTION: {1}. Check the text before running it.</value>
+  </data>
+  <data name="ChooseProductionYes" xml:space="preserve">
+    <value>Use production</value>
   </data>
   <data name="Close" xml:space="preserve">
     <value>Close</value>
@@ -811,6 +826,9 @@
   </data>
   <data name="CopyLog" xml:space="preserve">
     <value>Copy</value>
+  </data>
+  <data name="CopyLogTip" xml:space="preserve">
+    <value>Copies the selection; with nothing selected, the whole log, with the date and the database.</value>
   </data>
   <data name="CopyName" xml:space="preserve">
     <value>{0} (copy)</value>
@@ -1340,11 +1358,29 @@
   <data name="DiscardAndReload" xml:space="preserve">
     <value>Discard and reload</value>
   </data>
+  <data name="DisconnectAndUndo" xml:space="preserve">
+    <value>Disconnect and undo</value>
+  </data>
+  <data name="DisconnectedClosingAndKeeping" xml:space="preserve">
+    <value>Disconnected from {0}: {1} tab(s) were closed and {2} query tab(s) stayed open without a database.</value>
+  </data>
   <data name="DisconnectedClosingTabs" xml:space="preserve">
     <value>Disconnected from {0}: its {1} tab(s) were closed.</value>
   </data>
   <data name="DisconnectedFrom" xml:space="preserve">
     <value>Disconnected from {0}.</value>
+  </data>
+  <data name="DisconnectedKeepingQueries" xml:space="preserve">
+    <value>Disconnected from {0}: {1} query tab(s) stayed open without a database.</value>
+  </data>
+  <data name="DisconnectKeepsQueries" xml:space="preserve">
+    <value>Query tabs stay open, without a database and with their text.</value>
+  </data>
+  <data name="DisconnectPending" xml:space="preserve">
+    <value>Disconnecting {0} affects work that was not committed: {1}. Transactions are undone (rollback) and uncompiled or unapplied changes are lost.</value>
+  </data>
+  <data name="DisconnectTitle" xml:space="preserve">
+    <value>Disconnect {0}</value>
   </data>
   <data name="DisconnectWhileRunning" xml:space="preserve">
     <value>{0} was not disconnected: tab “{1}” is running. Cancel it or wait for it to finish.</value>
@@ -1369,6 +1405,9 @@
   </data>
   <data name="DontClose" xml:space="preserve">
     <value>Don't close</value>
+  </data>
+  <data name="DontDisconnect" xml:space="preserve">
+    <value>Don't disconnect</value>
   </data>
   <data name="DontExit" xml:space="preserve">
     <value>Don't exit</value>
@@ -2174,6 +2213,63 @@
   <data name="IsolationTableStability" xml:space="preserve">
     <value>Snapshot table stability</value>
   </data>
+  <data name="IsqlAutoDdl" xml:space="preserve">
+    <value>{0}: not run; FbStudio doesn't commit DDL by itself: it stays in the transaction until the COMMIT (like AUTODDL OFF).</value>
+  </data>
+  <data name="IsqlBailOff" xml:space="preserve">
+    <value>{0}: from here on, the script goes on even if there are errors.</value>
+  </data>
+  <data name="IsqlBailOn" xml:space="preserve">
+    <value>{0}: from here on, the script stops at the first error.</value>
+  </data>
+  <data name="IsqlClientLib" xml:space="preserve">
+    <value>{0}: a command of other tools, not of isql; not run.</value>
+  </data>
+  <data name="IsqlDialect" xml:space="preserve">
+    <value>{0}: not run; FbStudio already works in dialect 3.</value>
+  </data>
+  <data name="IsqlDisplay" xml:space="preserve">
+    <value>{0}: changes how isql shows results; not run.</value>
+  </data>
+  <data name="IsqlEnd" xml:space="preserve">
+    <value>{0}: the script ends here; what is pending stays in the transaction (Commit/Rollback).</value>
+  </data>
+  <data name="IsqlInput" xml:space="preserve">
+    <value>{0}: FbStudio doesn't run other files from a script; run each one with Query › Run script from file…</value>
+  </data>
+  <data name="IsqlInteractive" xml:space="preserve">
+    <value>{0}: an interactive isql command; FbStudio doesn't run it.</value>
+  </data>
+  <data name="IsqlNames" xml:space="preserve">
+    <value>{0}: not run; the connection uses the registration's charset ({1}).</value>
+  </data>
+  <data name="IsqlNamesDiffers" xml:space="preserve">
+    <value>{0}: not run; ⚠ the connection uses {1}, not the charset the script asks for (text with accents may come out different).</value>
+  </data>
+  <data name="IsqlOnlyInScript" xml:space="preserve">
+    <value>{0}: an isql command; it applies inside a script (several statements with F9, Ctrl+F9 or from a file).</value>
+  </data>
+  <data name="IsqlOtherDatabase" xml:space="preserve">
+    <value>{0}: the script runs on the tab's database; FbStudio doesn't connect to, create or drop databases from a script.</value>
+  </data>
+  <data name="IsqlOtherDialect" xml:space="preserve">
+    <value>{0}: the script is for another dialect; FbStudio works in dialect 3.</value>
+  </data>
+  <data name="IsqlOutput" xml:space="preserve">
+    <value>{0}: FbStudio doesn't write the output to a file; the log stays in Messages and can be saved.</value>
+  </data>
+  <data name="IsqlOutputOff" xml:space="preserve">
+    <value>{0}: not run; the log stays in Messages.</value>
+  </data>
+  <data name="IsqlPlanOnly" xml:space="preserve">
+    <value>{0}: isql would only prepare the statements and FbStudio would run them; to see the plan without running, Ctrl+Shift+E.</value>
+  </data>
+  <data name="IsqlShell" xml:space="preserve">
+    <value>{0}: FbStudio doesn't run system commands.</value>
+  </data>
+  <data name="IsqlShow" xml:space="preserve">
+    <value>{0}: lists things in the isql console; not run (see the tree).</value>
+  </data>
   <data name="KeepEditing" xml:space="preserve">
     <value>Keep editing</value>
   </data>
@@ -2224,6 +2320,9 @@
   </data>
   <data name="LogSaved" xml:space="preserve">
     <value>Log saved to {0}</value>
+  </data>
+  <data name="LogSelectionCopied" xml:space="preserve">
+    <value>The selected part of the log was copied.</value>
   </data>
   <data name="MaintBackupDone" xml:space="preserve">
     <value>Backup finished: {0} ({1:N1} s).</value>
@@ -3158,6 +3257,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="NoDatabase" xml:space="preserve">
     <value>No database</value>
   </data>
+  <data name="NoDatabaseBefore" xml:space="preserve">
+    <value>No database (was: {0})</value>
+  </data>
   <data name="NoPlan" xml:space="preserve">
     <value>(no plan)</value>
   </data>
@@ -3312,10 +3414,10 @@ ORDER BY a.MON$TIMESTAMP</value>
     <value>Continue with the next statement</value>
   </data>
   <data name="OptionsScriptNote" xml:space="preserve">
-    <value>A failing statement is undone by itself; what came before and the transaction stay. At the end the log lists the errors and the cursor goes to the first one. Also available in the Query menu.</value>
+    <value>In production the script always stops, and a SET BAIL ON or OFF written in the script rules from its line. When it stops, what the script left uncommitted is undone (what its COMMITs confirmed stays). When it goes on, the failing statement is undone by itself and the rest waits for Commit or Rollback. It can also be changed from the Query menu.</value>
   </data>
   <data name="OptionsScriptOnError" xml:space="preserve">
-    <value>On an error in a script</value>
+    <value>On an error in a script (Development and Test)</value>
   </data>
   <data name="OptionsScriptStop" xml:space="preserve">
     <value>Stop at the first error</value>
@@ -3416,8 +3518,23 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="PendingUnsaved" xml:space="preserve">
     <value>unsaved changes</value>
   </data>
+  <data name="PickDatabaseFixedTip" xml:space="preserve">
+    <value>This tab belongs to this database and can't be changed. For another database, open a query (Ctrl+T).</value>
+  </data>
   <data name="PickDatabaseInTree" xml:space="preserve">
     <value>Pick a database in the tree (or double-click it).</value>
+  </data>
+  <data name="PickDatabaseNoProfiles" xml:space="preserve">
+    <value>No registered databases</value>
+  </data>
+  <data name="PickDatabaseRunningTip" xml:space="preserve">
+    <value>It is running: wait for it to finish (or cancel it) to change the database.</value>
+  </data>
+  <data name="PickDatabaseTip" xml:space="preserve">
+    <value>Choose the database this query runs on. It connects when you run it.</value>
+  </data>
+  <data name="PickDatabaseTransactionTip" xml:space="preserve">
+    <value>It has an open transaction: Commit or Rollback to change the database.</value>
   </data>
   <data name="PlanDetailed" xml:space="preserve">
     <value>Detailed plan</value>
@@ -3451,6 +3568,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="ProfileDeleteYes" xml:space="preserve">
     <value>Delete the registration</value>
+  </data>
+  <data name="ProfileDeleted" xml:space="preserve">
+    <value>The registration “{0}” was deleted.</value>
   </data>
   <data name="ProfileEnvironment" xml:space="preserve">
     <value>Environment</value>
@@ -3535,6 +3655,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="ProfileWireCrypt" xml:space="preserve">
     <value>Connection encryption</value>
+  </data>
+  <data name="QueryPickDatabase" xml:space="preserve">
+    <value>This query has no database: pick one in the banner above or double-click one in the tree.</value>
   </data>
   <data name="QueryTabTitle" xml:space="preserve">
     <value>Query {0}</value>
@@ -3785,6 +3908,9 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="ScopeStatement" xml:space="preserve">
     <value>only the statement at the cursor was executed (line {0})</value>
   </data>
+  <data name="ScriptBailOffProduction" xml:space="preserve">
+    <value>Line {0}: {1}: from there on the script goes on even if there are errors.</value>
+  </data>
   <data name="ScriptBlocked" xml:space="preserve">
     <value>Blocked (no statement of the script was executed): {0}</value>
   </data>
@@ -3797,11 +3923,20 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="ScriptCancelledInConfirmation" xml:space="preserve">
     <value>The script was not executed (cancelled at the confirmation).</value>
   </data>
+  <data name="ScriptEndedAt" xml:space="preserve">
+    <value>ended at the {1} on line {0}</value>
+  </data>
   <data name="ScriptErrorAt" xml:space="preserve">
     <value>1 with an error (line {0})</value>
   </data>
   <data name="ScriptErrorsAt" xml:space="preserve">
     <value>{0} with errors (lines {1})</value>
+  </data>
+  <data name="ScriptFailedInside" xml:space="preserve">
+    <value>Error on line {2}, inside the {1} that starts on line {0}:</value>
+  </data>
+  <data name="ScriptFailedStatement" xml:space="preserve">
+    <value>Error in the statement on line {0} ({1}):</value>
   </data>
   <data name="ScriptFileEmpty" xml:space="preserve">
     <value>{0} has no statements to run.</value>
@@ -3821,6 +3956,12 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="ScriptGridlessAuto" xml:space="preserve">
     <value>no grid: more than {0} statements</value>
   </data>
+  <data name="ScriptIsqlRejected" xml:space="preserve">
+    <value>No statement was run: {1} (line {0}) is an isql command FbStudio doesn't run.</value>
+  </data>
+  <data name="ScriptIsqlSkipped" xml:space="preserve">
+    <value>isql commands not run: {0}</value>
+  </data>
   <data name="ScriptLimitReached" xml:space="preserve">
     <value> (limit reached)</value>
   </data>
@@ -3833,11 +3974,26 @@ ORDER BY a.MON$TIMESTAMP</value>
   <data name="ScriptLogError" xml:space="preserve">
     <value>✗ line {0} · {1}: {2}</value>
   </data>
+  <data name="ScriptLogIsql" xml:space="preserve">
+    <value>ℹ line {0} · {1}</value>
+  </data>
   <data name="ScriptLogOk" xml:space="preserve">
     <value>✓ line {0} · {1}</value>
   </data>
   <data name="ScriptModifiesProduction" xml:space="preserve">
     <value>The script has {0} statement(s) that modify PRODUCTION ({1}).</value>
+  </data>
+  <data name="ScriptNoAutoCommit" xml:space="preserve">
+    <value>scripts don't use autocommit</value>
+  </data>
+  <data name="ScriptNothingPending" xml:space="preserve">
+    <value>nothing of the script was left pending</value>
+  </data>
+  <data name="ScriptNothingPendingAfterCommit" xml:space="preserve">
+    <value>Nothing was left pending: what came before was already committed by the COMMIT on line {0}.</value>
+  </data>
+  <data name="ScriptNothingPendingDetail" xml:space="preserve">
+    <value>Nothing of the script was left uncommitted.</value>
   </data>
   <data name="ScriptNoWhere" xml:space="preserve">
     <value>Line {0}: {1} without WHERE (affects ALL rows).</value>
@@ -3865,6 +4021,24 @@ ORDER BY a.MON$TIMESTAMP</value>
   </data>
   <data name="ScriptSummary" xml:space="preserve">
     <value>Script: {0} of {1} statements in {2:N1} s</value>
+  </data>
+  <data name="ScriptUndoFailed" xml:space="preserve">
+    <value>The script's pending work could not be undone ({0}): the transaction is still open; do a Rollback.</value>
+  </data>
+  <data name="ScriptUndoFailedShort" xml:space="preserve">
+    <value>could not undo the pending work</value>
+  </data>
+  <data name="ScriptUndone" xml:space="preserve">
+    <value>the script's pending work was undone</value>
+  </data>
+  <data name="ScriptUndoneAfterCommit" xml:space="preserve">
+    <value>What the script did after the COMMIT on line {0} was undone; what came before was already committed.</value>
+  </data>
+  <data name="ScriptUndoneAll" xml:space="preserve">
+    <value>Everything the script did was undone: it hadn't committed anything.</value>
+  </data>
+  <data name="ScriptUndoneKeptBefore" xml:space="preserve">
+    <value>What the script did was undone; what was already pending before it started is still in the open transaction.</value>
   </data>
   <data name="SearchAreaAll" xml:space="preserve">
     <value>All areas</value>
@@ -4855,14 +5029,29 @@ Drag to the editor       Write the name of the table, object or column where it 
   <data name="TabCloseTip" xml:space="preserve">
     <value>Close (Ctrl+W)</value>
   </data>
+  <data name="TabDatabaseChanged" xml:space="preserve">
+    <value>— At {2:HH:mm} the query moved from {0} to {1}.</value>
+  </data>
   <data name="TabDatabaseIs" xml:space="preserve">
     <value>Database of this tab: {0}. F9 executes.</value>
+  </data>
+  <data name="TabDatabaseSet" xml:space="preserve">
+    <value>— At {1:HH:mm} the query moved to {0}.</value>
+  </data>
+  <data name="TabDetached" xml:space="preserve">
+    <value>— Disconnected from {0} at {1:HH:mm}. The query was left without a database, with its text.</value>
+  </data>
+  <data name="TabDetachedRolledBack" xml:space="preserve">
+    <value>— Disconnected from {0} at {1:HH:mm}: what had not been committed was undone (rollback). The query was left without a database, with its text.</value>
   </data>
   <data name="TabDuplicate" xml:space="preserve">
     <value>Duplicate</value>
   </data>
   <data name="TabHasNoEditor" xml:space="preserve">
     <value>The selected tab has no editor</value>
+  </data>
+  <data name="TabLeftWithoutDatabase" xml:space="preserve">
+    <value>No database: {0} was disconnected. Pick one in the banner above or double-click one in the tree.</value>
   </data>
   <data name="TableSqlNoColumns" xml:space="preserve">
     <value>The columns of {0} were not found: it may no longer exist (reload the metadata).</value>
@@ -4881,6 +5070,9 @@ Drag to the editor       Write the name of the table, object or column where it 
   </data>
   <data name="TabReopenClosed" xml:space="preserve">
     <value>Reopen closed tab (Ctrl+Shift+T)</value>
+  </data>
+  <data name="TabResultsCleared" xml:space="preserve">
+    <value> The results, plan and statistics from {0} were cleared.</value>
   </data>
   <data name="TemplateNone" xml:space="preserve">
     <value>There are no templates: add them in Tools → Options → Templates.</value>
@@ -5339,7 +5531,7 @@ Drag to the editor       Write the name of the table, object or column where it 
     <value>In production and in read-only registrations it is always explicit Commit and read committed.</value>
   </data>
   <data name="TransactionModeTip" xml:space="preserve">
-    <value>Autocommit commits each writing statement when it ends well. The isolation applies to the next write transaction: read committed sees what others commit; snapshot, the picture at the moment it started; snapshot table stability also locks the tables it reads.</value>
+    <value>Autocommit commits each writing statement when it ends well; scripts don't use it: they run with their own COMMITs, as in production. The isolation applies to the next write transaction: read committed sees what others commit; snapshot, the picture at the moment it started; snapshot table stability also locks the tables it reads.</value>
   </data>
   <data name="TransactionOpenBanner" xml:space="preserve">
     <value>Write transaction OPEN: confirm it (Commit) or undo it (Rollback)</value>
@@ -5388,6 +5580,9 @@ Drag to the editor       Write the name of the table, object or column where it 
   </data>
   <data name="TreeDataCompare" xml:space="preserve">
     <value>Compare data with another database…</value>
+  </data>
+  <data name="TreeDeleteRegistration" xml:space="preserve">
+    <value>Delete registration…</value>
   </data>
   <data name="TreeDependencies" xml:space="preserve">
     <value>Dependencies (uses / used by)</value>
@@ -5528,7 +5723,7 @@ Drag to the editor       Write the name of the table, object or column where it 
     <value>Trace (live statements)</value>
   </data>
   <data name="TreeUseInTab" xml:space="preserve">
-    <value>Use this database in the tab</value>
+    <value>Use this database in a query</value>
   </data>
   <data name="TreeViewData" xml:space="preserve">
     <value>View data (edit without locking)</value>

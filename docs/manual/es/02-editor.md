@@ -18,9 +18,10 @@ que escribís (ver [Primeros pasos](01-start.md)).
   si no, en la base de la pestaña elegida. Sin pestañas abiertas, en la del árbol. Si no hay ninguna base elegida, no se
   abre y la barra de estado lo dice.
 - Desde el árbol: clic derecho en una base › **Consulta nueva en esta base**.
-- Doble clic en una base del árbol la conecta y la usa en la pestaña de consulta elegida, si está libre. Si esa pestaña
-  tiene una transacción abierta o está ejecutando, la base se abre en una pestaña nueva y la anterior sigue con su base
-  y su transacción.
+- Doble clic en una base del árbol la conecta y la usa en la consulta elegida solo si esa consulta no tiene base o tiene
+  el editor vacío. Si tiene texto, una transacción abierta o está ejecutando, la base se abre en una pestaña nueva y la
+  anterior sigue con su base, su texto y su transacción. Para cambiarle la base a una consulta con texto, usá la lista
+  de la franja (ver [Elegir la base desde la franja](#elegir-la-base-desde-la-franja)).
 
 ### Recorrer y cerrar
 
@@ -52,6 +53,38 @@ no se guardan.
 Se apaga en **Herramientas › Opciones… › Editor**, con **Al cerrar, recordar las consultas abiertas y volver a
 abrirlas**.
 
+### Elegir la base desde la franja
+
+En la franja de arriba, el nombre de la base es una lista (**▾**). En una consulta, un clic muestra todas las bases
+registradas, por entorno y nombre, con el color de su entorno; la actual va marcada con ● y no se puede elegir. Elegir
+otra le cambia la base a la consulta:
+
+- La consulta conserva su texto. Se conecta a la base nueva recién al ejecutar.
+- Si la base nueva es de producción, pregunta antes: **Usar producción** la cambia y **Cancelar** la deja como estaba.
+- En **Mensajes** queda un renglón con la hora y de qué base a cuál pasó.
+- Los resultados, el plan y las estadísticas de la base anterior se borran, para no leerlos como si fueran de la
+  nueva. **Mensajes** queda como registro.
+
+La lista queda fija (sin **▾**) mientras la consulta tiene una transacción abierta o está ejecutando: hacé **Commit** o
+**Rollback**, o esperá a que termine. En la pestaña de un objeto, la búsqueda, el monitoreo y las demás herramientas,
+la base no se cambia. El tooltip de la lista dice por qué.
+
+### Consultas sin base
+
+Una consulta queda sin base cuando desconectás su base (ver [Desconectar](01-start.md#desconectar)) o borrás su
+registro, y también al abrir un archivo .sql sin una base elegida. Sigue abierta con su texto, y:
+
+- la pestaña tiene el borde gris, una base tachada como ícono y el título sin base; el tooltip dice «Sin base (antes:
+  Ventas)»;
+- la franja es gris y dice **Sin base** y, si se desconectó, de qué base quedó;
+- en **Mensajes** queda un renglón con la hora de la desconexión y, si había una transacción abierta, que lo que no se
+  había confirmado se deshizo (rollback);
+- los resultados de la última ejecución siguen a la vista;
+- `F9` no ejecuta: la barra de estado dice cómo elegir la base.
+
+Para seguir, elegí la base en la lista de la franja o hacé doble clic en una base del árbol con la consulta elegida. Al
+volver a conectar una base, las consultas que quedaron sin base no la retoman solas: cada una se elige a mano.
+
 ## Archivos .sql
 
 - **Consulta › Abrir archivo .sql…** (`Ctrl+O`) abre uno o varios archivos .sql o .txt. Si el archivo ya está abierto,
@@ -82,8 +115,9 @@ El botón **Ejecutar** de la barra de herramientas hace lo mismo que `F9`.
 
 - Con texto elegido, ejecuta lo elegido. Sin selección, ejecuta todo el editor.
 - Si es una sola sentencia, es una ejecución común: las filas van a **Resultados** y los mensajes a **Mensajes**.
-- Si son varias, corren como script: en orden, en la misma transacción, y paran en el primer error (o siguen, ver
-  [Scripts](#scripts)). Un `COMMIT` o `ROLLBACK` escrito en el script se ejecuta en su lugar.
+- Si son varias, corren como script: en orden, en la misma transacción, y paran en el primer error deshaciendo lo que
+  el script dejó sin confirmar (o siguen, ver [Errores en un script](#errores-en-un-script)). Un `COMMIT` o `ROLLBACK`
+  escrito en el script se ejecuta en su lugar.
 - Las sentencias se separan con `;`. FbStudio entiende `SET TERM` (los scripts de isql) y también los bloques PSQL sin
   `SET TERM`: los `;` de adentro de un `CREATE PROCEDURE … BEGIN … END` o de un `EXECUTE BLOCK` no lo cortan.
 - Si Firebird dice en qué renglón y columna está el error, el cursor va ahí.
@@ -114,15 +148,62 @@ Varias sentencias juntas corren como script (con `F9`, con `Ctrl+F9` o desde un 
   [La red de seguridad](#la-red-de-seguridad)).
 - La transacción de escritura se abre con lo primero que modifica y sigue abierta hasta un `COMMIT` o `ROLLBACK` del
   script, o hasta que apretás **Commit** o **Rollback**.
-- Ante un error, el script para. Para que siga con la siguiente sentencia, tildá **Consulta › Seguir ante errores en
-  scripts** (es la misma opción que **Ante un error en un script**, en **Herramientas › Opciones… › Consultas**). Una
-  sentencia que falla se deshace sola: lo anterior y la transacción siguen en pie. Al terminar, el cursor va al primer
-  error.
+- Un script no usa el **Autocommit**: corre igual en Desarrollo, Prueba y Producción, con sus propios `COMMIT`. Lo que
+  probás en una base de prueba se comporta igual en producción.
+- Ante un error, el script se detiene y deshace lo que dejó sin confirmar (ver
+  [Errores en un script](#errores-en-un-script)).
+- Las órdenes de isql, como `SET BAIL` o `SET NAMES`, no van al servidor (ver [Órdenes de isql](#órdenes-de-isql)).
 - El registro queda en **Mensajes**: un resumen arriba y un renglón por sentencia con su número de línea («✓ línea 3 ·
-  UPDATE: 12 filas afectadas», «✗ línea 7 · INSERT: …»).
-- Con `F9` (hasta 200 sentencias), cada sentencia queda en el historial y la grilla muestra el último SELECT, con su
-  plan y sus estadísticas.
+  UPDATE: 12 filas afectadas», «✗ línea 7 · INSERT: …»). Es el renglón de la primera palabra de la sentencia, no el
+  del comentario que tenga arriba.
+- El historial guarda el script una sola vez, entero, como lo ejecutaste: la selección o todo el editor.
+- Con `F9` (hasta 200 sentencias), la grilla muestra el último SELECT, con su plan y sus estadísticas.
 - Los parámetros no se piden en un script (ver [Parámetros](#parámetros)).
+
+### Errores en un script
+
+Qué hace el script ante un error lo decide, en este orden:
+
+1. Un `SET BAIL ON` o `SET BAIL OFF` del script, desde su línea y en cualquier base: `ON` se detiene en el primer error
+   y `OFF` sigue. Un `SET BAIL` sin `ON` ni `OFF` alterna, como en isql.
+2. Si el script no dice nada, en una base de **Producción** siempre se detiene.
+3. En **Desarrollo** y **Prueba**, la opción **Consulta › Seguir ante errores en scripts** (es la misma que **Ante un
+   error en un script**, en **Herramientas › Opciones… › Consultas**). De fábrica, se detiene.
+
+Cuando se detiene:
+
+- Deshace lo que el script dejó sin confirmar, como isql con `SET BAIL ON`. Lo que confirmó un `COMMIT` del script queda
+  confirmado.
+- Si la pestaña ya tenía una transacción abierta antes de empezar, lo que tenías pendiente sigue ahí: se deshace solo lo
+  del script.
+- **Mensajes** dice qué se deshizo, en qué línea falló, cómo empieza la sentencia y el error completo. En un
+  `EXECUTE BLOCK` es la línea de la `EXCEPTION` o del error, no la del comienzo del bloque. El cursor va ahí.
+
+Cuando sigue, la sentencia que falla se deshace sola: lo anterior y la transacción siguen en pie, para **Commit** o
+**Rollback**. Al terminar, el cursor va al primer error.
+
+En producción, si el script tiene un `SET BAIL OFF` con sentencias después, la confirmación lo avisa.
+
+> **Ojo:** cancelar con `Esc` no deshace nada: lo que ya corrió queda en la transacción, para que decidas.
+
+### Órdenes de isql
+
+Los scripts escritos para isql traen órdenes que no son SQL: el servidor no las conoce. FbStudio no se las manda.
+
+| Orden | Qué hace FbStudio |
+|---|---|
+| `SET TERM` | Cambia el separador de sentencias. |
+| `SET BAIL` | Cambia qué pasa ante un error (ver [Errores en un script](#errores-en-un-script)). |
+| `QUIT` o `EXIT` sueltos | El script termina ahí, sin confirmar ni deshacer nada. El `EXIT` de adentro de un procedimiento no cuenta. |
+| `SET NAMES` | No se ejecuta: la conexión usa el charset del registro. Si el script pide otro, lo avisa. |
+| `SET SQL DIALECT 3` | No se ejecuta: FbStudio ya trabaja en dialecto 3. |
+| `SET AUTODDL` | No se ejecuta: el DDL queda en la transacción hasta el `COMMIT`, como con `SET AUTODDL OFF`. |
+| `SET ECHO`, `SET LIST`, `SET HEADING`, `SET COUNT`, `SET STATS`, `SET PLAN`, `SET TIME`, `SET WIDTH`, `SET BLOBDISPLAY`, `SET WARNINGS` y las demás que cambian cómo muestra isql los resultados; `SET CLIENTLIB`; `SHOW` y `HELP`; `OUTPUT` sin archivo | No se ejecutan. |
+| `SHELL`, `INPUT`, `OUTPUT` con un archivo, `CONNECT`, `CREATE DATABASE`, `DROP DATABASE`, `SET SQL DIALECT 1` o `2`, `SET PLANONLY ON`, `EDIT`, `BLOBDUMP` y `BLOBVIEW` | El script no corre: **Mensajes** dice en qué línea está cada una. |
+
+- Las que no se ejecutan dejan un renglón «ℹ» en el registro, y la barra de estado dice cuántas fueron.
+- `SET GENERATOR`, `SET STATISTICS INDEX` y las demás que son SQL de Firebird van al servidor como siempre.
+- Para un script que encadena otros con `INPUT`, corré cada archivo con **Consulta › Ejecutar script desde archivo…**.
 
 ### Scripts sin grilla
 
@@ -131,7 +212,7 @@ para scripts largos, como miles de INSERT o UPDATE:
 
 - No pide el plan ni las lecturas por tabla de cada sentencia, así cada una tarda menos.
 - La grilla queda como estaba: de un SELECT solo se cuentan las filas.
-- El historial guarda el script entero una sola vez, no una entrada por sentencia.
+- Como todo script, queda una sola vez en el historial.
 - El avance se ve en la barra de estado: «Script: 1.200 de 5.000 (24 %) · 0 con error · Esc cancela».
 - Con más de 500 sentencias, el registro muestra un renglón por tipo de sentencia y lista solo los errores.
 
@@ -187,7 +268,11 @@ Cada pestaña trabaja con su propia transacción:
   `Ctrl+Alt+C`.
 - **Rollback** los deshace: el botón **Rollback**, **Consulta › Rollback** o `Ctrl+Alt+R`.
 - También podés escribir `COMMIT;` o `ROLLBACK;` en el editor y ejecutarlo.
-- `SET TRANSACTION`, `SAVEPOINT` y `RELEASE` no están soportados: FbStudio no los ejecuta.
+- `SAVEPOINT`, `RELEASE SAVEPOINT` y `ROLLBACK TO SAVEPOINT` van al servidor como cualquier sentencia: `ROLLBACK TO
+  SAVEPOINT` vuelve solo hasta ese punto y la transacción sigue abierta. Un `SAVEPOINT` abre la transacción de escritura
+  si no había una.
+- `SET TRANSACTION` no está soportado: el aislamiento se elige en la barra (ver
+  [Autocommit y aislamiento](#autocommit-y-aislamiento)).
 
 ### Autocommit y aislamiento
 
@@ -196,6 +281,8 @@ para la pestaña elegida y solo se cambian en bases de **Desarrollo** y **Prueba
 
 - **Autocommit**: cada sentencia que escribe se confirma sola al terminar bien, y la barra de estado dice «confirmado
   (autocommit)». Si el Commit falla, se deshace y se ve el error.
+- Un script no usa el autocommit: corre con sus propios `COMMIT`, como en producción. Si deja la transacción abierta,
+  una sentencia suelta que ejecutes después tampoco la confirma: hay que apretar **Commit** o **Rollback**.
 - El aislamiento vale para la próxima transacción de escritura:
   - **Read committed** (el de fábrica) ve lo que otros confirman.
   - **Snapshot** ve la foto del momento en que empezó.
@@ -228,7 +315,8 @@ y **…y rojo, con un aviso, a los**.
   confirmar.
 - Al salir de FbStudio con transacciones abiertas, la ventana **Transacciones abiertas** las lista: **Salir y deshacer**
   hace rollback de todas y sale; **No salir** vuelve.
-- Desconectar una base cierra todas sus pestañas, y también pregunta si alguna tiene una transacción abierta.
+- Desconectar una base pregunta si alguna de sus pestañas tiene una transacción abierta y la deshace; sus consultas con
+  texto quedan abiertas, sin base (ver [Consultas sin base](#consultas-sin-base)).
 
 ### Bloqueos
 
@@ -256,7 +344,7 @@ lo prohibido se bloquea.
 |---|---|
 | Registro de solo lectura y una sentencia que escribe: INSERT, UPDATE, DELETE, MERGE, DDL, EXECUTE PROCEDURE o EXECUTE BLOCK | La bloquea. |
 | Registro de solo lectura y `NEXT VALUE FOR` o `GEN_ID` con un paso distinto de 0 | La bloquea: mover un generador no se deshace. Para leer su valor, `GEN_ID(generador, 0)`. |
-| `SET TRANSACTION`, `SAVEPOINT` o `RELEASE`, en cualquier base | La bloquea: usá Commit y Rollback. |
+| `SET TRANSACTION`, en cualquier base | La bloquea: el aislamiento se elige en la barra y la transacción se cierra con Commit o Rollback. |
 | Base de producción y una sentencia que escribe | Pide confirmación. |
 | UPDATE o DELETE sin WHERE, en cualquier base | Pide confirmación: afecta todas las filas de la tabla. |
 | Un MERGE con `WHEN MATCHED THEN DELETE`, o un EXECUTE BLOCK con un UPDATE o DELETE sin WHERE | Pide confirmación. |
@@ -524,6 +612,8 @@ duración, filas, una ✗ si falló y el primer renglón. Al pasar el mouse se v
 - **Solo la base de esta pestaña** (tildada de fábrica) muestra solo las de la base de la pestaña; destildada, las de
   todas las bases.
 - Doble clic en una sentencia la carga en el editor: reemplaza el texto de la pestaña.
+- Un script queda como una sola entrada (tipo SCRIPT), con el texto entero que ejecutaste; uno corrido desde un archivo,
+  con el nombre del archivo.
 - Se guarda cifrado. Cuánto tiempo se guarda se elige en **Herramientas › Opciones… › Historial** (**Guardar las
   sentencias durante**; de fábrica, 90 días); al achicar el plazo, lo más viejo se borra en el momento.
 - En el registro de cada base se puede apagar, con **Guardar historial de sentencias** (ver
@@ -534,8 +624,11 @@ duración, filas, una ✗ si falló y el primer renglón. Al pasar el mouse se v
 ### Mensajes
 
 Los errores completos, lo que hizo una sentencia sin filas («UPDATE: 12 filas afectadas en 35 ms»), el registro de los
-scripts y el motivo de lo que se bloqueó. Cuando hay mensajes, **Guardar registro…** los guarda en un archivo de texto
-con la fecha y la base (sin la contraseña), y **Copiar** los copia.
+scripts y el motivo de lo que se bloqueó.
+
+- El texto se elige con el mouse o con el teclado (`Shift` y las flechas, `Ctrl+A` todo) y `Ctrl+C` copia lo elegido.
+- **Copiar** copia lo elegido; sin selección, todo el registro, con la fecha y la base.
+- **Guardar registro…** lo guarda en un archivo de texto con la fecha y la base (sin la contraseña).
 
 ## Arrastrar desde el árbol
 

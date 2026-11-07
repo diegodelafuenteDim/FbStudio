@@ -75,7 +75,7 @@ public static partial class DatabaseServices
     private static async Task RunScriptAsync(FbConnection connection, string script, List<ScriptError> errors, Action<string>? onLine, CancellationToken ct)
     {
         var statements = SqlScriptSplitter.Split(script)
-            .Where(s => StatementClassifier.Classify(s.Text).Kind is not (StatementKind.Empty or StatementKind.Transaction)).ToList();
+            .Where(s => StatementClassifier.Classify(s.Text).Kind is not (StatementKind.Empty or StatementKind.Transaction or StatementKind.Isql)).ToList();
         for (var i = 0; i < statements.Count; i++)
         {
             ct.ThrowIfCancellationRequested();

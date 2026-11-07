@@ -9,6 +9,9 @@ public enum StatementKind
     Execute,
     Transaction,
     Other,
+
+    /// <summary>Una orden de isql (SET BAIL, SET NAMES, INPUT…): no es SQL y no va al servidor (D-120).</summary>
+    Isql,
 }
 
 /// <param name="Kind">Tipo de sentencia según su primera palabra clave.</param>
@@ -21,6 +24,9 @@ public enum StatementKind
 public sealed record StatementInfo(StatementKind Kind, string Keyword, bool AffectsAllRows, bool ChangesSequences = false)
 {
     public bool Modifies => Kind is StatementKind.Dml or StatementKind.Ddl or StatementKind.Execute;
+
+    /// <summary>La orden de isql, si <see cref="Kind"/> es <see cref="StatementKind.Isql"/>.</summary>
+    public IsqlCommand? Isql { get; init; }
 }
 
 public static class StatementClassifier
@@ -35,6 +41,8 @@ public static class StatementClassifier
         var tokens = SqlLexer.Tokenize(sql).ToList();
         if (tokens.Count == 0) return new StatementInfo(StatementKind.Empty, "", false);
 
+        if (IsqlCommands.Parse(sql, tokens) is { } isql) return new StatementInfo(StatementKind.Isql, isql.Name, false) { Isql = isql };
+
         var first = tokens[0].Text.ToUpperInvariant();
         var second = tokens.Count > 1 ? tokens[1].Text.ToUpperInvariant() : "";
 
@@ -47,13 +55,23 @@ public static class StatementClassifier
             "UPDATE" when second == "OR" => new StatementInfo(StatementKind.Dml, "UPDATE OR INSERT", false),
             "UPDATE" or "DELETE" => new StatementInfo(StatementKind.Dml, first, !HasTopLevelWhere(tokens)),
             "EXECUTE" => new StatementInfo(StatementKind.Execute, $"EXECUTE {second}".Trim(), second == "BLOCK" && BlockHasUnfilteredDml(tokens)),
-            "COMMIT" or "ROLLBACK" or "SAVEPOINT" or "RELEASE" => new StatementInfo(StatementKind.Transaction, first, false),
+            "COMMIT" or "SAVEPOINT" => new StatementInfo(StatementKind.Transaction, first, false),
+            // ROLLBACK [WORK] TO [SAVEPOINT] x vuelve hasta el savepoint; ROLLBACK solo deshace toda la transacción.
+            "ROLLBACK" => new StatementInfo(StatementKind.Transaction, IsRollbackToSavepoint(tokens) ? "ROLLBACK TO SAVEPOINT" : first, false),
+            "RELEASE" => new StatementInfo(StatementKind.Transaction, "RELEASE SAVEPOINT", false),
             "SET" when second == "TRANSACTION" => new StatementInfo(StatementKind.Transaction, "SET TRANSACTION", false),
             "SET" when second is "GENERATOR" or "STATISTICS" => new StatementInfo(StatementKind.Ddl, $"SET {second}", false),
             _ when Ddl.Contains(first) => new StatementInfo(StatementKind.Ddl, first, false),
             _ => new StatementInfo(StatementKind.Other, first, false),
         };
         return ChangesSequences(tokens) ? info with { ChangesSequences = true } : info;
+    }
+
+    private static bool IsRollbackToSavepoint(List<SqlToken> tokens)
+    {
+        var i = 1;
+        if (i < tokens.Count && tokens[i].IsWord("WORK")) i++;
+        return i < tokens.Count && tokens[i].IsWord("TO");
     }
 
     /// <summary>«WHEN MATCHED THEN DELETE» sin «AND …»: borra todo lo que el ON hace coincidir (con ON 1 = 1, todo).</summary>

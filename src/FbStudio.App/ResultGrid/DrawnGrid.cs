@@ -138,8 +138,8 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         area.Children.Add(_searchBar);
         Children.Add(area);
 
-        _v.ValueChanged += (_, e) => _canvas.SetOffset(_canvas.OffsetX, e.NewValue);
-        _h.ValueChanged += (_, e) => _canvas.SetOffset(e.NewValue, _canvas.OffsetY);
+        _v.ValueChanged += (_, e) => { _canvas.SetOffset(_canvas.OffsetX, e.NewValue); FollowEditors(); };
+        _h.ValueChanged += (_, e) => { _canvas.SetOffset(e.NewValue, _canvas.OffsetY); FollowEditors(); };
         _canvas.SizeChanged += (_, _) => UpdateScrollBars();
         _canvas.PointerWheelChanged += OnWheel;
         _rebuildTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(400), DispatcherPriority.Background, (_, _) =>
@@ -148,7 +148,12 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             ApplySpec(Spec);
         });
         _rebuildTimer.Stop(); // ese constructor lo deja andando: rearmaba la vista una vez sin motivo a los 400 ms
-        ActualThemeVariantChanged += (_, _) => UpdatePanelColors();
+        ActualThemeVariantChanged += (_, _) =>
+        {
+            UpdatePanelColors();
+            if (_cellEditor is { } cell) MatchGrid(cell);
+            if (_filterEditor is { } filter) MatchGrid(filter);
+        };
         UpdatePanelColors();
         RefreshGroupPanel();
         // Clic o teclado pueden cambiar la fila elegida: se avisa después de que el canvas la actualizó.
@@ -747,11 +752,11 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             Width = Math.Max(80, cellRect.Width),
             Height = cellRect.Height,
             MinHeight = 0,
-            Padding = new Thickness(4, 2),
             FontSize = 12,
             PlaceholderText = FilterPlaceholder(Columns[column]),
             Tag = column,
         };
+        MatchGrid(editor);
         Canvas.SetLeft(editor, cellRect.X);
         Canvas.SetTop(editor, cellRect.Y);
         var debounce = new DispatcherTimer(TimeSpan.FromMilliseconds(350), DispatcherPriority.Background, (s, _) =>
@@ -769,8 +774,57 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         editor.LostFocus += (_, _) => CloseFilterEditor(apply: true);
         _overlay.Children.Add(editor);
         _filterEditor = editor;
+        _canvas.InvalidateVisual(); // sin el filtro dibujado debajo
         editor.Focus();
         editor.SelectAll();
+    }
+
+    /// <summary>
+    /// Los cuadros de edición van encima de lo dibujado. El fondo que les da el tema es casi transparente y dejaba ver
+    /// el texto de la celda, corrido y con otra letra: llevan el fondo, el color y la letra de la grilla, con el texto
+    /// donde ella lo dibuja (borde de 1 más el margen = <see cref="GridCanvas.CellPad"/>, centrado en el alto).
+    /// </summary>
+    private void MatchGrid(TextBox editor)
+    {
+        (editor.Background, editor.Foreground) = GridCanvas.CellColors(ActualThemeVariant);
+        editor.FontFamily = GridCanvas.CellFont;
+        editor.BorderThickness = new Thickness(1);
+        editor.Padding = new Thickness(GridCanvas.CellPad - 1, 0);
+        editor.VerticalContentAlignment = VerticalAlignment.Center;
+    }
+
+    /// <summary>
+    /// Con la grilla desplazada (rueda o barras), los cuadros de edición acompañan a su celda. Si la celda sale de la
+    /// vista se cierran guardando lo escrito, como al perder el foco, para no quedar tapando otra.
+    /// </summary>
+    private void FollowEditors()
+    {
+        if (_cellEditor is { Tag: (object[] _, int column, int display) } cell)
+        {
+            var rect = _canvas.CellRectAt(display, column);
+            if (_canvas.ShowsRow(rect) && _canvas.ShowsColumn(rect))
+            {
+                Canvas.SetLeft(cell, rect.X);
+                Canvas.SetTop(cell, rect.Y);
+            }
+            else
+            {
+                var focused = cell.IsKeyboardFocusWithin;
+                CloseCellEditor(commit: true, force: true);
+                if (focused) _canvas.Focus();
+            }
+        }
+        if (_filterEditor is { Tag: int filterColumn } filter)
+        {
+            var rect = _canvas.FilterCellRect(filterColumn);
+            if (_canvas.ShowsColumn(rect)) Canvas.SetLeft(filter, rect.X);
+            else
+            {
+                var focused = filter.IsKeyboardFocusWithin;
+                CloseFilterEditor(apply: true);
+                if (focused) _canvas.Focus();
+            }
+        }
     }
 
     // ---------- Ventanita de filtro según el tipo de la columna (F-12) ----------
@@ -877,6 +931,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         if (_filterEditor is not { } editor) return;
         _filterEditor = null;
         _overlay.Children.Remove(editor);
+        _canvas.InvalidateVisual(); // vuelve a dibujar el filtro que tapaba (aunque no haya cambiado)
         if (apply && editor.Tag is int column) SetFilter(column, editor.Text);
     }
 
@@ -894,10 +949,10 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             Width = Math.Max(120, cellRect.Width),
             Height = cellRect.Height,
             MinHeight = 0,
-            Padding = new Thickness(4, 1),
             FontSize = 13,
             Tag = (row, column, displayIndex),
         };
+        MatchGrid(editor);
         Canvas.SetLeft(editor, cellRect.X);
         Canvas.SetTop(editor, cellRect.Y);
         editor.KeyDown += (_, e) =>
@@ -919,6 +974,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         editor.LostFocus += (_, _) => { if (_cellEditor == editor) CloseCellEditor(commit: true, force: true); };
         _overlay.Children.Add(editor);
         _cellEditor = editor;
+        _canvas.InvalidateVisual(); // sin el valor dibujado debajo
         editor.Focus();
         if (typed is null) editor.SelectAll();
         else editor.CaretIndex = typed.Length;
@@ -943,6 +999,12 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         _canvas.ClearCacheAndRedraw();
         return true;
     }
+
+    /// <summary>La celda que tapa el cuadro de edición: el canvas no la dibuja. (null, −1) si no hay.</summary>
+    private (object[]? Row, int Column) EditedCell => _cellEditor is { Tag: (object[] row, int column, int _) } ? (row, column) : (null, -1);
+
+    /// <summary>La columna de la fila de filtros que tapa su cuadro de edición, o −1.</summary>
+    private int EditedFilterColumn => _filterEditor?.Tag is int column ? column : -1;
 
     /// <summary>Elige una celda (como un clic).</summary>
     internal void SelectCell(int displayIndex, int column)
@@ -970,6 +1032,23 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
 
     /// <summary>Para las pruebas: la columna de la celda elegida (−1 si no hay).</summary>
     internal int SelectedColumn => _canvas.SelectedColumn;
+
+    /// <summary>Para las pruebas: el cuadro de edición de la celda (null si no hay) y el de la fila de filtros.</summary>
+    internal TextBox? CellEditor => _cellEditor;
+    internal TextBox? FilterEditor => _filterEditor;
+
+    /// <summary>Para las pruebas: abre el cuadro en la celda elegida, como F2 (o empezando a escribir <paramref name="typed"/>).</summary>
+    internal bool OpenEditorAtSelection(string? typed = null) => _canvas.OpenEditorAtSelection(typed);
+
+    /// <summary>Para las pruebas: cierra el cuadro de la celda sin guardar (Esc).</summary>
+    internal void CancelCellEdit() => CloseCellEditor(commit: false);
+
+    /// <summary>Para las pruebas: abre el cuadro de la fila de filtros de una columna (clic en esa celda).</summary>
+    internal void OpenFilterEditor(int column) => OpenFilterEditor(column, _canvas.FilterCellRect(column));
+
+    /// <summary>Para las pruebas: dónde está una celda, respecto de la grilla.</summary>
+    internal Rect CellBounds(int displayIndex, int column) =>
+        _canvas.CellRectAt(displayIndex, column).Translate((Vector)(_canvas.TranslatePoint(default, this) ?? default));
 
     /// <summary>Para las pruebas: escribe en la celda elegida como si se tipeara y se apretara Enter.</summary>
     internal bool EditSelectedCell(string text)
@@ -1243,8 +1322,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         {
             if (_owner.Source is null || _selected.Display < 0 || _selected.Column < 0 || _selected.Column >= Columns.Length) return false;
             _owner.ScrollIntoView(_selected.Display, _selected.Column);
-            var y = TopHeight + _selected.Display * RowHeight - OffsetY;
-            _owner.OpenCellEditor(_selected.Display, _selected.Column, CellRect(_selected.Column, y, RowHeight), typed);
+            _owner.OpenCellEditor(_selected.Display, _selected.Column, CellRectAt(_selected.Display, _selected.Column), typed);
             return true;
         }
 
@@ -1349,6 +1427,24 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             var x = GutterWidth + _lefts[_pos[column]] - OffsetX;
             return new Rect(x, y, _widths[column], height);
         }
+
+        /// <summary>La celda de una fila de la vista, con el desplazamiento de ahora.</summary>
+        public Rect CellRectAt(int display, int column) => CellRect(column, TopHeight + display * RowHeight - OffsetY, RowHeight);
+
+        public Rect FilterCellRect(int column) => CellRect(column, HeaderHeight, FilterHeight);
+
+        /// <summary>La fila de la celda se ve entera, entre la fila de filtros y el pie.</summary>
+        public bool ShowsRow(Rect cell) => cell.Y >= TopHeight - 0.5 && cell.Bottom <= DataBottom + 0.5;
+
+        /// <summary>El borde izquierdo de la celda se ve (no quedó detrás de los números de fila ni a la derecha).</summary>
+        public bool ShowsColumn(Rect cell) => cell.X >= GutterWidth - 0.5 && cell.X < Bounds.Width;
+
+        /// <summary>Fondo y color de letra de las celdas, para los cuadros de edición que van encima.</summary>
+        public static (IBrush Background, IBrush Foreground) CellColors(ThemeVariant theme) =>
+            theme == ThemeVariant.Dark ? (Dark.Background, Dark.Foreground) : (Light.Background, Light.Foreground);
+
+        /// <summary>La letra de las celdas.</summary>
+        public static FontFamily CellFont => Face.FontFamily;
 
         // ---------- mouse ----------
 
@@ -1837,6 +1933,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             var drawn = 0;
             var created = 0;
             _next.Clear();
+            var edited = _owner.EditedCell;
             using (ctx.PushClip(new Rect(0, TopHeight, w, Math.Max(0, DataBottom - TopHeight))))
             {
                 var firstRow = Math.Max(0, (int)(OffsetY / RowHeight));
@@ -1865,6 +1962,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                             var c = _order[p];
                             if (_hidden.Contains(c)) continue;
                             var x = GutterWidth + _lefts[p] - OffsetX;
+                            if (c == edited.Column && ReferenceEquals(row, edited.Row)) continue; // la tapa el cuadro de edición
                             if (_selected == (d, c)) ctx.FillRectangle(pal.Selection, new Rect(x, y, _widths[c], RowHeight));
                             object? pending = null;
                             if (changed && source!.TryGetPending(row, c, out pending))
@@ -1983,12 +2081,13 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
             ctx.FillRectangle(pal.Background, new Rect(0, HeaderHeight, w, FilterHeight));
             ctx.FillRectangle(pal.HeaderBackground, new Rect(0, HeaderHeight, GutterWidth, FilterHeight));
             ctx.DrawText(Text(Strings.GridFilterRow, Face, pal.Muted, GutterWidth - 2 * CellPad, TextAlignment.Right, 11), new Point(CellPad, HeaderHeight + 6));
+            var edited = _owner.EditedFilterColumn;
             using (ctx.PushClip(new Rect(GutterWidth, HeaderHeight, w - GutterWidth, FilterHeight)))
             {
                 for (var p = firstCol; p <= lastCol; p++)
                 {
                     var c = _order[p];
-                    if (_hidden.Contains(c)) continue;
+                    if (_hidden.Contains(c) || c == edited) continue; // la que tapa el cuadro de edición no se dibuja
                     var x = GutterWidth + _lefts[p] - OffsetX;
                     var filtered = _owner.Spec.Filters.TryGetValue(c, out var f);
                     // ▾ a la derecha: abre la ventanita de filtro según el tipo de la columna.

@@ -983,13 +983,14 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
             Headers(Find(menu.ItemsSource?.Cast<object>(), "Mantenimiento").ItemsSource?.Cast<object>()));
         // Con una sola base registrada no hay con qué comparar.
         Assert.Equal(["Script de la base…", "Documentación en HTML…"], Headers(Find(menu.ItemsSource?.Cast<object>(), "Script y comparar").ItemsSource?.Cast<object>()));
-        Assert.Equal(["Editar registro…", "Clonar registro… (y abrir sus propiedades)", "Mover a carpeta…", "Exportar este registro…"],
+        Assert.Equal(["Editar registro…", "Clonar registro… (y abrir sus propiedades)", "Mover a carpeta…", "Exportar este registro…", "─",
+                "Borrar registro…"],
             Headers(Find(menu.ItemsSource?.Cast<object>(), "Registro").ItemsSource?.Cast<object>()));
 
         // Conectada: «Usar…», «Desconectar» y «Recargar metadatos».
         await vm.Tree.ActivateAsync(db);
         menu = w.BuildTreeMenu(db)!;
-        Assert.Equal(["Usar esta base en la pestaña", "Desconectar", "Consulta nueva en esta base", "Buscar en metadatos…", "Recargar metadatos"],
+        Assert.Equal(["Usar esta base en una consulta", "Desconectar", "Consulta nueva en esta base", "Buscar en metadatos…", "Recargar metadatos"],
             Headers(menu.ItemsSource?.Cast<object>()).Take(5));
 
         // Mantenimiento ▸ nbackup abre la pestaña en esa tarea.
@@ -1364,45 +1365,244 @@ public sealed class MainWindowTests(FirebirdFixture fb, HeadlessFixture ui) : ID
         var query = Assert.Single(vm.Tabs);
         Assert.Equal((fb.Profile.Id, "Consulta 1"), (query.Profile!.Id, query.BaseTitle));
         Assert.False(vm.ShowStartHint);
+        Assert.Equal(Material.Icons.MaterialIconKind.FileDocumentEditOutline, query.Icon);
         Pump();
         w.Editor.Text = "UPDATE TURNOS SET OBS = 'sin confirmar' WHERE ID = 33";
         await w.RunAsync();
         Assert.True(query.InTransaction);
+        var empty = vm.NewQueryTab(fb.Profile);                              // una consulta vacía: no hay nada que conservar
         var monitor = vm.OpenMonitor(fb.Profile)!;
         monitor.Interval = 0;
         var view = (await vm.OpenObjectAsync(fb.Profile, new DbObject(DbObjectKind.View, "V_TURNOS")))!;
+        var table = (await vm.OpenObjectAsync(fb.Profile, new DbObject(DbObjectKind.Table, "TURNOS")))!;
+        table.SelectedResultTab = EditorTabViewModel.DataTab;               // una fila borrada en Datos, sin aplicar
+        await WaitFor(() => table.Data!.IsLoaded && !table.Data.IsBusy);
+        table.Data!.ToggleDelete([table.Data.Rows[0]]);
+        Assert.True(table.Data.HasPending);
         var other = vm.CloneProfile(vm.Profiles.Single());                   // otra base: sus pestañas no se tocan
         var otherTab = vm.NewQueryTab(other);
-        Assert.Equal(4, vm.Tabs.Count);
+        Assert.Equal(6, vm.Tabs.Count);
         Assert.True(vm.CanDisconnect(fb.Profile.Id));
 
-        // Desconectar pregunta una vez por la transacción abierta; si se dice que no, no cierra nada.
-        var asked = new List<string>();
+        // Desconectar pregunta una vez, nombrando la transacción y los datos sin aplicar; si se dice que no, no toca nada.
+        var asked = new List<ConfirmPrompt>();
         var answer = false;
-        vm.ConfirmCloseAsync = m => { asked.Add(m); return Task.FromResult(answer); };
+        vm.ConfirmActionAsync = p => { asked.Add(p); return Task.FromResult(answer); };
         Assert.False(await vm.DisconnectAsync(fb.Profile));
-        Assert.Equal(4, vm.Tabs.Count);
+        Assert.Equal(6, vm.Tabs.Count);
         Assert.True(tree.IsConnected(fb.Profile.Id));
-        Assert.Contains("«Consulta 1» (transacción abierta)", Assert.Single(asked));
+        Assert.True(query.InTransaction);
+        var prompt = Assert.Single(asked);
+        Assert.Equal(($"Desconectar {fb.Profile.Name}", "Desconectar y deshacer", "No desconectar"), (prompt.Title, prompt.RunText, prompt.CancelText));
+        Assert.Contains("«Consulta 1» (transacción abierta), «TURNOS» (datos sin aplicar)", prompt.Reasons[0]);
+        Assert.EndsWith("Las consultas quedan abiertas, sin base y con su texto.", prompt.Reasons[0]);
 
+        // Sí: la consulta con texto queda abierta, sin base y con su texto (D-123); las demás de esa base se cierran.
         answer = true;
+        vm.SelectedTab = query;
         Assert.True(await vm.DisconnectAsync(fb.Profile));
-        Assert.Same(otherTab, Assert.Single(vm.Tabs));                       // quedó solo la de la otra base
+        Assert.Equal([query, otherTab], vm.Tabs);
         Assert.False(tree.IsConnected(fb.Profile.Id));
         Assert.False(vm.CanDisconnect(fb.Profile.Id));
-        Assert.Equal("Desconectado de " + fb.Profile.Name + ": se cerraron sus 3 pestaña(s).", tree.Status);
-        Assert.DoesNotContain(monitor, vm.Tabs);
-        Assert.DoesNotContain(view, vm.Tabs);
+        Assert.Equal($"Desconectado de {fb.Profile.Name}: se cerraron 4 pestaña(s) y 1 consulta(s) quedaron abiertas sin base.", tree.Status);
+        Assert.All(new[] { empty, monitor, view, table }, t => Assert.DoesNotContain(t, vm.Tabs));
+        Assert.Null(query.Profile);
+        Assert.False(query.InTransaction);
+        Assert.Equal(fb.Profile.Name, query.PreviousProfileName);
+        Assert.Equal("UPDATE TURNOS SET OBS = 'sin confirmar' WHERE ID = 33", query.Document.Text);
+        Assert.Contains($"— Desconectada de {fb.Profile.Name} a las ", query.Messages);
+        Assert.Contains("lo que no se había confirmado se deshizo (rollback)", query.Messages);
+        Assert.StartsWith($"Sin base: se desconectó {fb.Profile.Name}.", query.Status);
+
+        // Cómo se ve: base tachada, el título sin base y la franja gris con «Sin base» como lista.
         Pump();
-        w.Editor.Text = "SELECT OBS FROM TURNOS WHERE ID = 33";              // el UPDATE se deshizo al cerrar
+        Assert.Equal(Material.Icons.MaterialIconKind.DatabaseOffOutline, query.Icon);
+        Assert.Equal("Consulta 1", query.TitleText);
+        Assert.Equal($"Sin base (antes: {fb.Profile.Name})", query.ProfileTip);
+        Assert.Equal(("", "Sin base"), (vm.BannerPrefix, vm.BannerDatabase));
+        Assert.Equal($"Sin base (antes: {fb.Profile.Name}): elegí una base en esta lista o con doble clic en el árbol", vm.Banner);
+        Assert.False(vm.IsDevelopment);
+        Assert.True(query.CanPickDatabase);
+        Assert.True(Avalonia.Controls.ControlExtensions.FindControl<Avalonia.Controls.Button>(w, "BannerDatabaseButton")!.IsEnabled);
+
+        // F9 sin base no ejecuta y dice cómo elegirla.
+        await w.RunAsync();
+        Assert.Equal("Esta consulta no tiene base: elegila en la franja de arriba o con doble clic en el árbol.", query.Status);
+
+        // El UPDATE se deshizo al desconectar: la otra base (la misma de Docker con otro registro) no lo ve.
+        vm.SelectedTab = otherTab;
+        Pump();
+        w.Editor.Text = "SELECT OBS FROM TURNOS WHERE ID = 33";
         await w.RunAsync();
         Assert.NotEqual("sin confirmar", otherTab.Rows[0][0] as string);
 
-        await vm.CloseTabAsync(otherTab);                                    // cerrar la última: no se abre otra vacía
+        // Al volver a conectar la base la consulta no la retoma sola, y el doble clic no le cambia la base a una consulta
+        // con texto: abre una nueva.
+        db = tree.Rows.Single(n => n.Kind == TreeNodeKind.Database && n.Profile!.Id == fb.Profile.Id);
+        await tree.ActivateAsync(db);
+        Assert.True(tree.IsConnected(fb.Profile.Id));
+        var reopened = vm.SelectedTab!;
+        Assert.DoesNotContain(reopened, new[] { query, otherTab });
+        Assert.Equal((fb.Profile.Id, other.Id), (reopened.Profile!.Id, otherTab.Profile!.Id));
+        Assert.Null(query.Profile);
+
+        // Con la consulta sin base elegida, el doble clic sí se la pone.
+        vm.SelectedTab = query;
+        await tree.ActivateAsync(db);
+        Assert.Equal(fb.Profile.Id, query.Profile!.Id);
+        Assert.Null(query.PreviousProfileName);
+        Assert.Contains($"la consulta pasó a {fb.Profile.Name}.", query.Messages);
+        Assert.Equal(Material.Icons.MaterialIconKind.FileDocumentEditOutline, query.Icon);
+        Assert.StartsWith("Desarrollo · ", vm.Banner);
+
+        foreach (var tab in vm.Tabs.Skip(1).ToList()) await vm.CloseTabAsync(tab);
+        await vm.CloseTabAsync(query);                                       // cerrar la última: no se abre otra vacía
         Assert.Empty(vm.Tabs);
         Assert.Null(vm.SelectedTab);
         Assert.True(vm.ShowStartHint);
         vm.ProfileStore.Delete(other.Id);
+        w.Close();
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task La_franja_cambia_la_base_de_la_consulta_y_el_doble_clic_no_pisa_un_texto() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        var first = vm.SelectedTab!;
+        var prod = vm.CloneProfile(vm.Profiles.Single());                   // otra base, marcada como producción
+        vm.ProfileStore.Upsert(prod with { Environment = ProfileEnvironment.Produccion }, null);
+        var test = vm.CloneProfile(vm.Profiles.Single(p => p.Id == fb.Profile.Id));
+        vm.ProfileStore.Upsert(test with { Environment = ProfileEnvironment.Prueba }, null);
+        vm.ReloadProfiles();
+        prod = vm.Profiles.Single(p => p.Id == prod.Id);
+        test = vm.Profiles.Single(p => p.Id == test.Id);
+        try
+        {
+            Pump();
+            w.Editor.Text = "SELECT ID FROM TURNOS WHERE ID < 5";
+            await w.RunAsync();
+            Assert.Equal(5, first.Rows.Count);
+            Assert.NotEqual("", first.Plan);
+
+            // El doble clic en otra base con un texto escrito no le cambia la base: abre una consulta nueva (D-123).
+            vm.Activate(test);
+            var second = vm.SelectedTab!;
+            Assert.NotSame(first, second);
+            Assert.Equal((fb.Profile.Id, test.Id), (first.Profile!.Id, second.Profile!.Id));
+            // En una consulta vacía sí la cambia.
+            vm.Activate(prod);
+            Assert.Same(second, vm.SelectedTab);
+            Assert.Equal(prod.Id, second.Profile!.Id);
+            await vm.CloseTabAsync(second);
+            vm.SelectedTab = first;
+            Pump();
+
+            // La lista de la franja: todas las bases registradas, con la actual marcada y sin poder elegirla.
+            var menu = w.BuildDatabaseMenu(vm, first);
+            var items = menu.ItemsSource!.Cast<Avalonia.Controls.MenuItem>().ToList();
+            Assert.Equal(3, items.Count);
+            var mine = items.Single(i => i.Tag is ConnectionProfile p && p.Id == fb.Profile.Id);
+            Assert.Equal($"● {fb.Profile.Name}  ·  Desarrollo", mine.Header);
+            Assert.False(mine.IsEnabled);
+            Assert.Equal($"{prod.Name}  ·  Producción", items.Single(i => i.Tag is ConnectionProfile p && p.Id == prod.Id).Header);
+
+            // A producción pregunta antes; si se dice que no, no cambia nada.
+            var asked = new List<ConfirmPrompt>();
+            var answer = false;
+            vm.ConfirmActionAsync = p => { asked.Add(p); return Task.FromResult(answer); };
+            Assert.False(await vm.ChooseDatabaseAsync(first, prod));
+            Assert.Equal(fb.Profile.Id, first.Profile!.Id);
+            Assert.Equal("No se cambió la base de la consulta.", first.Status);
+            Assert.Equal(5, first.Rows.Count);
+            var prompt = Assert.Single(asked);
+            Assert.Equal(($"«Consulta 1» va a ejecutarse en PRODUCCIÓN: {prod.Name}. Revisá el texto antes de ejecutarlo.", "Usar producción"),
+                (prompt.Reasons[0], prompt.RunText));
+
+            // Con el sí: pasa a producción, se borran los resultados, el plan y las estadísticas de la otra base, y queda el renglón.
+            answer = true;
+            Assert.True(await vm.ChooseDatabaseAsync(first, prod));
+            Assert.Equal(prod.Id, first.Profile!.Id);
+            Assert.Empty(first.Rows);
+            Assert.Equal(("", ""), (first.Plan, first.Stats));
+            Assert.Contains($"la consulta pasó de {fb.Profile.Name} a {prod.Name}. Los resultados, el plan y las estadísticas de {fb.Profile.Name} se borraron.", first.Messages);
+            Assert.Equal("SELECT ID FROM TURNOS WHERE ID < 5", first.Document.Text);
+            Assert.StartsWith("PRODUCCIÓN · ", vm.Banner);
+            Assert.Equal(prod.Name, vm.BannerDatabase);
+
+            // A Prueba, desde un clic en la lista: sin preguntar, con su renglón en Mensajes.
+            items = w.BuildDatabaseMenu(vm, first).ItemsSource!.Cast<Avalonia.Controls.MenuItem>().ToList();
+            items.Single(i => i.Tag is ConnectionProfile p && p.Id == test.Id).RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.MenuItem.ClickEvent));
+            await WaitFor(() => first.Profile?.Id == test.Id);
+            Assert.Equal(2, asked.Count);                                    // las dos de producción, ninguna más
+            Assert.Contains($"la consulta pasó de {prod.Name} a {test.Name}.", first.Messages);
+            Assert.DoesNotContain($"estadísticas de {prod.Name}", first.Messages);   // en producción no se llegó a ejecutar
+
+            // Con una transacción abierta la lista queda fija (la misma regla que el doble clic).
+            w.Editor.Text = "UPDATE TURNOS SET IMPORTE = IMPORTE WHERE ID = 7";
+            await w.RunAsync();
+            Assert.True(first.InTransaction);
+            Assert.False(first.CanPickDatabase);
+            Pump();
+            Assert.False(Avalonia.Controls.ControlExtensions.FindControl<Avalonia.Controls.Button>(w, "BannerDatabaseButton")!.IsEnabled);
+            Assert.Equal("Tiene una transacción abierta: hacé Commit o Rollback para cambiar de base.", first.PickDatabaseTip);
+            Assert.False(await vm.ChooseDatabaseAsync(first, fb.Profile));
+            Assert.Equal(test.Id, first.Profile!.Id);
+            await first.RollbackCommand.ExecuteAsync(null);
+            Assert.True(first.CanPickDatabase);
+
+            // La pestaña de un objeto es de su base: la lista no se abre.
+            var view = (await vm.OpenObjectAsync(fb.Profile, new DbObject(DbObjectKind.View, "V_TURNOS")))!;
+            Assert.False(view.CanPickDatabase);
+            Assert.StartsWith("Esta pestaña es de esta base y no se cambia", view.PickDatabaseTip);
+            Assert.False(await vm.ChooseDatabaseAsync(view, test));
+            Assert.Equal(fb.Profile.Id, view.Profile!.Id);
+        }
+        finally
+        {
+            w.Close();
+            await vm.DisposeAsync();
+            vm.ProfileStore.Delete(prod.Id);
+            vm.ProfileStore.Delete(test.Id);
+        }
+    }, CancellationToken.None);
+
+    [Fact]
+    public Task Borrar_un_registro_desde_el_arbol_pregunta_y_si_esta_conectado_lo_desconecta() => ui.Session.DispatchAsync(async () =>
+    {
+        var (w, vm) = Open();
+        var copy = vm.CloneProfile(vm.Profiles.Single());
+        var tab = vm.NewQueryTab(copy);
+        Pump();
+        w.Editor.Text = "SELECT COUNT(*) FROM TURNOS";
+        await w.RunAsync();                                                  // conectada, con su pestaña
+        Assert.True(vm.CanDisconnect(copy.Id));
+        Assert.Equal(2, vm.Tree.Rows.Count(n => n.Kind == TreeNodeKind.Database));
+
+        // «Cancelar»: no se borra ni se cierra nada.
+        var asked = new List<ConfirmPrompt>();
+        var answer = false;
+        vm.ConfirmActionAsync = p => { asked.Add(p); return Task.FromResult(answer); };
+        Assert.False(await vm.DeleteProfileAsync(copy));
+        Assert.Contains(vm.Profiles, p => p.Id == copy.Id);
+        Assert.Contains(tab, vm.Tabs);
+        var prompt = Assert.Single(asked);
+        Assert.Equal($"Se borra el registro «{copy.Name}» y su contraseña guardada en este equipo. La base no se toca.", prompt.Reasons[0]);
+        Assert.Equal("Borrar el registro", prompt.RunText);
+
+        // «Borrar el registro»: la desconecta (su consulta con texto queda sin base, D-123), lo saca del árbol y olvida su
+        // contraseña; la otra base sigue igual.
+        answer = true;
+        Assert.True(await vm.DeleteProfileAsync(copy));
+        Assert.Equal(2, asked.Count);                                        // sin nada abierto, desconectar no pregunta
+        Assert.DoesNotContain(vm.Profiles, p => p.Id == copy.Id);
+        Assert.Contains(tab, vm.Tabs);
+        Assert.Equal((null, copy.Name), (tab.Profile, tab.PreviousProfileName));
+        Assert.Equal("SELECT COUNT(*) FROM TURNOS", tab.Document.Text);
+        Assert.False(vm.CanDisconnect(copy.Id));
+        Assert.Null(vm.ProfileStore.GetPassword(copy.Id));
+        Assert.Equal(fb.Password, vm.ProfileStore.GetPassword(fb.Profile.Id));
+        Assert.Single(vm.Tree.Rows, n => n.Kind == TreeNodeKind.Database);
+        Assert.Equal($"Se borró el registro «{copy.Name}».", vm.SelectedTab?.Status ?? vm.Tree.Status);
         w.Close();
     }, CancellationToken.None);
 

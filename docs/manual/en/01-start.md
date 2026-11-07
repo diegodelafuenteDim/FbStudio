@@ -201,7 +201,8 @@ read correctly.
   registration appears in the tree.
 - **New** clears the form for a new registration.
 - **Delete** removes the selected registration and its password saved on this computer, after asking. The database is
-  not touched.
+  not touched. It can also be deleted by right-clicking the database › **Registration › Delete registration…**, with
+  the same question; if the database is connected, it is disconnected first (see [Disconnecting](#disconnecting)).
 
 To make another similar registration (another database on the same server, another user or another role), right-click
 the database › **Registration › Clone registration… (and open its properties)**: it makes a copy with everything,
@@ -220,13 +221,15 @@ When it connects, FbStudio:
    server type is), and the tooltip adds the operating system, the ODS, the dialect, the page size, the charset and
    whether the connection is encrypted. If the database was left in nbackup backup mode, "⚠ backup mode" appears next
    to it and the tooltip explains what to do.
-3. Puts the database in the selected query tab, if it is free (no open transaction and nothing running). If not, or if
-   it is another kind of tab, it opens a new query on that database. With no tabs, it opens the first one.
+3. Puts the database in the selected query if it has no database or an empty editor (and no open transaction and
+   nothing running). If not, or if it is another kind of tab, it opens a new query on that database: double-clicking
+   never changes the database of a query with text. With no tabs, it opens the first one.
 
 Each query tab opens its own connection the first time you run something, with its own transaction. The tools
 (monitoring, trace, maintenance…) open their own: you don't need to connect the database first.
 
-Once the database is connected, the right-click menu offers **Use this database in the tab** and **Reload metadata**
+Once the database is connected, the right-click menu offers **Use this database in a query** (the same as
+double-clicking) and **Reload metadata**
 (reads the objects again, for example after creating a table from another program).
 
 If the database has no saved password, the status bar says so: fill it in in the registration. If it cannot connect,
@@ -235,12 +238,22 @@ Firebird 3.x and some metadata reads may fail.
 
 ### Disconnecting
 
-Right-click the database › **Disconnect**, or **Database › Disconnect the selected database**. All the tabs for that
-database (queries, objects, search, monitoring…) and the tree connection are closed.
+Right-click the database › **Disconnect**, or **Database › Disconnect the selected database**. The tree connection is
+closed and:
 
-- If any tab has an open transaction or unsaved changes, it asks once and names them. On closing, the transactions are
-  rolled back.
+- the query tabs with text or with a .sql file stay open, **without a database** and with their text (see
+  [Query tabs without a database](02-editor.md#query-tabs-without-a-database));
+- the other tabs for that database are closed: empty queries, objects, search, monitoring and the tools.
+
+Before that:
+
+- If there is an open transaction, uncompiled changes or unapplied data in the **Data** tab, it asks once and names
+  them: **Disconnect and undo** goes on and **Don't disconnect** leaves everything as it is. What is open is undone
+  (rollback), never committed.
 - If any tab is running something, nothing is disconnected: cancel it or wait for it to finish.
+
+When you connect the database again, the queries left without a database don't take it back by themselves: choose it
+in the banner or by double-clicking it in the tree.
 
 ### When you exit
 
@@ -325,8 +338,13 @@ The text shows the environment (in production, **PRODUCTION**), the registration
 `user@server:port/database`, for example "Development · Ventas · SYSDBA@servidor:3050/ventas". If the registration is
 read-only, it adds " · read-only".
 
+The database name is a list (**▾**): in a query, choosing another database there changes the query's database, in the
+same place you look at to confirm it (see
+[Choosing the database from the banner](02-editor.md#choosing-the-database-from-the-banner)).
+
 When there is no database, the banner tells you what to do: with no registered databases, register the first one; with
-no tabs, double-click a database to connect; in a tab without a database, double-click a database to use it there.
+no tabs, double-click a database to connect; in a query without a database, it says **No database** (and which
+database it had, if it was disconnected): choose one from that list or by double-clicking one in the tree.
 
 ### Whether the connection is encrypted
 
@@ -360,8 +378,9 @@ You can have several databases connected and work with all of them at the same t
 - Each tab has its own database, connection and transaction. The tab border has the environment color and the tooltip
   says which database it belongs to.
 - The banner always shows the database of the selected tab; the other connected ones appear as chips.
-- Double-click another database in the tree: the selected tab switches to that database if it is free; if it has an
-  open transaction or is running something, the database opens in a new tab and the previous one keeps its own.
+- Double-click another database in the tree: the selected query switches to that database if it has no database or an
+  empty editor; if it has text, an open transaction or is running something, the database opens in a new query and the
+  previous one keeps its own. To change the database of a query with text, use the list in the banner.
 - **Query › New tab** (`Ctrl+T`) or the **+** button opens a query on the database you touched last: the one selected
   in the tree, if you clicked the tree after visiting the tab; otherwise, the selected tab's database. The same goes for
   **Query › Search metadata…** (`Ctrl+Shift+F`).

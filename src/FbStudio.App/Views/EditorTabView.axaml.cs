@@ -110,8 +110,9 @@ public partial class EditorTabView : UserControl
         CopyLogButton.Click += async (_, _) =>
         {
             if (Tab is not { } tab || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) return;
-            await clipboard.SetTextAsync(tab.LogForFile(DateTime.Now));
-            tab.Status = Strings.LogCopied;
+            var selection = MessagesView.SelectionLength > 0;
+            await clipboard.SetTextAsync(LogToCopy(DateTime.Now));
+            tab.Status = selection ? Strings.LogSelectionCopied : Strings.LogCopied;
         };
         HistoryList.DoubleTapped += (_, _) =>
         {
@@ -168,6 +169,7 @@ public partial class EditorTabView : UserControl
         base.OnDataContextChanged(e);
         if (Tab is not { } tab) return;
         Editor.Document = tab.Document;
+        ShowMessages(tab);
         Editor.IsReadOnly = tab.IsReadOnlyObject; // el DDL de una tabla se ve y se copia, no se edita ni se ejecuta
         tab.ColumnsChanged += cols => Results.SetData(cols, tab.Rows);
         Results.CopyAsScript = (rows, update) => CopyAsScriptAsync(Results, rows, update, fromData: false);
@@ -201,6 +203,29 @@ public partial class EditorTabView : UserControl
         if (_owner is not null) _owner.SettingsChanged -= ApplySettings;
         _owner = null;
     }
+
+    private EditorTabViewModel? _messagesTab;
+
+    /// <summary>Mensajes: el texto de la pestaña en el visor, y de nuevo cada vez que cambia.</summary>
+    private void ShowMessages(EditorTabViewModel tab)
+    {
+        if (ReferenceEquals(_messagesTab, tab)) return;
+        if (_messagesTab is not null) _messagesTab.PropertyChanged -= OnTabPropertyChanged;
+        _messagesTab = tab;
+        tab.PropertyChanged += OnTabPropertyChanged;
+        MessagesView.Text = tab.Messages;
+    }
+
+    private void OnTabPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(EditorTabViewModel.Messages) && sender is EditorTabViewModel tab) MessagesView.Text = tab.Messages;
+    }
+
+    /// <summary>Lo que copia «Copiar» en Mensajes: lo elegido o, sin selección, todo el registro con la fecha y la base.</summary>
+    internal string LogToCopy(DateTime now) => MessagesView.SelectionLength > 0 ? MessagesView.SelectedText : Tab?.LogForFile(now) ?? "";
+
+    /// <summary>El visor de Mensajes (para las pruebas).</summary>
+    internal AvaloniaEdit.TextEditor MessagesViewer => MessagesView;
 
     /// <summary>Buscar y reemplazar en este editor (Ctrl+F, Ctrl+H, F3).</summary>
     public FindReplaceBar FindBar { get; }

@@ -3,17 +3,21 @@ using System.Text.RegularExpressions;
 namespace FbStudio.Core.Sql;
 
 /// <summary>
-/// Posición (1-based) que Firebird informa en los errores de compilación: "Token unknown - line 5, column 3" o
-/// "At line 8, column 15". Es relativa al texto de la sentencia enviada.
+/// Posición (1-based) que Firebird informa en los errores de compilación ("Token unknown - line 5, column 3" o
+/// "At line 8, column 15") y en los de un EXECUTE BLOCK al ejecutarse ("At block line: 13, col: 5", por ejemplo una
+/// EXCEPTION). Es relativa al texto de la sentencia enviada. La de "At procedure 'P' line: 3, col: 5" no: es del
+/// código del procedimiento.
 /// </summary>
 public readonly record struct FirebirdErrorPosition(int Line, int Column)
 {
     private static readonly Regex Pattern = new(@"line\s+(\d+),\s*(?:col|column|char)\s+(\d+)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex BlockPattern = new(@"At block line:\s*(\d+),\s*col:\s*(\d+)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     public static FirebirdErrorPosition? Parse(string? message)
     {
         if (string.IsNullOrEmpty(message)) return null;
         var m = Pattern.Match(message);
+        if (!m.Success) m = BlockPattern.Match(message);
         return m.Success && int.TryParse(m.Groups[1].Value, out var line) && int.TryParse(m.Groups[2].Value, out var column)
             ? new FirebirdErrorPosition(line, column)
             : null;

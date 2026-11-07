@@ -331,6 +331,9 @@
   <data name="InsertScriptTarget" xml:space="preserve">
     <value>Target table: {0} · {1} columns · COMMIT every {2:N0} rows</value>
   </data>
+  <data name="IsqlNotSent" xml:space="preserve">
+    <value>{0} is an isql command: it isn't sent to the server.</value>
+  </data>
   <data name="KeyringFailed" xml:space="preserve">
     <value>The system keyring did not store the secret: {0}</value>
   </data>

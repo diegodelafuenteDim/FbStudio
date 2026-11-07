@@ -46,7 +46,8 @@ filter**).
 - A click on the triangle expands or collapses the row, and does nothing else.
 - `→` expands the selected row and `←` collapses it.
 - Double-click (or `Enter`):
-  - on a database, connects and expands it, and the query tab switches to it (or a new query opens on it);
+  - on a database, connects and expands it, and the selected query switches to it if it has no database or an empty
+    editor (otherwise a new query opens on it);
   - on an object, opens its tab (see [The object tab](05-tree.md#the-object-tab));
   - on a column, types its name into the editor at the cursor;
   - on a category, a folder or an area, expands or collapses it.

@@ -2,18 +2,18 @@
   <ItemGroup>
     <!-- Firebird: SIN compresión de red (bug de 10.3.4/11-alpha, ver docs/decisiones.md). -->
     <PackageVersion Include="FirebirdSql.Data.FirebirdClient" Version="10.3.4" />
-    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <!-- Acomodo automático de los diagramas (F-8): Microsoft Automatic Graph Layout, MIT -->
     <PackageVersion Include="Msagl" Version="1.2.1" />
     <!-- Conector MCP (F-37, D-114): SDK oficial de Model Context Protocol para .NET, Apache-2.0 -->
     <PackageVersion Include="ModelContextProtocol.Core" Version="2.3.0" />
     <!-- UI -->
-    <PackageVersion Include="Avalonia" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Headless" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Skia" Version="12.1.4" />
+    <PackageVersion Include="Avalonia" Version="12.1.5" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.5" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.5" />
+    <PackageVersion Include="Avalonia.Headless" Version="12.1.5" />
+    <PackageVersion Include="Avalonia.Skia" Version="12.1.5" />
     <PackageVersion Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
     <PackageVersion Include="AvaloniaEdit.TextMate" Version="12.0.0" />
     <PackageVersion Include="TextMateSharp.Grammars" Version="2.0.4" />

@@ -44,9 +44,7 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         Tree.ConnectionsChanged += RefreshOtherConnections;
         Tree.ServerInfoLoaded += id =>
         {
-            if (SelectedProfile?.Id != id) return;
-            OnPropertyChanged(nameof(Banner));
-            OnPropertyChanged(nameof(BannerTip));
+            if (SelectedProfile?.Id == id) NotifyBanner();
         };
         Tree.ObjectRequested += (profile, obj) => _ = OpenObjectAsync(profile, obj);
         // Lo último que se tocó manda (D-88): elegir algo de una base en el árbol hace que la consulta nueva vaya a esa base.
@@ -457,7 +455,8 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
     public Func<DiscardPrompt, Task<bool>> ConfirmDiscardAsync { get; set; } = _ => Task.FromResult(true);
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedProfile), nameof(Banner), nameof(BannerTip), nameof(IsProduction), nameof(IsTest), nameof(IsDevelopment), nameof(IsReadOnlyProfile))]
+    [NotifyPropertyChangedFor(nameof(SelectedProfile), nameof(Banner), nameof(BannerTip), nameof(IsProduction), nameof(IsTest), nameof(IsDevelopment), nameof(IsReadOnlyProfile),
+        nameof(BannerPrefix), nameof(BannerDatabase), nameof(BannerSuffix), nameof(HasBannerDatabase))]
     private EditorTabViewModel? _selectedTab;
 
     [ObservableProperty] private int _rowLimit;
@@ -519,12 +518,42 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
     public bool IsDevelopment => SelectedProfile?.Environment == ProfileEnvironment.Desarrollo;
     public bool IsReadOnlyProfile => SelectedProfile?.ReadOnly == true;
 
-    public string Banner => SelectedProfile switch
+    /// <summary>La franja entera: el entorno, la base (la lista para elegirla) y dónde está, o qué hacer si no hay base.</summary>
+    public string Banner => BannerPrefix + BannerDatabase + BannerSuffix;
+
+    /// <summary>Lo de la franja antes del nombre de la base: el entorno («Desarrollo · », «PRODUCCIÓN · »).</summary>
+    public string BannerPrefix => SelectedProfile switch
     {
-        null => Tree.IsEmpty ? Strings.BannerNoDatabases : SelectedTab is null ? Strings.BannerNoTabs : Strings.BannerNoDatabaseInTab,
-        { IsProduction: true } p => $"{Strings.BannerProduction} · {p.Display}{(p.ReadOnly ? Strings.BannerReadOnly : "")}{Wire(p)}",
-        var p => $"{ProfileEnvironments.Label(p.Environment)} · {p.Display}{(p.ReadOnly ? Strings.BannerReadOnly : "")}{Wire(p)}",
+        null => "",
+        { IsProduction: true } => Strings.BannerProduction + " · ",
+        var p => ProfileEnvironments.Label(p.Environment) + " · ",
     };
+
+    /// <summary>
+    /// El nombre de la base en la franja, que es la lista para elegir la base de la consulta (D-123): «Sin base» si la
+    /// pestaña no tiene. Null sin pestañas o sin bases registradas (no hay nada que elegir).
+    /// </summary>
+    public string? BannerDatabase => SelectedTab is null || (Tree.IsEmpty && SelectedProfile is null) ? null : SelectedProfile?.Name ?? Strings.NoDatabase;
+
+    public bool HasBannerDatabase => BannerDatabase is not null;
+
+    /// <summary>Lo de la franja después del nombre: usuario, servidor y base, solo lectura y cifrado; o qué hacer sin base.</summary>
+    public string BannerSuffix => SelectedProfile switch
+    {
+        null when BannerDatabase is null => Tree.IsEmpty ? Strings.BannerNoDatabases : Strings.BannerNoTabs,
+        null => SelectedTab?.PreviousProfileName is { } previous ? string.Format(Strings.BannerNoDatabaseBeforeHint, previous) : Strings.BannerNoDatabaseHint,
+        var p => $"  ·  {p.User}@{p.Host}:{p.Port}/{p.Database}{(p.ReadOnly ? Strings.BannerReadOnly : "")}{Wire(p)}",
+    };
+
+    private void NotifyBanner()
+    {
+        OnPropertyChanged(nameof(Banner));
+        OnPropertyChanged(nameof(BannerPrefix));
+        OnPropertyChanged(nameof(BannerDatabase));
+        OnPropertyChanged(nameof(HasBannerDatabase));
+        OnPropertyChanged(nameof(BannerSuffix));
+        OnPropertyChanged(nameof(BannerTip));
+    }
 
     /// <summary>« · conexión cifrada» o « · ⚠ sin cifrar», cuando la base ya se conectó en el árbol y el servidor lo dijo.</summary>
     private string Wire(ConnectionProfile p) => Tree.ServerFor(p.Id)?.WireEncrypted switch
@@ -592,6 +621,7 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
 
     private void OnTabPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(EditorTabViewModel.PreviousProfileName)) NotifyBanner();
         if (e.PropertyName != nameof(EditorTabViewModel.Profile)) return;
         NotifyProfileDependents();
         Tree.MarkActive(SelectedProfile?.Id);
@@ -601,8 +631,7 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
     private void NotifyProfileDependents()
     {
         OnPropertyChanged(nameof(SelectedProfile));
-        OnPropertyChanged(nameof(Banner));
-        OnPropertyChanged(nameof(BannerTip));
+        NotifyBanner();
         RefreshOtherConnections();
         OnPropertyChanged(nameof(IsProduction));
         OnPropertyChanged(nameof(IsTest));
@@ -624,6 +653,24 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         _profiles.Upsert(copy, _profiles.GetPassword(profile.Id));
         ReloadProfiles();
         return copy;
+    }
+
+    /// <summary>
+    /// «Borrar registro…» del árbol: pregunta como la ventana de registros; si la base está conectada, primero la
+    /// desconecta (sus consultas con texto quedan sin base, las demás pestañas se cierran, y pregunta por lo que tengan
+    /// abierto, D-123). Se borra el registro y su contraseña
+    /// guardada; la base no se toca.
+    /// </summary>
+    public async Task<bool> DeleteProfileAsync(ConnectionProfile profile)
+    {
+        if (!await ConfirmActionAsync(new ConfirmPrompt([string.Format(Strings.ProfileDeleteConfirm, profile.Name)],
+                Strings.ProfileDeleteYes, Strings.Cancel, Strings.ProfileDeleteYes)))
+            return false;
+        if (CanDisconnect(profile.Id) && !await DisconnectAsync(profile)) return false;
+        _profiles.Delete(profile.Id);
+        ReloadProfiles();
+        Notify(string.Format(Strings.ProfileDeleted, profile.Name));
+        return true;
     }
 
     /// <summary>
@@ -830,17 +877,24 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
             if (tab.Profile is not { } current) continue;
             var updated = Profiles.FirstOrDefault(p => p.Id == current.Id);
             if (updated != current) InvalidateCatalog(current.Id); // cambió el registro (servidor, usuario…)
-            if (updated != current && tab.CanChangeProfile) tab.Profile = updated;
+            if (updated != current && tab.CanChangeProfile)
+            {
+                if (updated is null) tab.PreviousProfileName = current.Name; // se borró el registro: queda sin base (D-123)
+                tab.Profile = updated;
+            }
         }
-        // Con una sola base registrada, la pestaña sin base la usa (no se conecta hasta ejecutar).
-        if (SelectedTab is { Profile: null, Kind: EditorTabKind.Sql } t && Profiles.Count == 1) t.Profile = Profiles[0];
+        // Con una sola base registrada, la pestaña sin base la usa (no se conecta hasta ejecutar). La que quedó sin base
+        // al desconectar no: la base se vuelve a elegir a mano (D-123).
+        if (SelectedTab is { Profile: null, Kind: EditorTabKind.Sql, PreviousProfileName: null } t && Profiles.Count == 1) t.Profile = Profiles[0];
         Tree.MarkActive(SelectedProfile?.Id);
         NotifyProfileDependents();
     }
 
     /// <summary>
-    /// El árbol pide trabajar con esta base: la pestaña de consulta elegida la toma si está libre; si tiene una
-    /// transacción abierta, está ejecutando o es de un objeto, la base se abre en una pestaña nueva.
+    /// El árbol pide trabajar con esta base (doble clic): la consulta elegida la toma solo si no tiene base o tiene el
+    /// editor vacío (D-123); la búsqueda en metadatos, si está libre. Si no (una consulta con texto en otra base, una
+    /// transacción abierta, algo ejecutándose, la pestaña de un objeto), la base se abre en una consulta nueva. Cambiarle
+    /// la base a una consulta con texto queda para la lista de la franja.
     /// </summary>
     public void Activate(ConnectionProfile profile)
     {
@@ -848,15 +902,66 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         _ = CatalogFor(profile); // el usuario eligió la base: el autocompletado empieza a cargarse ya
         var tab = SelectedTab;
         if (tab?.Profile?.Id == profile.Id) return;
-        if (tab is { Kind: EditorTabKind.Sql or EditorTabKind.Search, CanChangeProfile: true })
+        var takes = tab is { CanChangeProfile: true }
+                    && (tab.Kind == EditorTabKind.Search || (tab.Kind == EditorTabKind.Sql && (tab.Profile is null || tab.Document.TextLength == 0)));
+        if (takes)
         {
-            tab.Profile = profile;
-            tab.Status = string.Format(Strings.TabDatabaseIs, profile.Name);
+            SetTabProfile(tab!, profile);
         }
         else
         {
             NewQueryTab(profile).Status = string.Format(Strings.TabNewOnDatabase, profile.Name);
         }
+    }
+
+    /// <summary>
+    /// La lista de la franja (D-123): la consulta elegida pasa a esta base. Solo en una consulta sin transacción abierta ni
+    /// algo ejecutándose. En producción pregunta antes; siempre queda un renglón en Mensajes, y los resultados, el plan y
+    /// las estadísticas de la otra base se borran. Devuelve si cambió.
+    /// </summary>
+    public async Task<bool> ChooseDatabaseAsync(EditorTabViewModel tab, ConnectionProfile profile)
+    {
+        profile = Profiles.FirstOrDefault(p => p.Id == profile.Id) ?? profile;
+        if (tab.Kind != EditorTabKind.Sql || tab.Profile?.Id == profile.Id) return false;
+        if (!tab.CanPickDatabase)
+        {
+            tab.Status = tab.PickDatabaseTip;
+            return false;
+        }
+        if (profile.IsProduction && !await ConfirmActionAsync(new ConfirmPrompt([string.Format(Strings.ChooseProductionConfirm, tab.BaseTitle, profile.Name)],
+                Strings.ChooseProductionYes, Strings.Cancel, Strings.ChooseDatabaseTitle)))
+        {
+            tab.Status = Strings.ChooseDatabaseCancelled;
+            return false;
+        }
+        if (!tab.CanPickDatabase) // mientras se preguntaba pudo empezar a ejecutar
+        {
+            tab.Status = tab.PickDatabaseTip;
+            return false;
+        }
+        _ = CatalogFor(profile);
+        SetTabProfile(tab, profile);
+        return true;
+    }
+
+    /// <summary>
+    /// Le pone la base a la pestaña y, si es una consulta con texto o que ya tenía base, lo anota en Mensajes (de qué base
+    /// a cuál, y si se borraron los resultados de la anterior).
+    /// </summary>
+    private void SetTabProfile(EditorTabViewModel tab, ConnectionProfile profile)
+    {
+        var previous = tab.Profile?.Name ?? tab.PreviousProfileName;
+        var cleared = tab.HasResultsFromAnotherDatabase(profile.Id); // se borran al cambiar (OnProfileChanged)
+        var note = tab.Kind == EditorTabKind.Sql && (previous is not null || tab.Document.TextLength > 0);
+        tab.Profile = profile;
+        tab.Status = string.Format(Strings.TabDatabaseIs, profile.Name);
+        if (!note) return;
+        var now = DateTime.Now;
+        // Volver a la misma base después de desconectarla: «pasó a Base de pruebas», no «de Base de pruebas a Base de pruebas».
+        tab.AppendMessage((previous is null || previous == profile.Name
+                              ? string.Format(Strings.TabDatabaseSet, profile.Name, now)
+                              : string.Format(Strings.TabDatabaseChanged, previous, profile.Name, now))
+                          + (cleared && previous is not null ? string.Format(Strings.TabResultsCleared, previous) : ""));
     }
 
     /// <summary>Se eligió algo en el árbol después de pasar por la pestaña: la consulta nueva va a esa base (D-88).</summary>
@@ -990,9 +1095,11 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
     }
 
     /// <summary>
-    /// Desconectar una base: se cierran todas sus pestañas (consultas, objetos, búsqueda y monitoreo)
-    /// y la conexión del árbol. Si alguna tiene una transacción abierta o cambios sin guardar, pregunta una sola vez
-    /// nombrándolas; si se cancela, o si alguna está ejecutando, no se desconecta nada.
+    /// Desconectar una base (D-123, antes D-35): las consultas con texto o con un archivo .sql quedan abiertas, sin base y
+    /// con su texto; las demás pestañas de la base (consultas vacías, objetos, búsqueda, monitoreo y las herramientas) se
+    /// cierran, y se cierra la conexión del árbol. Si hay una transacción abierta, cambios sin compilar o datos sin aplicar,
+    /// pregunta una sola vez nombrándolas y lo abierto se deshace (rollback); si se cancela, o si alguna está ejecutando,
+    /// no se desconecta nada.
     /// </summary>
     public async Task<bool> DisconnectAsync(ConnectionProfile profile)
     {
@@ -1002,14 +1109,39 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
             Notify(string.Format(Strings.DisconnectWhileRunning, profile.Name, running.BaseTitle));
             return false;
         }
-        if (!await CloseTabsAsync(tabs)) return false;
+        var keep = tabs.Where(StaysOpenWhenDisconnected).ToList();
+        var close = tabs.Except(keep).ToList();
+        var pending = tabs.Where(t => t.InTransaction || (close.Contains(t) && (t.IsModified || t.Data?.HasPending == true))).ToList();
+        if (pending.Count > 0)
+        {
+            var message = string.Format(Strings.DisconnectPending, profile.Name, string.Join(", ", pending.Select(PendingLabel)))
+                          + (keep.Count > 0 ? " " + Strings.DisconnectKeepsQueries : "");
+            if (!await ConfirmActionAsync(new ConfirmPrompt([message], Strings.DisconnectAndUndo, Strings.DontDisconnect,
+                    string.Format(Strings.DisconnectTitle, profile.Name))))
+                return false;
+        }
+        foreach (var tab in close) await CloseTabAsync(tab, ask: false);
+        var now = DateTime.Now;
+        foreach (var tab in keep) await tab.DetachAsync(now);
         await Tree.DisconnectAsync(profile.Id);
         InvalidateCatalog(profile.Id);
-        Tree.Status = tabs.Count == 0
-            ? string.Format(Strings.DisconnectedFrom, profile.Name)
-            : string.Format(Strings.DisconnectedClosingTabs, profile.Name, tabs.Count);
+        Tree.Status = (close.Count, keep.Count) switch
+        {
+            (0, 0) => string.Format(Strings.DisconnectedFrom, profile.Name),
+            (_, 0) => string.Format(Strings.DisconnectedClosingTabs, profile.Name, close.Count),
+            (0, _) => string.Format(Strings.DisconnectedKeepingQueries, profile.Name, keep.Count),
+            _ => string.Format(Strings.DisconnectedClosingAndKeeping, profile.Name, close.Count, keep.Count),
+        };
         return true;
     }
+
+    /// <summary>Una consulta con texto o con su archivo .sql sigue abierta al desconectar su base (D-123).</summary>
+    private static bool StaysOpenWhenDisconnected(EditorTabViewModel tab) =>
+        tab.Kind == EditorTabKind.Sql && (tab.FilePath is not null || tab.Document.TextLength > 0);
+
+    /// <summary>«Consulta 1» (transacción abierta), «TURNOS» (datos sin aplicar)…: para nombrarla al preguntar.</summary>
+    private static string PendingLabel(EditorTabViewModel t) =>
+        $"«{t.BaseTitle}» ({(t.InTransaction ? Strings.PendingTransaction : t.HasUnsavedFile || t is AreasTabViewModel ? Strings.PendingUnsaved : t.IsModified ? Strings.PendingChanges : Strings.PendingData)})";
 
     /// <summary>La base tiene algo abierto (conexión del árbol o pestañas): «Desconectar» tiene sentido.</summary>
     public bool CanDisconnect(Guid profileId) => Tree.IsConnected(profileId) || Tabs.Any(t => t.Profile?.Id == profileId);
@@ -1238,7 +1370,7 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
         var pending = closing.Where(t => t.InTransaction || t.IsModified || t.Data?.HasPending == true).ToList();
         if (pending.Count > 0)
         {
-            var list = string.Join(", ", pending.Select(t => $"«{t.BaseTitle}» ({(t.InTransaction ? Strings.PendingTransaction : t.HasUnsavedFile || t is AreasTabViewModel ? Strings.PendingUnsaved : t.IsModified ? Strings.PendingChanges : Strings.PendingData)})"));
+            var list = string.Join(", ", pending.Select(PendingLabel));
             if (!await ConfirmCloseAsync(string.Format(Strings.CloseManyPending, closing.Count, list)))
                 return false;
         }
@@ -1319,7 +1451,7 @@ public partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
     internal void Record(ConnectionProfile profile, string sql, StatementInfo statement, QueryOutcome o) =>
         Record(profile, sql, statement.Keyword, o);
 
-    /// <summary>Un script corrido sin grilla: una sola entrada con el texto entero.</summary>
+    /// <summary>Un script, con grilla o sin ella: una sola entrada con el texto entero como se ejecutó (D-121).</summary>
     internal void RecordScript(ConnectionProfile profile, string script, QueryOutcome o) => Record(profile, script, "SCRIPT", o);
 
     private void Record(ConnectionProfile profile, string sql, string keyword, QueryOutcome o)

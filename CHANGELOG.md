@@ -6,11 +6,61 @@ What changed in each version of FbStudio, in English and in Spanish. The section
 Qué cambió en cada versión de FbStudio, en inglés y en español. La sección de cada versión también aparece en su
 [página de descarga](https://github.com/diegodelafuenteDim/FbStudio/releases) y en FbStudio, en Ayuda → Novedades.
 
-## [Unreleased]
+## [0.5.0] - 2026-11-07
 
 ### English
 
+- Tree: right-click a database › Registration › "Delete registration…" deletes it, with the same question as the
+  Registered databases window; if the database is connected, it is disconnected first.
+- Scripts: `SET BAIL ON` stops at the first error and `SET BAIL OFF` goes on, from its line and on any database, over
+  the option. Without it, a script on production always stops. When it stops, what the script left uncommitted is
+  undone (what its `COMMIT`s confirmed stays, and so does what the tab had pending before it started), and Messages
+  tells the line that failed (in an `EXECUTE BLOCK`, that of the `EXCEPTION`), how the statement starts and the error.
+- Scripts: isql commands no longer give a server error. `SET NAMES`, `SET SQL DIALECT 3`, `SET AUTODDL`, `SET LIST`
+  and the other display ones are skipped with a note; `QUIT` and `EXIT` end the script; `SHELL`, `INPUT`, `OUTPUT` to
+  a file, `CONNECT` and `CREATE DATABASE` stop the script before it starts, telling the line.
+- Scripts don't use autocommit: they run the same way on Development, Test and Production, with their own `COMMIT`s.
+- `SAVEPOINT`, `RELEASE SAVEPOINT` and `ROLLBACK TO SAVEPOINT` work: `ROLLBACK TO SAVEPOINT` used to undo the whole
+  transaction.
+- History: a script is stored once, whole, as you ran it, also with the grid (it used to store one entry per
+  statement).
+- Messages: Copy copies the part you selected (with nothing selected, the whole log), and the text is selected as in
+  the editor, with the mouse or the keyboard.
+- Disconnect leaves the query tabs with text or a .sql file open, without a database and with their text (what was
+  uncommitted is undone, as before); the database is chosen again in the banner, whose database name is now a list
+  (production asks first). Double-clicking a database in the tree no longer changes the database of a query with text:
+  it opens a new query.
+- Data: when editing a cell, what you type no longer shows over the old value, shifted and blurry. The box covers the
+  cell, with the grid's font and right in its place, in the light and dark themes, and so does the filter row's box.
+  If the grid scrolls, the box follows its cell; if the cell leaves the view, what you typed stays as a pending change.
+- Updated: Avalonia 12.1.5, Microsoft.Data.Sqlite and ProtectedData 10.0.14.
+
 ### Español
+
+- Árbol: clic derecho en la base › Registro › «Borrar registro…» lo borra, con la misma pregunta que la ventana Bases
+  registradas; si la base está conectada, antes se desconecta.
+- Scripts: `SET BAIL ON` se detiene en el primer error y `SET BAIL OFF` sigue, desde su línea y en cualquier base, por
+  encima de la opción. Sin eso, en producción un script siempre se detiene. Al detenerse se deshace lo que el script
+  dejó sin confirmar (lo que confirmaron sus `COMMIT` queda, y también lo que la pestaña tenía pendiente de antes), y
+  Mensajes dice la línea que falló (en un `EXECUTE BLOCK`, la de la `EXCEPTION`), cómo empieza la sentencia y el error.
+- Scripts: las órdenes de isql ya no dan error del servidor. `SET NAMES`, `SET SQL DIALECT 3`, `SET AUTODDL`,
+  `SET LIST` y las demás de pantalla se saltean con un aviso; `QUIT` y `EXIT` terminan el script; `SHELL`, `INPUT`,
+  `OUTPUT` a un archivo, `CONNECT` y `CREATE DATABASE` frenan el script antes de empezar y dicen en qué línea están.
+- Los scripts no usan el autocommit: corren igual en Desarrollo, Prueba y Producción, con sus propios `COMMIT`.
+- `SAVEPOINT`, `RELEASE SAVEPOINT` y `ROLLBACK TO SAVEPOINT` funcionan: antes `ROLLBACK TO SAVEPOINT` deshacía toda la
+  transacción.
+- Historial: un script se guarda una sola vez, entero, como lo ejecutaste, también con grilla (antes guardaba una
+  entrada por sentencia).
+- Mensajes: Copiar copia la parte que elegiste (sin selección, todo el registro), y el texto se elige como en el
+  editor, con el mouse o el teclado.
+- Desconectar deja abiertas las consultas con texto o con un archivo .sql, sin base y con su texto (lo no confirmado se
+  deshace, como antes); la base se vuelve a elegir en la franja, donde el nombre de la base ahora es una lista
+  (producción pregunta antes). El doble clic en una base del árbol ya no le cambia la base a una consulta con texto:
+  abre una consulta nueva.
+- Datos: al editar una celda, lo que se escribe ya no se ve encima del valor anterior, corrido y borroso. El cuadro tapa
+  la celda, con la letra de la grilla y justo en su lugar, en tema claro y oscuro, y lo mismo el de la fila de filtros.
+  Si la grilla se desplaza, el cuadro acompaña a su celda; si la celda sale de la vista, lo escrito queda pendiente.
+- Actualizados: Avalonia 12.1.5, Microsoft.Data.Sqlite y ProtectedData 10.0.14.
 
 ## [0.4.0] - 2026-10-27
 

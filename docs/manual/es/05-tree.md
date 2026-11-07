@@ -44,7 +44,8 @@ filtro**).
 - Un clic en el triángulo abre o cierra la fila, sin hacer nada más.
 - `→` abre la fila elegida y `←` la cierra.
 - Doble clic (o `Enter`):
-  - en una base, la conecta y la abre, y la pestaña de consulta pasa a usarla (o se abre una consulta nueva en ella);
+  - en una base, la conecta y la abre, y la consulta elegida pasa a usarla si no tiene base o tiene el editor vacío (si
+    no, se abre una consulta nueva en ella);
   - en un objeto, abre su pestaña (ver [La pestaña de un objeto](05-tree.md#la-pestaña-de-un-objeto));
   - en una columna, escribe su nombre en el editor, donde está el cursor;
   - en una categoría, una carpeta o un área, la abre o la cierra.

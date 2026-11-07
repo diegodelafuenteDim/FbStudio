@@ -93,13 +93,15 @@
             <Button x:Name="SaveLogButton" Padding="8,3" ToolTip.Tip="{x:Static res:Strings.SaveLogTip}">
               <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.SaveLog}" /></StackPanel>
             </Button>
-            <Button x:Name="CopyLogButton" Padding="8,3">
+            <Button x:Name="CopyLogButton" Padding="8,3" ToolTip.Tip="{x:Static res:Strings.CopyLogTip}">
               <StackPanel Orientation="Horizontal" Spacing="6"><mi:MaterialIcon Kind="ContentCopy" Width="16" Height="16" /><TextBlock Text="{x:Static res:Strings.CopyLog}" /></StackPanel>
             </Button>
           </StackPanel>
-          <ScrollViewer HorizontalScrollBarVisibility="Auto">
-            <SelectableTextBlock Text="{Binding Messages}" FontFamily="Cascadia Mono,Consolas,Menlo,monospace" Margin="12" TextWrapping="Wrap" />
-          </ScrollViewer>
+          <!-- Un visor de solo lectura (como el registro de Mantenimiento): se elige con el mouse o el teclado y Ctrl+C
+               copia lo elegido; el botón Copiar también. El texto lo pone el código (MessagesView). -->
+          <ae:TextEditor x:Name="MessagesView" IsReadOnly="True" ShowLineNumbers="False" WordWrap="True" Padding="12,8"
+                         FontFamily="Cascadia Mono,Consolas,Menlo,monospace"
+                         HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" />
         </DockPanel>
       </TabItem>
       <TabItem Header="{x:Static res:Strings.DependenciesTab}" IsVisible="{Binding IsObjectTab}">

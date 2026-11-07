@@ -83,6 +83,11 @@ public partial class MainWindow : Window
             if ((SelectedDatabase()?.Profile ?? vm.SelectedProfile) is { } profile) await vm.DisconnectAsync(profile);
             else vm.Notify(Strings.PickDatabaseInTree);
         };
+        // El nombre de la base en la franja: la lista de bases registradas para la consulta elegida (D-123).
+        BannerDatabaseButton.Click += (_, _) =>
+        {
+            if (Vm is { SelectedTab: { } tab } vm) BuildDatabaseMenu(vm, tab).Open(BannerDatabaseButton);
+        };
         MenuExit.Click += (_, _) => Close();
         MenuShortcuts.Click += async (_, _) => await ShowShortcutsAsync();
         MenuAbout.Click += async (_, _) => await new AboutDialog().ShowDialog(this);
@@ -735,6 +740,41 @@ public partial class MainWindow : Window
         else vm.Notify(vm.Tree.IsEmpty ? Strings.RegisterFirst : Strings.PickDatabaseInTree);
     }
 
+    /// <summary>
+    /// La lista de la franja (D-123): las bases registradas en el orden del árbol por entorno y nombre, con el color de su
+    /// entorno y la actual marcada. Elegir una cambia la base de la consulta (en producción, pregunta antes).
+    /// </summary>
+    internal ContextMenu BuildDatabaseMenu(MainWindowViewModel vm, EditorTabViewModel tab)
+    {
+        var items = new List<Control>();
+        foreach (var profile in vm.Profiles.OrderBy(p => p.Environment).ThenBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase))
+        {
+            var icon = new Material.Icons.Avalonia.MaterialIcon { Kind = Material.Icons.MaterialIconKind.Database, Width = 16, Height = 16 };
+            icon.Classes.Add("tone");
+            if (Tones.ForEnvironment(profile.Environment) switch
+                {
+                    Tone.Production => "prod",
+                    Tone.Test => "test",
+                    Tone.Development => "dev",
+                    _ => null,
+                } is { } tone)
+                icon.Classes.Add(tone);
+            var current = tab.Profile?.Id == profile.Id;
+            var item = new MenuItem
+            {
+                Header = (current ? "● " : "") + profile.Name + "  ·  " + Core.Profiles.ProfileEnvironments.Label(profile.Environment)
+                         + (Core.Profiles.ProfileFolders.Clean(profile.Folder) is { } folder ? "  ·  " + folder : ""),
+                Icon = icon,
+                IsEnabled = !current,
+                Tag = profile,
+            };
+            item.Click += async (_, _) => await vm.ChooseDatabaseAsync(tab, profile);
+            items.Add(item);
+        }
+        if (items.Count == 0) items.Add(new MenuItem { Header = Strings.PickDatabaseNoProfiles, IsEnabled = false });
+        return new ContextMenu { ItemsSource = items, Placement = PlacementMode.BottomEdgeAlignedLeft };
+    }
+
     internal ContextMenu BuildTabMenu(MainWindowViewModel vm, EditorTabViewModel tab)
     {
         MenuItem Item(string header, Func<Task> action, bool enabled = true)
@@ -854,7 +894,9 @@ public partial class MainWindow : Window
                     Item(Strings.TreeEditRegistration, () => OpenProfilesAsync(newRegistration: false, select: profile.Id)),
                     Item(Strings.TreeCloneRegistration, () => OpenProfilesAsync(newRegistration: false, select: vm.CloneProfile(profile).Id)),
                     Item(Strings.TreeMoveToFolder, () => MoveToFolderAsync(vm, profile)),
-                    Item(Strings.TreeExportThis, () => ExportProfilesAsync(vm, [profile.Id]))));
+                    Item(Strings.TreeExportThis, () => ExportProfilesAsync(vm, [profile.Id])),
+                    new Separator(),
+                    Item(Strings.TreeDeleteRegistration, () => vm.DeleteProfileAsync(profile))));
                 break;
             }
             case TreeNodeKind.Category when node.Category == DbObjectKind.Table && node.DatabaseNode?.Profile is { ReadOnly: false } tablesOf:

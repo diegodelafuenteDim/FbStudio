@@ -101,7 +101,7 @@ una versión nueva de FbStudio las mejora, las ves sin tocar nada.
 | **Transacción de escritura abierta: ámbar a los** | Pasados estos minutos, el aviso de transacción abierta de la franja va sobre ámbar. De 1 a 1.440. | 5 minutos |
 | **…y rojo, con un aviso, a los** | Pasados estos, va en rojo y la barra de estado avisa una vez. No puede ser menos que el anterior; hasta 10.080. | 15 minutos |
 | **Al aplicar cambios en la pestaña Datos** | **Mostrar los comandos antes (ejecutarlos, copiarlos o llevarlos a una pestaña de consulta)** o **Ejecutarlos directamente**. | Mostrar los comandos antes |
-| **Ante un error en un script** | **Parar en el primer error** o **Seguir con la siguiente sentencia**. | Parar en el primer error |
+| **Ante un error en un script (Desarrollo y Prueba)** | **Parar en el primer error** o **Seguir con la siguiente sentencia**. En producción siempre se detiene, y un `SET BAIL` del script manda sobre esta opción. | Parar en el primer error |
 
 Sobre la transacción abierta: una transacción olvidada, con varias personas trabajando, traba la OAT y la recolección de
 basura del servidor (ver [La franja de la base](01-start.md#la-franja-de-la-base)).
@@ -110,8 +110,9 @@ Al aplicar cambios en la pestaña Datos, de las dos formas se ejecuta lo mismo: 
 control de que nadie haya cambiado la fila. Con producción o con borrados se pide confirmación igual (ver
 [La pestaña Datos](04-data.md)).
 
-Ante un error en un script: una sentencia que falla se deshace sola; lo anterior y la transacción siguen en pie. Al final
-el registro lista los errores y el cursor va al primero. Es la misma opción que
+Ante un error en un script: al parar se deshace lo que el script dejó sin confirmar (lo que confirmaron sus `COMMIT`
+queda); al seguir, la sentencia que falla se deshace sola y lo anterior queda para Commit o Rollback. Ver
+[Errores en un script](02-editor.md#errores-en-un-script). Es la misma opción que
 **Consulta › Seguir ante errores en scripts**.
 
 ### Monitoreo
@@ -262,7 +263,7 @@ Nada se guarda en la base hasta **Aplicar** (ver [La pestaña Datos](04-data.md)
 
 | Atajo | Qué hace |
 |---|---|
-| `Enter` o doble clic en una base | La conecta y la usa en la pestaña. |
+| `Enter` o doble clic en una base | La conecta y la usa en la consulta elegida si no tiene base o tiene el editor vacío; si no, abre una consulta nueva. |
 | `Enter` o doble clic en un objeto | Lo abre en su pestaña (DDL y dependencias; los procedimientos, triggers, vistas y funciones se editan y compilan ahí). |
 | `Enter` o doble clic en una columna | Escribe su nombre en el editor. |
 | `Enter` o doble clic en una carpeta o un tipo de objeto | Lo abre o lo cierra. |

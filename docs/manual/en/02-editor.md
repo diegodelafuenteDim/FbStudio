@@ -18,9 +18,10 @@ everything you type runs (see [Getting started](01-start.md)).
   tab, that one; otherwise, the database of the selected tab. With no tabs open, the one selected in the tree. If no
   database is selected, nothing opens and the status bar tells you so.
 - From the tree: right-click a database › **New query on this database**.
-- Double-clicking a database in the tree connects it and uses it in the selected query tab, if that tab is free. If the
-  tab has an open transaction or is running, the database opens in a new tab, and the previous tab keeps its database
-  and its transaction.
+- Double-clicking a database in the tree connects it and uses it in the selected query only if that query has no
+  database or an empty editor. If it has text, an open transaction or is running, the database opens in a new tab, and
+  the previous tab keeps its database, its text and its transaction. To change the database of a query with text, use
+  the list in the banner (see [Choosing the database from the banner](#choosing-the-database-from-the-banner)).
 
 ### Switching and closing
 
@@ -48,6 +49,41 @@ from the file: anything you didn't save is lost (FbStudio warns you when you exi
 
 To turn this off, go to **Tools › Options… › Editor** and clear **On close, remember the open queries and reopen
 them**.
+
+### Choosing the database from the banner
+
+In the banner at the top, the database name is a list (**▾**). In a query, a click shows every registered database, by
+environment and name, with the color of its environment; the current one is marked with ● and can't be chosen.
+Choosing another one changes the query's database:
+
+- The query keeps its text. It connects to the new database only when you run something.
+- If the new database is a production one, it asks first: **Use production** changes it and **Cancel** leaves it as
+  it was.
+- **Messages** gets a line with the time and which database it moved from and to.
+- The results, plan and statistics from the previous database are cleared, so you don't read them as if they came
+  from the new one. **Messages** stays, as a log.
+
+The list is fixed (no **▾**) while the query has an open transaction or is running: **Commit** or **Rollback**, or
+wait for it to finish. In an object tab, search, monitoring and the other tools, the database can't be changed. The
+list's tooltip tells you why.
+
+### Query tabs without a database
+
+A query is left without a database when you disconnect its database (see [Disconnecting](01-start.md#disconnecting))
+or delete its registration, and also when you open a .sql file with no database selected. It stays open with its
+text, and:
+
+- the tab has a gray border, a crossed-out database as its icon and no database in its title; the tooltip says "No
+  database (was: Ventas)";
+- the banner is gray and says **No database** and, if it was disconnected, which database it had;
+- **Messages** gets a line with the time of the disconnection and, if there was an open transaction, that what had not
+  been committed was undone (rollback);
+- the results of the last run stay visible;
+- `F9` doesn't run anything: the status bar tells you how to choose the database.
+
+To go on, choose the database from the list in the banner, or double-click a database in the tree with the query
+selected. When you connect a database again, the queries left without a database don't take it back by themselves:
+you choose it for each one.
 
 ## .sql files
 
@@ -79,8 +115,9 @@ The **Execute** button on the toolbar does the same as `F9`.
 
 - With text selected, it runs the selection. Without a selection, it runs the whole editor.
 - A single statement is a normal execution: the rows go to **Results** and the messages to **Messages**.
-- Several statements run as a script: in order, in the same transaction, stopping at the first error (or continuing,
-  see [Scripts](#scripts)). A `COMMIT` or `ROLLBACK` written in the script runs at that point.
+- Several statements run as a script: in order, in the same transaction, stopping at the first error and undoing
+  what the script left uncommitted (or continuing, see [Errors in a script](#errors-in-a-script)). A `COMMIT` or
+  `ROLLBACK` written in the script runs at that point.
 - Statements are separated by `;`. FbStudio understands `SET TERM` (isql scripts) and also PSQL blocks without
   `SET TERM`: the `;` inside a `CREATE PROCEDURE … BEGIN … END` or an `EXECUTE BLOCK` don't split it.
 - If Firebird reports the line and column of the error, the cursor jumps there.
@@ -111,15 +148,62 @@ Several statements together run as a script (with `F9`, with `Ctrl+F9` or from a
   [The safety net](#the-safety-net)).
 - The write transaction opens with the first statement that modifies something and stays open until a `COMMIT` or
   `ROLLBACK` in the script, or until you press **Commit** or **Rollback**.
-- On an error, the script stops. To have it go on with the next statement, check **Query › Continue on errors in
-  scripts** (the same option as **On an error in a script**, in **Tools › Options… › Queries**). A statement that fails
-  is undone on its own: everything before it and the transaction stay in place. When the script ends, the cursor goes
-  to the first error.
+- A script doesn't use **Autocommit**: it runs the same way on Development, Test and Production, with its own
+  `COMMIT`s. What you try on a test database behaves the same in production.
+- On an error, the script stops and undoes what it left uncommitted (see [Errors in a script](#errors-in-a-script)).
+- isql commands, such as `SET BAIL` or `SET NAMES`, aren't sent to the server (see [isql commands](#isql-commands)).
 - The log goes to **Messages**: a summary at the top and one line per statement with its line number ("✓ line 3 ·
-  UPDATE: 12 rows affected", "✗ line 7 · INSERT: …").
-- With `F9` (up to 200 statements), each statement goes into the history and the grid shows the last SELECT, with its
-  plan and its statistics.
+  UPDATE: 12 rows affected", "✗ line 7 · INSERT: …"). It's the line of the statement's first word, not that of the
+  comment above it.
+- The history stores the script once, whole, as you ran it: the selection or the whole editor.
+- With `F9` (up to 200 statements), the grid shows the last SELECT, with its plan and its statistics.
 - Parameters aren't requested in a script (see [Parameters](#parameters)).
+
+### Errors in a script
+
+What the script does on an error is decided, in this order, by:
+
+1. A `SET BAIL ON` or `SET BAIL OFF` in the script, from its line on and on any database: `ON` stops at the first error
+   and `OFF` goes on. A `SET BAIL` without `ON` or `OFF` toggles, as in isql.
+2. If the script says nothing, on a **Production** database it always stops.
+3. On **Development** and **Test**, the option **Query › Continue on errors in scripts** (the same as **On an error in
+   a script**, in **Tools › Options… › Queries**). By default, it stops.
+
+When it stops:
+
+- It undoes what the script left uncommitted, as isql does with `SET BAIL ON`. What a `COMMIT` in the script confirmed
+  stays committed.
+- If the tab already had an open transaction before it started, what you had pending is still there: only the script's
+  part is undone.
+- **Messages** tells what was undone, the line that failed, how the statement starts and the full error. In an
+  `EXECUTE BLOCK` it's the line of the `EXCEPTION` or of the error, not the line where the block starts. The cursor
+  goes there.
+
+When it goes on, the failing statement is undone on its own: everything before it and the transaction stay in place,
+for **Commit** or **Rollback**. When the script ends, the cursor goes to the first error.
+
+On production, if the script has a `SET BAIL OFF` followed by statements, the confirmation says so.
+
+> **Note:** cancelling with `Esc` doesn't undo anything: what already ran stays in the transaction, for you to decide.
+
+### isql commands
+
+Scripts written for isql bring commands that aren't SQL: the server doesn't know them. FbStudio doesn't send them.
+
+| Command | What FbStudio does |
+|---|---|
+| `SET TERM` | Changes the statement separator. |
+| `SET BAIL` | Changes what happens on an error (see [Errors in a script](#errors-in-a-script)). |
+| `QUIT` or `EXIT` on their own | The script ends there, without committing or undoing anything. The `EXIT` inside a procedure doesn't count. |
+| `SET NAMES` | Not run: the connection uses the registration's charset. If the script asks for another one, it says so. |
+| `SET SQL DIALECT 3` | Not run: FbStudio already works in dialect 3. |
+| `SET AUTODDL` | Not run: DDL stays in the transaction until the `COMMIT`, as with `SET AUTODDL OFF`. |
+| `SET ECHO`, `SET LIST`, `SET HEADING`, `SET COUNT`, `SET STATS`, `SET PLAN`, `SET TIME`, `SET WIDTH`, `SET BLOBDISPLAY`, `SET WARNINGS` and the others that change how isql shows results; `SET CLIENTLIB`; `SHOW` and `HELP`; `OUTPUT` without a file | Not run. |
+| `SHELL`, `INPUT`, `OUTPUT` with a file, `CONNECT`, `CREATE DATABASE`, `DROP DATABASE`, `SET SQL DIALECT 1` or `2`, `SET PLANONLY ON`, `EDIT`, `BLOBDUMP` and `BLOBVIEW` | The script doesn't run: **Messages** tells the line of each one. |
+
+- The ones that aren't run leave an "ℹ" line in the log, and the status bar says how many there were.
+- `SET GENERATOR`, `SET STATISTICS INDEX` and the others that are Firebird SQL go to the server as always.
+- For a script that chains others with `INPUT`, run each file with **Query › Run script from file…**.
 
 ### Scripts without the grid
 
@@ -128,7 +212,7 @@ scripts, such as thousands of INSERT or UPDATE statements:
 
 - It doesn't fetch the plan or the per-table reads of each statement, so each one takes less time.
 - The grid stays as it was: for a SELECT, only the rows are counted.
-- The history stores the whole script once, not one entry per statement.
+- Like every script, it's stored once in the history.
 - Progress shows in the status bar: "Script: 1,200 of 5,000 (24 %) · 0 with errors · Esc cancels".
 - With more than 500 statements, the log shows one line per statement type and lists only the errors.
 
@@ -184,7 +268,11 @@ Each tab works with its own transaction:
 - **Commit** saves the changes: the **Commit** button on the toolbar, **Query › Commit** or `Ctrl+Alt+C`.
 - **Rollback** undoes them: the **Rollback** button, **Query › Rollback** or `Ctrl+Alt+R`.
 - You can also type `COMMIT;` or `ROLLBACK;` in the editor and run it.
-- `SET TRANSACTION`, `SAVEPOINT` and `RELEASE` aren't supported: FbStudio doesn't run them.
+- `SAVEPOINT`, `RELEASE SAVEPOINT` and `ROLLBACK TO SAVEPOINT` go to the server like any statement: `ROLLBACK TO
+  SAVEPOINT` goes back only to that point and the transaction stays open. A `SAVEPOINT` opens the write transaction if
+  there wasn't one.
+- `SET TRANSACTION` isn't supported: the isolation is chosen on the toolbar (see
+  [Autocommit and isolation](#autocommit-and-isolation)).
 
 ### Autocommit and isolation
 
@@ -193,6 +281,8 @@ the selected tab and can only be changed on **Development** and **Test** databas
 
 - **Autocommit**: each statement that writes commits on its own when it finishes successfully, and the status bar says
   "committed (autocommit)". If the Commit fails, the statement is rolled back and you see the error.
+- A script doesn't use autocommit: it runs with its own `COMMIT`s, as in production. If it leaves the transaction open,
+  a single statement you run afterwards doesn't commit it either: press **Commit** or **Rollback**.
 - The isolation applies to the next write transaction:
   - **Read committed** (the default) sees what others commit.
   - **Snapshot** sees the data as it was when the transaction started.
@@ -225,7 +315,8 @@ notice, after**.
   uncommitted work.
 - When you exit FbStudio with open transactions, the **Open transactions** window lists them: **Exit and undo** rolls
   them all back and exits; **Don't exit** takes you back.
-- Disconnecting a database closes all its tabs, and it also asks first if any of them has an open transaction.
+- Disconnecting a database asks first if any of its tabs has an open transaction and undoes it; its queries with text
+  stay open, without a database (see [Query tabs without a database](#query-tabs-without-a-database)).
 
 ### Locks
 
@@ -252,7 +343,7 @@ whether the registration is read-only (both are chosen when you register the dat
 |---|---|
 | Read-only registration and a statement that writes: INSERT, UPDATE, DELETE, MERGE, DDL, EXECUTE PROCEDURE or EXECUTE BLOCK | Blocks it. |
 | Read-only registration and `NEXT VALUE FOR` or `GEN_ID` with a step other than 0 | Blocks it: moving a generator can't be undone. To read its value, use `GEN_ID(generator, 0)`. |
-| `SET TRANSACTION`, `SAVEPOINT` or `RELEASE`, on any database | Blocks it: use Commit and Rollback. |
+| `SET TRANSACTION`, on any database | Blocks it: the isolation is chosen on the toolbar and the transaction ends with Commit or Rollback. |
 | Production database and a statement that writes | Asks for confirmation. |
 | UPDATE or DELETE without WHERE, on any database | Asks for confirmation: it affects every row in the table. |
 | A MERGE with `WHEN MATCHED THEN DELETE`, or an EXECUTE BLOCK with an UPDATE or DELETE without WHERE | Asks for confirmation. |
@@ -522,6 +613,7 @@ failed, and the first line. Hover over one to see the whole SQL.
 - **Only this tab's database** (checked by default) shows only the statements of the tab's database; unchecked, those
   of every database.
 - Double-clicking a statement loads it into the editor: it replaces the tab's text.
+- A script is a single entry (type SCRIPT), with the whole text you ran; one run from a file, with the file name.
 - It's stored encrypted. How long it's kept is set in **Tools › Options… › History** (**Keep statements for**; 90 days
   by default); when you shorten the period, the oldest entries are deleted right away.
 - You can turn it off in each database's registration, with **Keep statement history** (see
@@ -532,8 +624,12 @@ failed, and the first line. Hover over one to see the whole SQL.
 ### Messages
 
 Full error messages, what a statement without rows did ("UPDATE: 12 rows affected in 35 ms"), the script log and the
-reason a statement was blocked. When there are messages, **Save log…** saves them to a text file with the date and the
-database (without the password), and **Copy** copies them.
+reason a statement was blocked.
+
+- You can select the text with the mouse or the keyboard (`Shift` and the arrows, `Ctrl+A` for everything), and
+  `Ctrl+C` copies the selection.
+- **Copy** copies the selection; with nothing selected, the whole log, with the date and the database.
+- **Save log…** saves it to a text file with the date and the database (without the password).
 
 ## Dragging from the tree
 

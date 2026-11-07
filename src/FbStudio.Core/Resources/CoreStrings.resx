@@ -331,6 +331,9 @@
   <data name="InsertScriptTarget" xml:space="preserve">
     <value>Tabla destino: {0} · {1} columnas · COMMIT cada {2:N0} filas</value>
   </data>
+  <data name="IsqlNotSent" xml:space="preserve">
+    <value>{0} es una orden de isql: no se manda al servidor.</value>
+  </data>
   <data name="KeyringFailed" xml:space="preserve">
     <value>El llavero del sistema no guardó el secreto: {0}</value>
   </data>
