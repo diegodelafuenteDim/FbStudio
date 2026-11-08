@@ -782,15 +782,18 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
     /// <summary>
     /// Los cuadros de edición van encima de lo dibujado. El fondo que les da el tema es casi transparente y dejaba ver
     /// el texto de la celda, corrido y con otra letra: llevan el fondo, el color y la letra de la grilla, con el texto
-    /// donde ella lo dibuja (borde de 1 más el margen = <see cref="GridCanvas.CellPad"/>, centrado en el alto).
+    /// donde ella lo dibuja: a la izquierda, borde de 1 más el margen = <see cref="GridCanvas.CellPad"/>; arriba, borde
+    /// más margen = <see cref="GridCanvas.TextTop"/>. Centrado por el cuadro, su texto caía en un punto entero y el de la
+    /// grilla en una fracción: con la letra de Linux (DejaVu Sans) quedaba un punto más arriba.
     /// </summary>
     private void MatchGrid(TextBox editor)
     {
         (editor.Background, editor.Foreground) = GridCanvas.CellColors(ActualThemeVariant);
         editor.FontFamily = GridCanvas.CellFont;
         editor.BorderThickness = new Thickness(1);
-        editor.Padding = new Thickness(GridCanvas.CellPad - 1, 0);
-        editor.VerticalContentAlignment = VerticalAlignment.Center;
+        var top = GridCanvas.TextTop(GridCanvas.LineHeight(editor.FontSize), editor.Height);
+        editor.Padding = new Thickness(GridCanvas.CellPad - 1, Math.Max(0, top - 1), GridCanvas.CellPad - 1, 0);
+        editor.VerticalContentAlignment = VerticalAlignment.Top;
     }
 
     /// <summary>
@@ -1446,6 +1449,16 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
         /// <summary>La letra de las celdas.</summary>
         public static FontFamily CellFont => Face.FontFamily;
 
+        /// <summary>
+        /// Dónde empieza un texto de <paramref name="textHeight"/> en una fila de <paramref name="height"/>: centrado, en
+        /// un punto entero. Los cuadros de edición ponen el suyo a la misma altura, así las letras no saltan al abrirlos.
+        /// </summary>
+        public static double TextTop(double textHeight, double height) => Math.Round((height - textHeight) / 2);
+
+        /// <summary>Alto de un renglón de la letra de las celdas, en ese tamaño.</summary>
+        public static double LineHeight(double size) =>
+            new FormattedText("Xg", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Face, size, Brushes.Black).Height;
+
         // ---------- mouse ----------
 
         protected override void OnPointerMoved(PointerEventArgs e)
@@ -1971,7 +1984,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                                 ctx.FillRectangle(pal.Edited, new Rect(x, y, _widths[c], RowHeight));
                                 var pt = Text(CellFormatter.Format(pending, Columns[c].DataTypeName), CellFormatter.IsNull(pending) ? FaceItalic : FaceBold,
                                     pal.Foreground, _widths[c] - 2 * CellPad, Columns[c].IsNumeric ? TextAlignment.Right : TextAlignment.Left);
-                                ctx.DrawText(pt, new Point(x + CellPad, y + (RowHeight - pt.Height) / 2));
+                                ctx.DrawText(pt, new Point(x + CellPad, y + TextTop(pt.Height, RowHeight)));
                                 drawn++;
                                 continue;
                             }
@@ -1984,7 +1997,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                                 created++;
                             }
                             _next[(entry.RowIndex, c)] = ft;
-                            ctx.DrawText(ft, new Point(x + CellPad, y + (RowHeight - ft.Height) / 2));
+                            ctx.DrawText(ft, new Point(x + CellPad, y + TextTop(ft.Height, RowHeight)));
                             drawn++;
                         }
                     }
@@ -2095,7 +2108,7 @@ public sealed class DrawnGrid : Avalonia.Controls.Grid
                     ctx.DrawText(arrow, new Point(x + _widths[c] - FilterButtonWidth, HeaderHeight + (FilterHeight - arrow.Height) / 2));
                     if (!filtered) continue;
                     var t = Text(f!.Text, Face, f.Error is null ? pal.Accent : pal.Error, _widths[c] - 2 * CellPad - FilterButtonWidth + CellPad, size: 12);
-                    ctx.DrawText(t, new Point(x + CellPad, HeaderHeight + (FilterHeight - t.Height) / 2));
+                    ctx.DrawText(t, new Point(x + CellPad, HeaderHeight + TextTop(t.Height, FilterHeight)));
                 }
             }
             ctx.DrawLine(pal.Line, new Point(0, TopHeight - 0.5), new Point(w, TopHeight - 0.5));
